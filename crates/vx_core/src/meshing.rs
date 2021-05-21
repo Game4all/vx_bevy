@@ -35,7 +35,12 @@ pub struct ChunkMesh {
 }
 
 impl ChunkMesh {
-    pub fn add_quad_to_mesh(&mut self, face: &OrientedCubeFace, quad: &UnorientedQuad, voxel: &Voxel) {
+    pub fn add_quad_to_mesh(
+        &mut self,
+        face: &OrientedCubeFace,
+        quad: &UnorientedQuad,
+        voxel: &Voxel,
+    ) {
         let start_index = self.positions.len() as u32;
 
         self.positions

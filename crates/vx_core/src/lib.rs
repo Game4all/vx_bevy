@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-pub mod world;
 pub mod meshing;
+pub mod world;
 
 pub struct Player;
 
