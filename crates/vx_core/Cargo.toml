@@ -9,3 +9,4 @@ publish = false
 
 [dependencies]
 bevy = "0.5.0"
+building-blocks = "0.6.0"
