@@ -11,14 +11,12 @@ use bevy::{
     },
 };
 use building_blocks::{
-    mesh::{
-        greedy_quads, GreedyQuadsBuffer, IsOpaque, MergeVoxel, OrientedCubeFace, UnorientedQuad,
-    },
+    mesh::{greedy_quads, GreedyQuadsBuffer},
     prelude::*,
 };
-use world::chunk_extent;
 
-use crate::world::{self, Chunk, ChunkReadyEvent, Voxel, DEFAULT_VIEW_DISTANCE};
+use vx_core::meshing::ChunkMesh;
+use vx_core::world::{chunk_extent, Chunk, ChunkReadyEvent, DEFAULT_VIEW_DISTANCE};
 
 struct ChunkMeshingEvent(Entity);
 
@@ -47,7 +45,6 @@ fn attach_chunk_render_bundle(
             mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
             material: mats.add(Default::default()),
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
-                //PBR_PIPELINE_HANDLE.typed(),
                 TERRAIN_PIPELINE_HANDLE.typed(),
             )]),
             draw: Default::default(),
@@ -141,53 +138,5 @@ impl Plugin for WorldRenderPlugin {
             .add_system(attach_chunk_render_bundle.system())
             .add_system(handle_chunk_ready_events.system())
             .add_system(mesh_chunks_async.system());
-    }
-}
-
-impl MergeVoxel for Voxel {
-    type VoxelValue = u8;
-
-    fn voxel_merge_value(&self) -> Self::VoxelValue {
-        self.attributes[0]
-    }
-}
-
-impl IsOpaque for Voxel {
-    fn is_opaque(&self) -> bool {
-        true
-    }
-}
-
-impl IsEmpty for Voxel {
-    fn is_empty(&self) -> bool {
-        self.attributes[3] == 0
-    }
-}
-
-#[derive(Default)]
-struct ChunkMesh {
-    pub positions: Vec<[f32; 3]>,
-    pub normals: Vec<[f32; 3]>,
-    pub indices: Vec<u32>,
-    pub uv: Vec<[f32; 2]>,
-    pub colors: Vec<[u8; 4]>,
-}
-
-impl ChunkMesh {
-    fn add_quad_to_mesh(&mut self, face: &OrientedCubeFace, quad: &UnorientedQuad, voxel: &Voxel) {
-        let start_index = self.positions.len() as u32;
-
-        self.positions
-            .extend_from_slice(&face.quad_mesh_positions(quad));
-
-        self.normals.extend_from_slice(&face.quad_mesh_normals());
-
-        self.uv
-            .extend_from_slice(&face.simple_tex_coords(false, quad));
-
-        self.colors.extend_from_slice(&[voxel.attributes; 4]);
-
-        self.indices
-            .extend_from_slice(&face.quad_mesh_indices(start_index));
     }
 }

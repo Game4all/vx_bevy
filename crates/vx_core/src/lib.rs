@@ -1,16 +1,14 @@
-use bevy::prelude::PluginGroup;
+use bevy::prelude::*;
 
-pub mod player;
-pub mod render;
 pub mod world;
+pub mod meshing;
+
+pub struct Player;
 
 pub struct CorePlugins;
 
 impl PluginGroup for CorePlugins {
     fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
-        group
-            .add(player::PlayerControllerPlugin)
-            .add(world::WorldSimulationPlugin)
-            .add(render::WorldRenderPlugin);
+        group.add(world::WorldSimulationPlugin);
     }
 }

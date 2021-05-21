@@ -6,7 +6,7 @@ use building_blocks::{
     prelude::*,
 };
 
-use crate::player::PlayerController;
+use crate::Player;
 
 pub type ChunkMap = HashMap<IVec2, Entity>;
 
@@ -68,7 +68,7 @@ pub struct ChunkDataBundle {
 /// This will accordingly emit [`ChunkSpawnRequest`] events for chunks that need to be loaded since they entered the player's view distance and [`ChunkDespawnRequest`] for
 /// chunks out of the player's view distance.
 fn update_visible_chunks(
-    player: Query<(&Transform, &PlayerController)>,
+    player: Query<(&Transform, &Player)>,
     world: Res<VoxelWorld>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
     mut despawn_requests: EventWriter<ChunkDespawnRequest>,

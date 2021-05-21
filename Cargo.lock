@@ -3724,6 +3724,16 @@ name = "vx_bevy"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "vx_client",
+ "vx_core",
+]
+
+[[package]]
+name = "vx_client"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "building-blocks",
  "vx_core",
 ]
 
