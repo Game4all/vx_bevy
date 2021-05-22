@@ -6,11 +6,12 @@ use building_blocks::{
     prelude::*,
 };
 
-use crate::{Player, voxel::Voxel};
+use crate::{voxel::Voxel, Player};
 
 use super::{
-    chunk2global, global2chunk, worldgen::generate_chunk, CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH,
-    DEFAULT_VIEW_DISTANCE,
+    chunk2global, global2chunk,
+    worldgen::{NoiseTerrainGenerator, TerrainGenerator},
+    CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH, DEFAULT_VIEW_DISTANCE,
 };
 
 pub type ChunkMap = HashMap<IVec2, Entity>;
@@ -171,12 +172,12 @@ fn destroy_chunks(
 fn generate_chunks(
     mut query: Query<(&mut Chunk, &mut ChunkLoadState)>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
-    //gen: Res<NoiseTerrainGenerator>,
+    gen: Res<NoiseTerrainGenerator>,
 ) {
     for _ in 0..(DEFAULT_VIEW_DISTANCE / 2) {
         if let Some(ev) = gen_requests.pop_back() {
-            if let Ok((data, mut load_state)) = query.get_mut(ev.0) {
-                generate_chunk(data);
+            if let Ok((mut data, mut load_state)) = query.get_mut(ev.0) {
+                gen.generate(data.pos, 0, &mut data.block_data);
                 *load_state = ChunkLoadState::Done;
             }
         }
@@ -201,6 +202,8 @@ impl Plugin for WorldSimulationPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<ChunkMap>()
             .init_resource::<VecDeque<ChunkLoadRequest>>()
+            //todo: move this to a struct or smth else
+            .init_resource::<NoiseTerrainGenerator>()
             // internal events
             .add_event::<ChunkSpawnRequest>()
             .add_event::<ChunkDespawnRequest>()
