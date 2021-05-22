@@ -10,3 +10,4 @@ publish = false
 [dependencies]
 bevy = "0.5.0"
 building-blocks = "0.6.0"
+simdnoise = "3.1.6"

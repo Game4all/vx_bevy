@@ -9,7 +9,8 @@ use building_blocks::{
 use crate::Player;
 
 use super::{
-    chunk2global, global2chunk, CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH, DEFAULT_VIEW_DISTANCE,
+    chunk2global, global2chunk, worldgen::generate_chunk, CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH,
+    DEFAULT_VIEW_DISTANCE,
 };
 
 pub type ChunkMap = HashMap<IVec2, Entity>;
@@ -175,16 +176,12 @@ fn destroy_chunks(
 fn generate_chunks(
     mut query: Query<(&mut Chunk, &mut ChunkLoadState)>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
+    //gen: Res<NoiseTerrainGenerator>,
 ) {
     for _ in 0..(DEFAULT_VIEW_DISTANCE / 2) {
         if let Some(ev) = gen_requests.pop_back() {
-            if let Ok((mut data, mut load_state)) = query.get_mut(ev.0) {
-                data.block_data.fill_extent(
-                    &chunk_extent(),
-                    Voxel {
-                        attributes: [255; 4],
-                    },
-                );
+            if let Ok((data, mut load_state)) = query.get_mut(ev.0) {
+                generate_chunk(data);
                 *load_state = ChunkLoadState::Done;
             }
         }

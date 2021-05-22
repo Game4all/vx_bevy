@@ -3,7 +3,7 @@ use bevy::math::{IVec2, IVec3, Vec3};
 mod world;
 pub use world::*;
 
-mod gen;
+mod worldgen;
 
 pub const CHUNK_HEIGHT: i32 = 128;
 pub const CHUNK_WIDTH: i32 = 16;
