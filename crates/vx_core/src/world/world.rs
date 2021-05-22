@@ -8,13 +8,11 @@ use building_blocks::{
 
 use crate::Player;
 
+use super::{
+    chunk2global, global2chunk, CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH, DEFAULT_VIEW_DISTANCE,
+};
+
 pub type ChunkMap = HashMap<IVec2, Entity>;
-
-pub const CHUNK_HEIGHT: i32 = 128;
-pub const CHUNK_WIDTH: i32 = 16;
-pub const CHUNK_DEPTH: i32 = 16;
-
-pub const DEFAULT_VIEW_DISTANCE: i32 = 24;
 
 #[inline]
 pub fn chunk_extent() -> Extent3i {
@@ -27,11 +25,6 @@ pub fn chunk_extent() -> Extent3i {
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub struct Voxel {
     pub attributes: [u8; 4],
-}
-
-#[derive(Default)]
-pub struct VoxelWorld {
-    pub loaded_chunks: ChunkMap,
 }
 
 /// A component tracking the current loading state of a chunk.
@@ -69,7 +62,7 @@ pub struct ChunkDataBundle {
 /// chunks out of the player's view distance.
 fn update_visible_chunks(
     player: Query<(&Transform, &Player)>,
-    world: Res<VoxelWorld>,
+    world: Res<ChunkMap>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
     mut despawn_requests: EventWriter<ChunkDespawnRequest>,
 ) {
@@ -78,7 +71,6 @@ fn update_visible_chunks(
 
         let mut load_radius_chunks: Vec<IVec2> = Vec::new();
 
-        //todo: sort chunk loading order from closest to farthest from ply view.
         for dx in -DEFAULT_VIEW_DISTANCE..=DEFAULT_VIEW_DISTANCE {
             for dy in -DEFAULT_VIEW_DISTANCE..=DEFAULT_VIEW_DISTANCE {
                 if dx.pow(2) + dy.pow(2) >= DEFAULT_VIEW_DISTANCE.pow(2) {
@@ -86,7 +78,7 @@ fn update_visible_chunks(
                 };
 
                 let chunk_pos = pos + (dx, dy).into();
-                if !world.loaded_chunks.contains_key(&chunk_pos) {
+                if !world.contains_key(&chunk_pos) {
                     load_radius_chunks.push(chunk_pos);
                 }
             }
@@ -100,9 +92,9 @@ fn update_visible_chunks(
                 .map(|c| ChunkSpawnRequest(c.clone())),
         );
 
-        for key in world.loaded_chunks.keys() {
+        for key in world.keys() {
             let delta = *key - pos;
-            let entity = world.loaded_chunks.get(key).unwrap().clone();
+            let entity = world.get(key).unwrap().clone();
             if delta.x.abs().pow(2) + delta.y.abs().pow(2) > DEFAULT_VIEW_DISTANCE.pow(2) {
                 despawn_requests.send(ChunkDespawnRequest(key.clone(), entity));
             }
@@ -113,7 +105,7 @@ fn update_visible_chunks(
 fn create_chunks(
     mut commands: Commands,
     mut spawn_events: EventReader<ChunkSpawnRequest>,
-    mut world: ResMut<VoxelWorld>,
+    mut world: ResMut<ChunkMap>,
 ) {
     for creation_request in spawn_events.iter() {
         let entity = commands
@@ -128,7 +120,7 @@ fn create_chunks(
             .insert(ChunkLoadState::Load)
             .id();
 
-        world.loaded_chunks.insert(creation_request.0, entity);
+        world.insert(creation_request.0, entity);
     }
 }
 
@@ -166,13 +158,13 @@ fn prepare_for_unload(
 /// Destroys all the chunks that have a load state of [`ChunkLoadState::Unload`]
 fn destroy_chunks(
     mut commands: Commands,
-    mut world: ResMut<VoxelWorld>,
+    mut world: ResMut<ChunkMap>,
     chunks: Query<(&Chunk, &ChunkLoadState)>,
 ) {
     for (chunk, load_state) in chunks.iter() {
         match load_state {
             ChunkLoadState::Unload => {
-                let entity = world.loaded_chunks.remove(&chunk.pos).unwrap();
+                let entity = world.remove(&chunk.pos).unwrap();
                 commands.entity(entity).despawn();
             }
             _ => {}
@@ -211,34 +203,11 @@ fn mark_chunks_ready(
     }
 }
 
-pub fn global2chunk(position: Vec3) -> IVec2 {
-    IVec2::new(
-        position.x.floor() as i32 / CHUNK_WIDTH,
-        position.z.floor() as i32 / CHUNK_DEPTH,
-    )
-}
-
-pub fn globalil2local(pos: IVec3) -> IVec3 {
-    IVec3::new(pos.x % CHUNK_WIDTH, pos.y, pos.z % CHUNK_DEPTH)
-}
-
-pub fn globali2chunk(position: IVec3) -> IVec2 {
-    IVec2::new(position.x / CHUNK_WIDTH, position.z / CHUNK_DEPTH)
-}
-
-pub fn chunk2global(chunk_coords: IVec2) -> Vec3 {
-    Vec3::new(
-        (chunk_coords.x * CHUNK_WIDTH) as f32,
-        0.,
-        (chunk_coords.y * CHUNK_DEPTH) as f32,
-    )
-}
-
 pub struct WorldSimulationPlugin;
 
 impl Plugin for WorldSimulationPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource(VoxelWorld::default())
+        app.init_resource::<ChunkMap>()
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             // internal events
             .add_event::<ChunkSpawnRequest>()
