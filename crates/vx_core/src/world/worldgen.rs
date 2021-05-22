@@ -1,7 +1,8 @@
 use bevy::prelude::Mut;
 use building_blocks::core::{ExtentN, PointN};
 
-use super::{Chunk, Voxel, CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH};
+use super::{Chunk, CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH};
+use crate::voxel::Voxel;
 
 pub(crate) fn generate_chunk(mut chunk: Mut<Chunk>) {
     let noise = simdnoise::NoiseBuilder::fbm_2d_offset(

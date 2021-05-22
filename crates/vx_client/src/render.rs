@@ -15,7 +15,7 @@ use building_blocks::{
     prelude::*,
 };
 
-use vx_core::meshing::ChunkMesh;
+use vx_core::voxel::ChunkMesh;
 use vx_core::world::{chunk_extent, Chunk, ChunkReadyEvent, DEFAULT_VIEW_DISTANCE};
 
 struct ChunkMeshingEvent(Entity);

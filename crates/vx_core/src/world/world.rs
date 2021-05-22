@@ -6,7 +6,7 @@ use building_blocks::{
     prelude::*,
 };
 
-use crate::Player;
+use crate::{Player, voxel::Voxel};
 
 use super::{
     chunk2global, global2chunk, worldgen::generate_chunk, CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH,
@@ -21,11 +21,6 @@ pub fn chunk_extent() -> Extent3i {
         PointN([0; 3]),
         PointN([CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH]),
     )
-}
-
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
-pub struct Voxel {
-    pub attributes: [u8; 4],
 }
 
 /// A component tracking the current loading state of a chunk.
