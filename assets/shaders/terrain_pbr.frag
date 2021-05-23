@@ -1,9 +1,9 @@
 #version 450
 
 /*
-    This is a modified version of bevy's PBR pipeline fragment shader.
+    This is a modified version of bevy's PBR pipeline fragment shader modified
+    to support per-vertex coloring.
 */
-
 
 // From the Filament design doc
 // https://google.github.io/filament/Filament.html#table_symbols
@@ -39,12 +39,19 @@
 //
 // The above integration needs to be approximated.
 
-const int MAX_LIGHTS = 10;
+// reflects the constants defined bevy_pbr/src/render_graph/mod.rs
+const int MAX_POINT_LIGHTS = 10;
+const int MAX_DIRECTIONAL_LIGHTS = 1;
 
 struct PointLight {
     vec4 pos;
     vec4 color;
     vec4 lightParams;
+};
+ 
+struct DirectionalLight {
+    vec4 direction;
+    vec4 color;
 };
 
 layout(location = 0) in vec3 v_WorldPosition;
@@ -60,32 +67,28 @@ layout(set = 0, binding = 0) uniform CameraViewProj {
 layout(std140, set = 0, binding = 1) uniform CameraPosition {
     vec4 CameraPos;
 };
-
 layout(std140, set = 1, binding = 0) uniform Lights {
     vec4 AmbientColor;
-    uvec4 NumLights;
-    PointLight PointLights[MAX_LIGHTS];
+    uvec4 NumLights; // x = point lights, y = directional lights
+    PointLight PointLights[MAX_POINT_LIGHTS];
+    DirectionalLight DirectionalLights[MAX_DIRECTIONAL_LIGHTS];
 };
-
 layout(set = 3, binding = 0) uniform StandardMaterial_base_color {
     vec4 base_color;
 };
-
 layout(set = 3, binding = 3) uniform StandardMaterial_roughness {
     float perceptual_roughness;
 };
-
 layout(set = 3, binding = 4) uniform StandardMaterial_metallic {
     float metallic;
 };
-
 layout(set = 3, binding = 7) uniform StandardMaterial_reflectance {
     float reflectance;
 };
-
 layout(set = 3, binding = 12) uniform StandardMaterial_emissive {
     vec4 emissive;
 };
+
 
 #    define saturate(x) clamp(x, 0.0, 1.0)
 const float PI = 3.141592653589793;
@@ -245,6 +248,71 @@ vec3 reinhard_extended_luminance(vec3 color, float max_white_l) {
     return change_luminance(color, l_new);
 }
 
+vec3 point_light(PointLight light, float roughness, float NdotV, vec3 N, vec3 V, vec3 R, vec3 F0, vec3 diffuseColor) {
+    vec3 light_to_frag = light.pos.xyz - v_WorldPosition.xyz;
+    float distance_square = dot(light_to_frag, light_to_frag);
+    float rangeAttenuation =
+        getDistanceAttenuation(distance_square, light.lightParams.r);
+
+    // Specular.
+    // Representative Point Area Lights.
+    // see http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf p14-16
+    float a = roughness;
+    float radius = light.lightParams.g;
+    vec3 centerToRay = dot(light_to_frag, R) * R - light_to_frag;
+    vec3 closestPoint = light_to_frag + centerToRay * saturate(radius * inversesqrt(dot(centerToRay, centerToRay)));
+    float LspecLengthInverse = inversesqrt(dot(closestPoint, closestPoint));
+    float normalizationFactor = a / saturate(a + (radius * 0.5 * LspecLengthInverse));
+    float specularIntensity = normalizationFactor * normalizationFactor;
+
+    vec3 L = closestPoint * LspecLengthInverse; // normalize() equivalent?
+    vec3 H = normalize(L + V);
+    float NoL = saturate(dot(N, L));
+    float NoH = saturate(dot(N, H));
+    float LoH = saturate(dot(L, H));
+
+    vec3 specular = specular(F0, roughness, H, NdotV, NoL, NoH, LoH, specularIntensity);
+
+    // Diffuse.
+    // Comes after specular since its NoL is used in the lighting equation.
+    L = normalize(light_to_frag);
+    H = normalize(L + V);
+    NoL = saturate(dot(N, L));
+    NoH = saturate(dot(N, H));
+    LoH = saturate(dot(L, H));
+
+    vec3 diffuse = diffuseColor * Fd_Burley(roughness, NdotV, NoL, LoH);
+
+    // Lout = f(v,l) Φ / { 4 π d^2 }⟨n⋅l⟩
+    // where
+    // f(v,l) = (f_d(v,l) + f_r(v,l)) * light_color
+    // Φ is light intensity
+
+    // our rangeAttentuation = 1 / d^2 multiplied with an attenuation factor for smoothing at the edge of the non-physical maximum light radius
+    // It's not 100% clear where the 1/4π goes in the derivation, but we follow the filament shader and leave it out
+
+    // See https://google.github.io/filament/Filament.html#mjx-eqn-pointLightLuminanceEquation
+    // TODO compensate for energy loss https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
+    // light.color.rgb is premultiplied with light.intensity on the CPU
+    return ((diffuse + specular) * light.color.rgb) * (rangeAttenuation * NoL);
+}
+
+vec3 dir_light(DirectionalLight light, float roughness, float NdotV, vec3 normal, vec3 view, vec3 R, vec3 F0, vec3 diffuseColor) {
+    vec3 incident_light = light.direction.xyz;
+
+    vec3 half_vector = normalize(incident_light + view);
+    float NoL = saturate(dot(normal, incident_light));
+    float NoH = saturate(dot(normal, half_vector));
+    float LoH = saturate(dot(incident_light, half_vector));
+
+    vec3 diffuse = diffuseColor * Fd_Burley(roughness, NdotV, NoL, LoH);
+    float specularIntensity = 1.0;
+    vec3 specular = specular(F0, roughness, half_vector, NdotV, NoL, NoH, LoH, specularIntensity);
+
+    return (specular + diffuse) * light.color.rgb * NoL;
+}
+
+
 void main() {
     vec4 output_color = v_Color;
     // calculate non-linear roughness from linear perceptualRoughness
@@ -252,6 +320,7 @@ void main() {
     float roughness = perceptualRoughnessToRoughness(perceptual_roughness);
 
     vec3 N = normalize(v_WorldNormal);
+    float occlusion = 1.0;
 
     vec3 V = normalize(CameraPos.xyz - v_WorldPosition.xyz);
     // Neubelt and Pettineo 2013, "Crafting a Next-gen Material Pipeline for The Order: 1886"
@@ -268,62 +337,18 @@ void main() {
 
     // accumulate color
     vec3 light_accum = vec3(0.0);
-    for (int i = 0; i < int(NumLights.x) && i < MAX_LIGHTS; ++i) {
-        PointLight light = PointLights[i];
-        vec3 light_to_frag = light.pos.xyz - v_WorldPosition.xyz;
-        float distance_square = dot(light_to_frag, light_to_frag);
-        float rangeAttenuation =
-            getDistanceAttenuation(distance_square, light.lightParams.r);
-
-        // Specular.
-        // Representative Point Area Lights.
-        // see http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf p14-16
-        float a = roughness;
-        float radius = light.lightParams.g;
-        vec3 centerToRay = dot(light_to_frag, R) * R - light_to_frag;
-        vec3 closestPoint = light_to_frag + centerToRay * saturate(radius * inversesqrt(dot(centerToRay, centerToRay)));
-        float LspecLengthInverse = inversesqrt(dot(closestPoint, closestPoint));
-        float normalizationFactor = a / saturate(a + (radius * 0.5 * LspecLengthInverse));
-        float specularIntensity = normalizationFactor * normalizationFactor;
-
-        vec3 L = closestPoint * LspecLengthInverse; // normalize() equivalent?
-        vec3 H = normalize(L + V);
-        float NoL = saturate(dot(N, L));
-        float NoH = saturate(dot(N, H));
-        float LoH = saturate(dot(L, H));
-
-        vec3 specular = specular(F0, roughness, H, NdotV, NoL, NoH, LoH, specularIntensity);
-
-        // Diffuse.
-        // Comes after specular since its NoL is used in the lighting equation.
-        L = normalize(light_to_frag);
-        H = normalize(L + V);
-        NoL = saturate(dot(N, L));
-        NoH = saturate(dot(N, H));
-        LoH = saturate(dot(L, H));
-
-        vec3 diffuse = diffuseColor * Fd_Burley(roughness, NdotV, NoL, LoH);
-
-        // Lout = f(v,l) Φ / { 4 π d^2 }⟨n⋅l⟩
-        // where
-        // f(v,l) = (f_d(v,l) + f_r(v,l)) * light_color
-        // Φ is light intensity
-
-        // our rangeAttentuation = 1 / d^2 multiplied with an attenuation factor for smoothing at the edge of the non-physical maximum light radius
-        // It's not 100% clear where the 1/4π goes in the derivation, but we follow the filament shader and leave it out
-
-        // See https://google.github.io/filament/Filament.html#mjx-eqn-pointLightLuminanceEquation
-        // TODO compensate for energy loss https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
-        // light.color.rgb is premultiplied with light.intensity on the CPU
-        light_accum +=
-            ((diffuse + specular) * light.color.rgb) * (rangeAttenuation * NoL);
+    for (int i = 0; i < int(NumLights.x) && i < MAX_POINT_LIGHTS; ++i) {
+        light_accum += point_light(PointLights[i], roughness, NdotV, N, V, R, F0, diffuseColor);
+    }
+    for (int i = 0; i < int(NumLights.y) && i < MAX_DIRECTIONAL_LIGHTS; ++i) {
+        light_accum += dir_light(DirectionalLights[i], roughness, NdotV, N, V, R, F0, diffuseColor);
     }
 
     vec3 diffuse_ambient = EnvBRDFApprox(diffuseColor, 1.0, NdotV);
     vec3 specular_ambient = EnvBRDFApprox(F0, perceptual_roughness, NdotV);
 
     output_color.rgb = light_accum;
-    output_color.rgb += (diffuse_ambient + specular_ambient) * AmbientColor.xyz * 1.0;
+    output_color.rgb += (diffuse_ambient + specular_ambient) * AmbientColor.xyz * occlusion;
     output_color.rgb += emissive.rgb * output_color.a;
 
     // tone_mapping

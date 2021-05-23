@@ -1,5 +1,10 @@
 #version 450
 
+/*
+    This is a modified version of bevy's PBR pipeline fragment shader modified
+    to support per-vertex coloring.
+*/
+
 layout(location = 0) in vec3 Vertex_Position;
 layout(location = 1) in vec3 Vertex_Normal;
 layout(location = 2) in vec2 Vertex_Uv;

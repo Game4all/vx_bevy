@@ -8,6 +8,6 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.5.0"
+bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
 building-blocks = "0.6.0"
 simdnoise = "3.1.6"
