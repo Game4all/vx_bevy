@@ -1,12 +1,12 @@
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
-pub struct Voxel {
-    pub attributes: [u8; 4],
-}
-
 use building_blocks::{
     mesh::{IsOpaque, MergeVoxel, OrientedCubeFace, UnorientedQuad},
     storage::IsEmpty,
 };
+
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
+pub struct Voxel {
+    pub attributes: [u8; 4],
+}
 
 impl MergeVoxel for Voxel {
     type VoxelValue = u8;
