@@ -404,6 +404,7 @@ dependencies = [
  "bevy_ecs",
  "bevy_math",
  "bevy_utils",
+ "serde",
 ]
 
 [[package]]
@@ -3853,6 +3854,8 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "building-blocks",
+ "ron",
+ "serde",
  "vx_core",
 ]
 

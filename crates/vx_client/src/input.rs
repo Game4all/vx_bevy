@@ -1,10 +1,17 @@
 use bevy::{
     input::{keyboard::KeyboardInput, ElementState},
     prelude::*,
+    utils::tracing::{error, info},
     utils::HashMap,
 };
+use serde::{Deserialize, Serialize};
+use vx_core::platform::UserData;
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+use std::{fs::OpenOptions, path::PathBuf};
+
+const BINDINGS_FILENAME: &'static str = "bindings.ron";
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub enum Action {
     //movement handling
     WalkForward,
@@ -50,12 +57,46 @@ fn update_actions(
     }
 }
 
+fn load_bindings(userdata: Res<UserData>, mut user_bindings: ResMut<KeybindingMap>) {
+    info!("Loading user bindings");
+
+    let file = match userdata.open(
+        &PathBuf::from(BINDINGS_FILENAME),
+        OpenOptions::new().read(true),
+    ) {
+        Ok(file) => file,
+        Err(err) => {
+            error!("Failed to load user bindings: {:?}", err);
+            return;
+        }
+    };
+
+    let loaded_bindings: KeybindingMap = match ron::de::from_reader(file) {
+        Ok(data) => data,
+        Err(error) => {
+            error!("Failed to parse user bindings: {:?}", error);
+            return;
+        }
+    };
+
+    for key in loaded_bindings.keys() {
+        if user_bindings.contains_key(key) {
+            // unmap a key from the previous binding if an action in the loaded bindings uses that key
+            user_bindings.remove(key);
+        }
+        user_bindings.insert(*key, *loaded_bindings.get_key_value(key).unwrap().1);
+    }
+
+    info!("User bindings loaded!");
+}
+
 pub struct PlayerInputPlugin;
 
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource::<KeybindingMap>(default_keybinds())
             .init_resource::<Input<Action>>()
-            .add_system(update_actions.system());
+            .add_system(update_actions.system())
+            .add_startup_system(load_bindings.system());
     }
 }
