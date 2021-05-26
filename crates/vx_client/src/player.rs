@@ -2,6 +2,8 @@ use bevy::{input::mouse::MouseMotion, prelude::*};
 
 use std::f32::consts::FRAC_PI_2;
 
+use crate::input::Action;
+
 pub const CAMERA_SENS: f32 = 0.0005;
 
 #[derive(Default)]
@@ -47,10 +49,10 @@ pub fn handle_player_mouse_move(
 
 pub fn handle_player_input(
     mut query: Query<(&mut PlayerController, &mut Transform)>,
-    keyboard: Res<Input<KeyCode>>,
+    actions: Res<Input<Action>>,
 ) {
     for (mut controller, mut transform) in query.single_mut() {
-        if keyboard.just_pressed(KeyCode::Escape) {
+        if actions.just_pressed(Action::CursorLock) {
             controller.cursor_locked = !controller.cursor_locked;
         }
 
@@ -59,19 +61,19 @@ pub fn handle_player_input(
         let forward = transform.rotation.mul_vec3(Vec3::Z).normalize();
         let right = transform.rotation.mul_vec3(Vec3::X).normalize();
 
-        if keyboard.pressed(KeyCode::Z) {
+        if actions.pressed(Action::WalkForward) {
             direction.z -= 1.0;
         }
 
-        if keyboard.pressed(KeyCode::S) {
+        if actions.pressed(Action::WalkBackward) {
             direction.z += 1.0;
         }
 
-        if keyboard.pressed(KeyCode::D) {
+        if actions.pressed(Action::WalkRight) {
             direction.x += 1.0;
         }
 
-        if keyboard.pressed(KeyCode::A) {
+        if actions.pressed(Action::WalkLeft) {
             direction.x -= 1.0;
         }
 
@@ -79,7 +81,6 @@ pub fn handle_player_input(
     }
 }
 
-//todo: move to client-side plugins whens 'the split' happens
 pub struct PlayerControllerPlugin;
 
 impl Plugin for PlayerControllerPlugin {
