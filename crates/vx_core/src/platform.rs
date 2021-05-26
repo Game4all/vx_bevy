@@ -1,5 +1,5 @@
 use std::{
-    fs,
+    fs::{self, ReadDir},
     io::Result,
     path::{Path, PathBuf},
 };
@@ -16,32 +16,36 @@ impl UserData {
         Self { root }
     }
 
-    pub fn dir_exists<T: AsRef<Path>>(&self, path: &T) -> bool {
+    /// Enumerates all the entries at the provided path.
+    pub fn enum_dir<T: AsRef<Path>>(&self, path: &T) -> Result<ReadDir> {
         let mut full_path = self.root();
         full_path.push(path);
-        full_path.is_dir()
+        fs::read_dir(path)
     }
 
+    /// Creates a directory at the specified path.
     pub fn create_dir<T: AsRef<Path>>(&self, path: &T) -> Result<()> {
         let mut full_path = self.root();
         full_path.push(path);
         fs::create_dir_all(&full_path)
     }
 
-    pub fn root(&self) -> PathBuf {
-        self.root.clone()
+    /// Checks for existence of the given path.
+    pub fn exists<T: AsRef<Path>>(&self, path: &T) -> bool {
+        let mut full_path = self.root();
+        full_path.push(path);
+        full_path.exists()
     }
 
-    pub fn absolute_path<T: AsRef<Path>>(&self, path: T) -> PathBuf {
-        let mut abs_path = self.root();
-        abs_path.push(&path);
-        abs_path
+    pub fn root(&self) -> PathBuf {
+        self.root.clone()
     }
 }
 
 fn setup_userdata(userdata: ResMut<UserData>) {
     userdata.create_dir(&PathBuf::from(".")).unwrap();
 }
+
 pub struct PlatformPlugin;
 
 impl Plugin for PlatformPlugin {
