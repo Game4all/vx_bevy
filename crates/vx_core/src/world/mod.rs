@@ -9,8 +9,6 @@ pub const CHUNK_HEIGHT: i32 = 128;
 pub const CHUNK_WIDTH: i32 = 16;
 pub const CHUNK_DEPTH: i32 = 16;
 
-pub const DEFAULT_VIEW_DISTANCE: i32 = 24;
-
 /// Gets the corresponding chunks coordinates from a point in global space.
 pub fn global2chunk(position: Vec3) -> IVec2 {
     IVec2::new(

@@ -15,8 +15,8 @@ use building_blocks::{
     prelude::*,
 };
 
-use vx_core::voxel::ChunkMesh;
-use vx_core::world::{chunk_extent, Chunk, ChunkReadyEvent, DEFAULT_VIEW_DISTANCE};
+use vx_core::world::{chunk_extent, Chunk, ChunkReadyEvent};
+use vx_core::{config::GlobalConfig, voxel::ChunkMesh};
 
 struct ChunkMeshingEvent(Entity);
 
@@ -63,8 +63,9 @@ fn mesh_chunks_async(
     mut chunks: Query<(&Chunk, &mut Visible, &Handle<Mesh>)>,
     mut meshing_events: ResMut<VecDeque<ChunkMeshingEvent>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    config: Res<GlobalConfig>,
 ) {
-    for _ in 0..(DEFAULT_VIEW_DISTANCE / 2) {
+    for _ in 0..(config.render_distance / 2) {
         if let Some(meshing_event) = meshing_events.pop_back() {
             if let Ok((chunk, mut visibility, mesh_handle)) = chunks.get_mut(meshing_event.0) {
                 let mesh = meshes.get_mut(mesh_handle).unwrap();

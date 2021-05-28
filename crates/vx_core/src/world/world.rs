@@ -6,12 +6,12 @@ use building_blocks::{
     prelude::*,
 };
 
-use crate::{voxel::Voxel, Player};
+use crate::{config::GlobalConfig, voxel::Voxel, Player};
 
 use super::{
     chunk2global, global2chunk,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
-    CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH, DEFAULT_VIEW_DISTANCE,
+    CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH,
 };
 
 pub type ChunkMap = HashMap<IVec2, Entity>;
@@ -60,6 +60,7 @@ pub struct ChunkDataBundle {
 fn update_visible_chunks(
     player: Query<(&Transform, &Player)>,
     world: Res<ChunkMap>,
+    config: Res<GlobalConfig>,
     mut load_radius_chunks: bevy::ecs::system::Local<Vec<IVec2>>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
     mut despawn_requests: EventWriter<ChunkDespawnRequest>,
@@ -67,9 +68,9 @@ fn update_visible_chunks(
     if let Ok((transform, _)) = player.single() {
         let pos = global2chunk(transform.translation);
 
-        for dx in -DEFAULT_VIEW_DISTANCE..=DEFAULT_VIEW_DISTANCE {
-            for dy in -DEFAULT_VIEW_DISTANCE..=DEFAULT_VIEW_DISTANCE {
-                if dx.pow(2) + dy.pow(2) >= DEFAULT_VIEW_DISTANCE.pow(2) {
+        for dx in -config.render_distance..=config.render_distance {
+            for dy in -config.render_distance..=config.render_distance {
+                if dx.pow(2) + dy.pow(2) >= config.render_distance.pow(2) {
                     continue;
                 };
 
@@ -91,7 +92,7 @@ fn update_visible_chunks(
         for key in world.keys() {
             let delta = *key - pos;
             let entity = world.get(key).unwrap().clone();
-            if delta.x.abs().pow(2) + delta.y.abs().pow(2) > DEFAULT_VIEW_DISTANCE.pow(2) {
+            if delta.x.abs().pow(2) + delta.y.abs().pow(2) > config.render_distance.pow(2) {
                 despawn_requests.send(ChunkDespawnRequest(key.clone(), entity));
             }
         }
@@ -171,9 +172,10 @@ fn destroy_chunks(
 fn generate_chunks(
     mut query: Query<(&mut Chunk, &mut ChunkLoadState)>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
+    config: Res<GlobalConfig>,
     gen: Res<NoiseTerrainGenerator>,
 ) {
-    for _ in 0..(DEFAULT_VIEW_DISTANCE / 2) {
+    for _ in 0..(config.render_distance / 2) {
         if let Some(ev) = gen_requests.pop_back() {
             if let Ok((mut data, mut load_state)) = query.get_mut(ev.0) {
                 gen.generate(data.pos, 0, &mut data.block_data);

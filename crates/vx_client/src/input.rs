@@ -6,8 +6,8 @@ use bevy::{
 };
 use serde::{Deserialize, Serialize};
 use vx_core::{
-    config::{self, Configuration},
     platform::UserData,
+    utils::{self, Configuration},
 };
 
 use std::ops::{Deref, DerefMut};
@@ -101,7 +101,7 @@ fn save_bindings(
     userdata: Res<UserData>,
 ) {
     for _ in exit_events.iter() {
-        config::save_config_file(userdata, binds);
+        utils::save_config_file(userdata, binds);
         break;
     }
 }
@@ -113,7 +113,7 @@ impl Plugin for PlayerInputPlugin {
         app.init_resource::<Keybindings>()
             .init_resource::<Input<Action>>()
             .add_startup_system(
-                config::load_config_file::<Keybindings>
+                utils::load_config_file::<Keybindings>
                     .system()
                     .chain(load_bindings.system()),
             )
