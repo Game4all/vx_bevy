@@ -3,6 +3,7 @@ use bevy::prelude::*;
 pub mod platform;
 pub mod voxel;
 pub mod world;
+pub mod config;
 
 pub struct Player;
 

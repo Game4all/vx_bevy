@@ -1,15 +1,16 @@
 use bevy::{
+    app::AppExit,
     input::{keyboard::KeyboardInput, ElementState},
     prelude::*,
-    utils::tracing::{error, info},
     utils::HashMap,
 };
 use serde::{Deserialize, Serialize};
-use vx_core::platform::UserData;
+use vx_core::{
+    config::{self, Configuration},
+    platform::UserData,
+};
 
-use std::{fs::OpenOptions, path::PathBuf};
-
-const BINDINGS_FILENAME: &'static str = "bindings.ron";
+use std::ops::{Deref, DerefMut};
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub enum Action {
@@ -22,21 +23,42 @@ pub enum Action {
 }
 
 //todo: this is a super simple action map but it may be cool to move to something like **Kurinji** when it updates to bevy 0.5
-pub type KeybindingMap = HashMap<KeyCode, Action>;
+#[derive(Serialize, Deserialize)]
+pub struct Keybindings(HashMap<KeyCode, Action>);
 
-fn default_keybinds() -> KeybindingMap {
-    let mut keybinds = KeybindingMap::default();
-    keybinds.insert(KeyCode::Z, Action::WalkForward);
-    keybinds.insert(KeyCode::S, Action::WalkBackward);
-    keybinds.insert(KeyCode::A, Action::WalkLeft);
-    keybinds.insert(KeyCode::D, Action::WalkRight);
-    keybinds.insert(KeyCode::Escape, Action::CursorLock);
-    keybinds
+impl Deref for Keybindings {
+    type Target = HashMap<KeyCode, Action>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Keybindings {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Configuration for Keybindings {
+    const FILENAME: &'static str = "bindings.ron";
+}
+
+impl Default for Keybindings {
+    fn default() -> Self {
+        let mut keybinds = HashMap::default();
+        keybinds.insert(KeyCode::Z, Action::WalkForward);
+        keybinds.insert(KeyCode::S, Action::WalkBackward);
+        keybinds.insert(KeyCode::A, Action::WalkLeft);
+        keybinds.insert(KeyCode::D, Action::WalkRight);
+        keybinds.insert(KeyCode::Escape, Action::CursorLock);
+        Keybindings(keybinds)
+    }
 }
 
 fn update_actions(
     mut actions: ResMut<Input<Action>>,
-    keybinds: Res<KeybindingMap>,
+    keybinds: Res<Keybindings>,
     mut key_events: EventReader<KeyboardInput>,
 ) {
     actions.clear();
@@ -57,46 +79,45 @@ fn update_actions(
     }
 }
 
-fn load_bindings(userdata: Res<UserData>, mut user_bindings: ResMut<KeybindingMap>) {
-    info!("Loading user bindings");
-
-    let file = match userdata.open(
-        &PathBuf::from(BINDINGS_FILENAME),
-        OpenOptions::new().read(true),
-    ) {
-        Ok(file) => file,
-        Err(err) => {
-            error!("Failed to load user bindings: {:?}", err);
-            return;
+fn load_bindings(In(bindings): In<Option<Keybindings>>, mut user_bindings: ResMut<Keybindings>) {
+    match bindings {
+        Some(keybinds) => {
+            for key in keybinds.keys() {
+                if user_bindings.contains_key(key) {
+                    // unmap a key from the previous binding if an action in the loaded bindings uses that key
+                    user_bindings.remove(key);
+                }
+                user_bindings.insert(*key, *keybinds.get_key_value(key).unwrap().1);
+            }
+            info!("Bindings loaded successfully");
         }
-    };
-
-    let loaded_bindings: KeybindingMap = match ron::de::from_reader(file) {
-        Ok(data) => data,
-        Err(error) => {
-            error!("Failed to parse user bindings: {:?}", error);
-            return;
-        }
-    };
-
-    for key in loaded_bindings.keys() {
-        if user_bindings.contains_key(key) {
-            // unmap a key from the previous binding if an action in the loaded bindings uses that key
-            user_bindings.remove(key);
-        }
-        user_bindings.insert(*key, *loaded_bindings.get_key_value(key).unwrap().1);
+        None => {}
     }
+}
 
-    info!("User bindings loaded!");
+fn save_bindings(
+    binds: Res<Keybindings>,
+    mut exit_events: EventReader<AppExit>,
+    userdata: Res<UserData>,
+) {
+    for _ in exit_events.iter() {
+        config::save_config_file(userdata, binds);
+        break;
+    }
 }
 
 pub struct PlayerInputPlugin;
 
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource::<KeybindingMap>(default_keybinds())
+        app.init_resource::<Keybindings>()
             .init_resource::<Input<Action>>()
+            .add_startup_system(
+                config::load_config_file::<Keybindings>
+                    .system()
+                    .chain(load_bindings.system()),
+            )
             .add_system(update_actions.system())
-            .add_startup_system(load_bindings.system());
+            .add_system(save_bindings.system());
     }
 }
