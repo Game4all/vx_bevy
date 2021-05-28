@@ -60,13 +60,12 @@ pub struct ChunkDataBundle {
 fn update_visible_chunks(
     player: Query<(&Transform, &Player)>,
     world: Res<ChunkMap>,
+    mut load_radius_chunks: bevy::ecs::system::Local<Vec<IVec2>>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
     mut despawn_requests: EventWriter<ChunkDespawnRequest>,
 ) {
     if let Ok((transform, _)) = player.single() {
         let pos = global2chunk(transform.translation);
-
-        let mut load_radius_chunks: Vec<IVec2> = Vec::new();
 
         for dx in -DEFAULT_VIEW_DISTANCE..=DEFAULT_VIEW_DISTANCE {
             for dy in -DEFAULT_VIEW_DISTANCE..=DEFAULT_VIEW_DISTANCE {
@@ -85,7 +84,7 @@ fn update_visible_chunks(
 
         spawn_requests.send_batch(
             load_radius_chunks
-                .iter()
+                .drain(..)
                 .map(|c| ChunkSpawnRequest(c.clone())),
         );
 
