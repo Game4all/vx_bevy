@@ -8,21 +8,25 @@ use super::{CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH};
 use crate::voxel::Voxel;
 
 pub trait TerrainGenerator {
-    fn generate(&self, chunk_pos: IVec2, seed: i32, data: &mut Array3x1<Voxel>);
+    fn generate(&self, chunk_pos: IVec2, data: &mut Array3x1<Voxel>);
+
+    fn set_seed(&mut self, seed: i32);
 }
 
 #[derive(Default)]
-pub struct NoiseTerrainGenerator;
+pub struct NoiseTerrainGenerator {
+    seed: i32
+}
 
 impl TerrainGenerator for NoiseTerrainGenerator {
-    fn generate(&self, chunk_pos: IVec2, seed: i32, data: &mut Array3x1<Voxel>) {
+    fn generate(&self, chunk_pos: IVec2, data: &mut Array3x1<Voxel>) {
         let noise = simdnoise::NoiseBuilder::fbm_2d_offset(
             (chunk_pos.x * CHUNK_WIDTH) as f32,
             CHUNK_WIDTH as usize,
             (chunk_pos.y * CHUNK_DEPTH) as f32,
             CHUNK_DEPTH as usize,
         )
-        .with_seed(seed)
+        .with_seed(self.seed)
         .generate()
         .0;
 
@@ -73,5 +77,9 @@ impl TerrainGenerator for NoiseTerrainGenerator {
                 );
             }
         }
+    }
+
+    fn set_seed(&mut self, seed: i32) {
+        self.seed = seed;
     }
 }

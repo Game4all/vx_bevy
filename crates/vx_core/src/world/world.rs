@@ -178,7 +178,7 @@ fn generate_chunks(
     for _ in 0..(config.render_distance / 2) {
         if let Some(ev) = gen_requests.pop_back() {
             if let Ok((mut data, mut load_state)) = query.get_mut(ev.0) {
-                gen.generate(data.pos, 0, &mut data.block_data);
+                gen.generate(data.pos, &mut data.block_data);
                 *load_state = ChunkLoadState::Done;
             }
         }
