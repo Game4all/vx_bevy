@@ -1,6 +1,6 @@
 use std::{
-    fs::{self, File, OpenOptions, ReadDir},
-    io::Result,
+    fs::{self, OpenOptions, ReadDir},
+    io::{Read, Result, Write},
     path::{Path, PathBuf},
 };
 
@@ -42,7 +42,11 @@ impl UserData {
     }
 
     /// Opens the file at the given path with the specified open options.
-    pub fn open<T: AsRef<Path>>(&self, path: &T, open_options: &OpenOptions) -> Result<File> {
+    pub fn open<T: AsRef<Path>>(
+        &self,
+        path: &T,
+        open_options: &OpenOptions,
+    ) -> Result<impl Write + Read> {
         open_options.open(self.full_path(path))
     }
 
