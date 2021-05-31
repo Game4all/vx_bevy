@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 
 use bevy::{
+    pbr::AmbientLight,
     prelude::*,
     reflect::TypeUuid,
     render::{
@@ -135,6 +136,11 @@ impl Plugin for WorldRenderPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_event::<ChunkMeshingEvent>()
             .init_resource::<VecDeque<ChunkMeshingEvent>>()
+            .insert_resource(ClearColor(Color::hex("87CEEB").unwrap()))
+            .insert_resource(AmbientLight {
+                brightness: 0.4,
+                ..Default::default()
+            })
             .add_startup_system(setup_render_resources.system())
             .add_system(attach_chunk_render_bundle.system())
             .add_system(handle_chunk_ready_events.system())
