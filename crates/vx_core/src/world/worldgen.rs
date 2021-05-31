@@ -47,7 +47,7 @@ impl TerrainGenerator for NoiseTerrainGenerator {
 
                 let extent =
                     ExtentN::from_min_and_max(PointN([x, 0, z]), PointN([x, block_height, z]));
-                data.fill_extent(&extent, Voxel { attributes: color })
+                data.fill_extent(&extent, Voxel::Solid { attributes: color })
             }
         }
     }
