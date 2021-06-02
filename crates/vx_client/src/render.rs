@@ -17,7 +17,7 @@ use building_blocks::{
 };
 
 use vx_core::world::{chunk_extent, Chunk, ChunkReadyEvent};
-use vx_core::{config::GlobalConfig, voxel::ChunkMesh};
+use vx_core::{config::GlobalConfig, utils::ChunkMeshBuilder};
 
 struct ChunkMeshingEvent(Entity);
 
@@ -75,7 +75,7 @@ fn mesh_chunks_async(
                 let mut greedy_buffer = GreedyQuadsBuffer::new_with_y_up(extent.padded(1));
                 greedy_quads(&chunk.block_data, &extent.padded(1), &mut greedy_buffer);
 
-                let mut chunk_mesh = ChunkMesh::default();
+                let mut chunk_mesh = ChunkMeshBuilder::default();
 
                 for group in greedy_buffer.quad_groups.iter() {
                     for quad in group.quads.iter() {
@@ -87,7 +87,7 @@ fn mesh_chunks_async(
                     }
                 }
 
-                let ChunkMesh {
+                let ChunkMeshBuilder {
                     positions,
                     normals,
                     indices,
