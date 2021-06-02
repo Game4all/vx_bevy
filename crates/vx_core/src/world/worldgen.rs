@@ -31,6 +31,7 @@ impl TerrainGenerator for NoiseTerrainGenerator {
             CHUNK_DEPTH as usize,
         )
         .with_seed(self.seed)
+        .with_octaves(5)
         .generate()
         .0;
 
