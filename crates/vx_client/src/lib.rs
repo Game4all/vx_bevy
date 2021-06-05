@@ -11,6 +11,7 @@ impl PluginGroup for ClientPlugins {
         group
             .add(input::PlayerInputPlugin)
             .add(player::PlayerControllerPlugin)
-            .add(render::WorldRenderPlugin);
+            .add(render::WorldRenderPlugin)
+            .add(render::EnvLightingPlugin);
     }
 }
