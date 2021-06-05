@@ -20,7 +20,7 @@ use vx_core::{config::GlobalConfig, utils::ChunkMeshBuilder};
 
 struct ChunkMeshingEvent(Entity);
 
-pub const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
+const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 541458694767869);
 
 #[derive(Bundle)]
