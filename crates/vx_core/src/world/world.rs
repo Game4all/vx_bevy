@@ -5,6 +5,7 @@ use building_blocks::{
     core::{Extent3i, PointN},
     prelude::*,
 };
+use heron::prelude::*;
 
 use crate::{config::GlobalConfig, voxel::Voxel, Player};
 
@@ -52,6 +53,8 @@ pub struct ChunkDataBundle {
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub chunk: Chunk,
+    pub rigid_body: RigidBody,
+    pub collision_shape: CollisionShape,
 }
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
@@ -113,6 +116,8 @@ fn create_chunks(
                     block_data: Array3x1::fill(chunk_extent().padded(1), Voxel::default()),
                 },
                 global_transform: Default::default(),
+                rigid_body: RigidBody::Static,
+                collision_shape: CollisionShape::Sphere { radius: 16.0 },
             })
             .insert(ChunkLoadState::Load)
             .id();

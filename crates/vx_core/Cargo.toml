@@ -9,7 +9,11 @@ publish = false
 
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
+heron = "0.8.0"
 building-blocks = "0.6.0"
 simdnoise = "3.1.6"
 ron = "0.6.4"
 serde = "1.0.126"
+
+[replace]
+"bevy:0.5.0" = { git = "https://github.com/bevyengine/bevy", branch = "main" }

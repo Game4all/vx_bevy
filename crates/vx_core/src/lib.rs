@@ -1,10 +1,11 @@
 use bevy::prelude::*;
+use heron::prelude::*;
 
+pub mod config;
 pub mod platform;
+pub mod utils;
 pub mod voxel;
 pub mod world;
-pub mod config;
-pub mod utils;
 
 pub struct Player;
 
@@ -15,6 +16,7 @@ impl PluginGroup for CorePlugins {
         group
             .add(platform::PlatformPlugin)
             .add(config::ConfigurationPlugin)
+            .add(PhysicsPlugin::default())
             .add(world::WorldSimulationPlugin);
     }
 }
