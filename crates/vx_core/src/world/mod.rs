@@ -1,4 +1,5 @@
-use bevy::math::{IVec2, IVec3, Vec3};
+use bevy::prelude::*;
+use std::collections::VecDeque;
 
 mod world;
 pub use world::*;
@@ -34,4 +35,28 @@ pub fn chunk2global(chunk_coords: IVec2) -> Vec3 {
         0.,
         (chunk_coords.y * CHUNK_DEPTH) as f32,
     )
+}
+
+pub struct WorldSimulationPlugin;
+
+impl Plugin for WorldSimulationPlugin {
+    fn build(&self, app: &mut AppBuilder) {
+        app.init_resource::<ChunkMap>()
+            .init_resource::<VecDeque<ChunkLoadRequest>>()
+            //todo: move this to a struct or smth else
+            .init_resource::<worldgen::NoiseTerrainGenerator>()
+            // internal events
+            .add_event::<ChunkSpawnRequest>()
+            .add_event::<ChunkDespawnRequest>()
+            // public events
+            .add_event::<ChunkReadyEvent>()
+            // systems
+            .add_system(world::update_visible_chunks.system())
+            .add_system(world::create_chunks.system())
+            .add_system(world::load_chunk_data.system())
+            .add_system(world::generate_chunks.system())
+            .add_system(world::prepare_for_unload.system())
+            .add_system(world::mark_chunks_ready.system())
+            .add_system(world::destroy_chunks.system());
+    }
 }

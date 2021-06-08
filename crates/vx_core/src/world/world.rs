@@ -34,10 +34,10 @@ pub enum ChunkLoadState {
     Done,     // Chunk is done loading.
 }
 
-struct ChunkSpawnRequest(IVec2);
-struct ChunkDespawnRequest(IVec2, Entity);
+pub(crate) struct ChunkSpawnRequest(IVec2);
+pub(crate) struct ChunkDespawnRequest(IVec2, Entity);
 
-struct ChunkLoadRequest(Entity);
+pub(crate) struct ChunkLoadRequest(Entity);
 
 /// An event signaling that a chunk and its data have finished loading and are ready to be displayed.
 pub struct ChunkReadyEvent(pub IVec2, pub Entity);
@@ -60,7 +60,7 @@ pub struct ChunkDataBundle {
 /// Handles the visibility checking of the currently loaded chunks around the player.
 /// This will accordingly emit [`ChunkSpawnRequest`] events for chunks that need to be loaded since they entered the player's view distance and [`ChunkDespawnRequest`] for
 /// chunks out of the player's view distance.
-fn update_visible_chunks(
+pub(crate) fn update_visible_chunks(
     player: Query<(&Transform, &Player)>,
     world: Res<ChunkMap>,
     config: Res<GlobalConfig>,
@@ -102,7 +102,7 @@ fn update_visible_chunks(
     }
 }
 
-fn create_chunks(
+pub(crate) fn create_chunks(
     mut commands: Commands,
     mut spawn_events: EventReader<ChunkSpawnRequest>,
     mut world: ResMut<ChunkMap>,
@@ -130,7 +130,7 @@ fn create_chunks(
 //todo: run this on the IOTaskPool
 /// Loads from disk the chunk data of chunks with a current load state of [`ChunkLoadState::Load`].
 /// If the chunk wasn't generated, the [`ChunkLoadState`] of the chunk is set to [`ChunkLoadState::Generate`].
-fn load_chunk_data(
+pub(crate) fn load_chunk_data(
     mut chunks: Query<(&mut ChunkLoadState, Entity), Added<Chunk>>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
 ) {
@@ -146,7 +146,7 @@ fn load_chunk_data(
 }
 
 /// Marks the load state of all chunk that are queued to be unloaded as [`ChunkLoadState::Unload`]
-fn prepare_for_unload(
+pub(crate) fn prepare_for_unload(
     mut despawn_events: EventReader<ChunkDespawnRequest>,
     mut chunks: Query<&mut ChunkLoadState>,
 ) {
@@ -158,7 +158,7 @@ fn prepare_for_unload(
 }
 
 /// Destroys all the chunks that have a load state of [`ChunkLoadState::Unload`]
-fn destroy_chunks(
+pub(crate) fn destroy_chunks(
     mut commands: Commands,
     mut world: ResMut<ChunkMap>,
     chunks: Query<(&Chunk, &ChunkLoadState)>,
@@ -174,7 +174,7 @@ fn destroy_chunks(
     }
 }
 
-fn generate_chunks(
+pub(crate) fn generate_chunks(
     mut query: Query<(&mut Chunk, &mut ChunkLoadState)>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
     config: Res<GlobalConfig>,
@@ -190,7 +190,7 @@ fn generate_chunks(
     }
 }
 
-fn mark_chunks_ready(
+pub(crate) fn mark_chunks_ready(
     mut ready_events: EventWriter<ChunkReadyEvent>,
     chunks: Query<(&Chunk, &ChunkLoadState, Entity), Changed<ChunkLoadState>>,
 ) {
@@ -199,29 +199,5 @@ fn mark_chunks_ready(
             ChunkLoadState::Done => ready_events.send(ChunkReadyEvent(chunk.pos, entity)),
             _ => {}
         }
-    }
-}
-
-pub struct WorldSimulationPlugin;
-
-impl Plugin for WorldSimulationPlugin {
-    fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<ChunkMap>()
-            .init_resource::<VecDeque<ChunkLoadRequest>>()
-            //todo: move this to a struct or smth else
-            .init_resource::<NoiseTerrainGenerator>()
-            // internal events
-            .add_event::<ChunkSpawnRequest>()
-            .add_event::<ChunkDespawnRequest>()
-            // public events
-            .add_event::<ChunkReadyEvent>()
-            // systems
-            .add_system(update_visible_chunks.system())
-            .add_system(create_chunks.system())
-            .add_system(load_chunk_data.system())
-            .add_system(generate_chunks.system())
-            .add_system(prepare_for_unload.system())
-            .add_system(mark_chunks_ready.system())
-            .add_system(destroy_chunks.system());
     }
 }
