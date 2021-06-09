@@ -1,4 +1,7 @@
-use std::collections::VecDeque;
+use std::{
+    collections::VecDeque,
+    ops::{Deref, DerefMut},
+};
 
 use bevy::{
     prelude::*,
@@ -33,6 +36,33 @@ pub struct ChunkRenderBundle {
     pub render_pipelines: RenderPipelines,
 }
 
+#[inline]
+fn padded_chunk_extent() -> Extent3i {
+    chunk_extent().padded(1)
+}
+
+struct ReusableGreedyQuadsBuffer(GreedyQuadsBuffer);
+
+impl Deref for ReusableGreedyQuadsBuffer {
+    type Target = GreedyQuadsBuffer;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for ReusableGreedyQuadsBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl FromWorld for ReusableGreedyQuadsBuffer {
+    fn from_world(_: &mut World) -> Self {
+        Self(GreedyQuadsBuffer::new_with_y_up(padded_chunk_extent()))
+    }
+}
+
 /// Attach to the newly created chunk entities, the render components.
 fn attach_chunk_render_bundle(
     chunks: Query<Entity, Added<Chunk>>,
@@ -63,16 +93,17 @@ fn mesh_chunks_async(
     mut chunks: Query<(&Chunk, &mut Visible, &Handle<Mesh>)>,
     mut meshing_events: ResMut<VecDeque<ChunkMeshingEvent>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut greedy_buffer: bevy::ecs::system::Local<ReusableGreedyQuadsBuffer>,
     config: Res<GlobalConfig>,
 ) {
     for _ in 0..(config.render_distance / 2) {
         if let Some(meshing_event) = meshing_events.pop_back() {
             if let Ok((chunk, mut visibility, mesh_handle)) = chunks.get_mut(meshing_event.0) {
                 let mesh = meshes.get_mut(mesh_handle).unwrap();
-                let extent = chunk_extent();
+                let extent = padded_chunk_extent();
 
-                let mut greedy_buffer = GreedyQuadsBuffer::new_with_y_up(extent.padded(1));
-                greedy_quads(&chunk.block_data, &extent.padded(1), &mut greedy_buffer);
+                greedy_buffer.reset(extent);
+                greedy_quads(&chunk.block_data, &extent, &mut greedy_buffer);
 
                 let mut chunk_mesh = ChunkMeshBuilder::default();
 
