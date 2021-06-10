@@ -167,7 +167,7 @@ pub(crate) fn destroy_chunks(
         match load_state {
             ChunkLoadState::Unload => {
                 let entity = world.remove(&chunk.pos).unwrap();
-                commands.entity(entity).despawn();
+                commands.entity(entity).despawn_recursive();
             }
             _ => {}
         }

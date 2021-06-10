@@ -35,12 +35,16 @@ impl TerrainGenerator for NoiseTerrainGenerator {
         .generate()
         .0;
 
+        data.fill_extent(
+            &ExtentN::from_min_and_max(PointN([0; 3]), PointN([CHUNK_WIDTH, 4, CHUNK_DEPTH])),
+            Voxel::Fluid {
+                attributes: [102, 133, 254, 255],
+            },
+        );
+
         for x in 0..CHUNK_WIDTH {
             for z in 0..CHUNK_DEPTH {
-                let original_height = heightmap
-                    .get((z * CHUNK_WIDTH + x) as usize)
-                    .unwrap()
-                    .abs();
+                let original_height = heightmap.get((z * CHUNK_WIDTH + x) as usize).unwrap().abs();
 
                 let height = original_height * 8.0;
                 let block_height = (original_height * CHUNK_HEIGHT as f32) as i32;
@@ -56,11 +60,7 @@ impl TerrainGenerator for NoiseTerrainGenerator {
 
 impl NoiseTerrainGenerator {
     fn get_color_for_height(&self, height: f32) -> [u8; 4] {
-        if height < 0.3 {
-            [74, 97, 210, 255]
-        } else if height < 0.4 {
-            [102, 133, 254, 255]
-        } else if height < 0.45 {
+        if height < 0.45 {
             [96, 200, 102, 255]
         } else if height < 0.65 {
             [64, 152, 72, 255]

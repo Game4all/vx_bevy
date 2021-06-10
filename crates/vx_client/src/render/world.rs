@@ -71,26 +71,49 @@ fn attach_chunk_render_bundle(
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     for ent in chunks.iter() {
-        commands.entity(ent).insert_bundle(ChunkRenderBundle {
-            mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
-            material: mats.add(Default::default()),
-            render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
-                TERRAIN_PIPELINE_HANDLE.typed(),
-            )]),
-            draw: Default::default(),
-            main_pass: Default::default(),
-            visible: Visible {
-                is_visible: false,
-                is_transparent: false,
-            },
-        });
+        commands
+            .entity(ent)
+            .insert_bundle(ChunkRenderBundle {
+                mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
+                material: mats.add(Default::default()),
+                render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
+                    TERRAIN_PIPELINE_HANDLE.typed(),
+                )]),
+                draw: Default::default(),
+                main_pass: Default::default(),
+                visible: Visible {
+                    is_visible: false,
+                    is_transparent: false,
+                },
+            })
+            .with_children(|parent| {
+                parent
+                    .spawn_bundle(ChunkRenderBundle {
+                        mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
+                        material: mats.add(Default::default()),
+                        render_pipelines: RenderPipelines::from_pipelines(vec![
+                            RenderPipeline::new(TERRAIN_PIPELINE_HANDLE.typed()),
+                        ]),
+                        draw: Default::default(),
+                        main_pass: Default::default(),
+                        visible: Visible {
+                            is_visible: false,
+                            is_transparent: false,
+                        },
+                    })
+                    .insert(GlobalTransform::default())
+                    .insert(Transform::default());
+            });
     }
 }
 
 //todo: run this asynchronously
 //todo: limit concurrency
 fn mesh_chunks_async(
-    mut chunks: Query<(&Chunk, &mut Visible, &Handle<Mesh>)>,
+    mut chunks: QuerySet<(
+        Query<(&Chunk, &mut Visible, &Handle<Mesh>, &Children)>,
+        Query<(&mut Visible, &Handle<Mesh>)>,
+    )>,
     mut meshing_events: ResMut<VecDeque<ChunkMeshingEvent>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut greedy_buffer: bevy::ecs::system::Local<ReusableGreedyQuadsBuffer>,
@@ -98,9 +121,11 @@ fn mesh_chunks_async(
 ) {
     for _ in 0..(config.render_distance / 2) {
         if let Some(meshing_event) = meshing_events.pop_back() {
-            if let Ok((chunk, mut visibility, mesh_handle)) = chunks.get_mut(meshing_event.0) {
-                let mesh = meshes.get_mut(mesh_handle).unwrap();
+            if let Ok((chunk, mut terrain_visibility, mesh_handle, children)) =
+                chunks.q0_mut().get_mut(meshing_event.0)
+            {
                 let extent = padded_chunk_extent();
+                let fluid_mesh_entity = children.first().unwrap().clone();
 
                 greedy_buffer.reset(extent);
                 greedy_quads(&chunk.block_data, &extent, &mut greedy_buffer);
@@ -123,15 +148,38 @@ fn mesh_chunks_async(
                     indices,
                     colors,
                     uv,
+                    fluid_positions,
+                    fluid_normals,
+                    fluid_indices,
+                    fluid_colors,
+                    fluid_uv,
                 } = chunk_mesh;
 
-                mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-                mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-                mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, uv);
-                mesh.set_attribute(Mesh::ATTRIBUTE_COLOR, colors);
-                mesh.set_indices(Some(Indices::U32(indices)));
+                {
+                    let terrain_mesh = meshes.get_mut(mesh_handle).unwrap();
 
-                visibility.is_visible = true;
+                    terrain_mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+                    terrain_mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+                    terrain_mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, uv);
+                    terrain_mesh.set_attribute(Mesh::ATTRIBUTE_COLOR, colors);
+                    terrain_mesh.set_indices(Some(Indices::U32(indices)));
+
+                    terrain_visibility.is_visible = true;
+                }
+
+                if let Ok((mut fluid_visibility, mesh_handle)) =
+                    chunks.q1_mut().get_mut(fluid_mesh_entity)
+                {
+                    let fluid_mesh = meshes.get_mut(mesh_handle).unwrap();
+
+                    fluid_mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, fluid_positions);
+                    fluid_mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, fluid_normals);
+                    fluid_mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, fluid_uv);
+                    fluid_mesh.set_attribute(Mesh::ATTRIBUTE_COLOR, fluid_colors);
+                    fluid_mesh.set_indices(Some(Indices::U32(fluid_indices)));
+
+                    fluid_visibility.is_visible = true;
+                }
             }
         }
     }
