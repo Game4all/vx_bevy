@@ -60,7 +60,9 @@ impl TerrainGenerator for NoiseTerrainGenerator {
 
 impl NoiseTerrainGenerator {
     fn get_color_for_height(&self, height: f32) -> [u8; 4] {
-        if height < 0.45 {
+        if height < 0.30 {
+            [236, 230, 214, 255]
+        } else if height < 0.45 {
             [96, 200, 102, 255]
         } else if height < 0.65 {
             [64, 152, 72, 255]

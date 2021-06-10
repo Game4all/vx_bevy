@@ -23,7 +23,7 @@ layout(set = 2, binding = 0) uniform Transform {
     mat4 Model;
 };
 
-const float FLUID_HEIGHT_DELTA = -0.2;
+const float FLUID_HEIGHT_DELTA = -0.27;
 
 void main() {
     vec3 fluid_vertex_pos = vec3(Vertex_Position.x, max(Vertex_Position.y + FLUID_HEIGHT_DELTA, 0), Vertex_Position.z);
