@@ -26,6 +26,9 @@ struct ChunkMeshingEvent(Entity);
 const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 541458694767869);
 
+const FLUID_PIPELINE_HANDLE: HandleUntyped =
+    HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 494984949444979);
+
 #[derive(Bundle)]
 pub struct ChunkRenderBundle {
     pub mesh: Handle<Mesh>,
@@ -92,13 +95,13 @@ fn attach_chunk_render_bundle(
                         mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
                         material: mats.add(Default::default()),
                         render_pipelines: RenderPipelines::from_pipelines(vec![
-                            RenderPipeline::new(TERRAIN_PIPELINE_HANDLE.typed()),
+                            RenderPipeline::new(FLUID_PIPELINE_HANDLE.typed()),
                         ]),
                         draw: Default::default(),
                         main_pass: Default::default(),
                         visible: Visible {
                             is_visible: false,
-                            is_transparent: false,
+                            is_transparent: true,
                         },
                     })
                     .insert(GlobalTransform::default())
@@ -204,6 +207,14 @@ fn setup_render_resources(
         PipelineDescriptor::default_config(ShaderStages {
             vertex: asset_server.load("shaders/terrain_pbr.vert"),
             fragment: Some(asset_server.load("shaders/terrain_pbr.frag")),
+        }),
+    );
+
+    let _ = pipelines.set_untracked(
+        FLUID_PIPELINE_HANDLE,
+        PipelineDescriptor::default_config(ShaderStages {
+            vertex: asset_server.load("shaders/fluid_pbr.vert"),
+            fragment: Some(asset_server.load("shaders/fluid_pbr.frag")),
         }),
     );
 }
