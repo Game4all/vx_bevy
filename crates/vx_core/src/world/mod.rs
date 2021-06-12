@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use building_blocks::core::{Extent3i, PointN};
 use std::collections::VecDeque;
 
 mod world;
@@ -9,6 +10,14 @@ mod worldgen;
 pub const CHUNK_HEIGHT: i32 = 128;
 pub const CHUNK_WIDTH: i32 = 16;
 pub const CHUNK_DEPTH: i32 = 16;
+
+#[inline]
+pub fn chunk_extent() -> Extent3i {
+    Extent3i::from_min_and_shape(
+        PointN([0; 3]),
+        PointN([CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH]),
+    )
+}
 
 /// Gets the corresponding chunks coordinates from a point in global space.
 pub fn global2chunk(position: Vec3) -> IVec2 {

@@ -1,29 +1,17 @@
 use std::collections::VecDeque;
 
 use bevy::{math::IVec2, prelude::*, utils::HashMap};
-use building_blocks::{
-    core::{Extent3i, PointN},
-    prelude::*,
-};
+use building_blocks::prelude::*;
 use heron::prelude::*;
 
 use crate::{config::GlobalConfig, voxel::Voxel, Player};
 
 use super::{
-    chunk2global, global2chunk,
+    chunk2global, chunk_extent, global2chunk,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
-    CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH,
 };
 
 pub type ChunkMap = HashMap<IVec2, Entity>;
-
-#[inline]
-pub fn chunk_extent() -> Extent3i {
-    Extent3i::from_min_and_shape(
-        PointN([0; 3]),
-        PointN([CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH]),
-    )
-}
 
 /// A component tracking the current loading state of a chunk.
 pub enum ChunkLoadState {
