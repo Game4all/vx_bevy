@@ -11,7 +11,7 @@ use super::{
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
 };
 
-pub type ChunkMap = HashMap<IVec2, Entity>;
+pub type ChunkEntityMap = HashMap<IVec2, Entity>;
 
 /// A component tracking the current loading state of a chunk.
 pub enum ChunkLoadState {
@@ -50,7 +50,7 @@ pub struct ChunkDataBundle {
 /// chunks out of the player's view distance.
 pub(crate) fn update_visible_chunks(
     player: Query<(&Transform, &Player)>,
-    world: Res<ChunkMap>,
+    world: Res<ChunkEntityMap>,
     config: Res<GlobalConfig>,
     mut load_radius_chunks: bevy::ecs::system::Local<Vec<IVec2>>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
@@ -93,7 +93,7 @@ pub(crate) fn update_visible_chunks(
 pub(crate) fn create_chunks(
     mut commands: Commands,
     mut spawn_events: EventReader<ChunkSpawnRequest>,
-    mut world: ResMut<ChunkMap>,
+    mut world: ResMut<ChunkEntityMap>,
 ) {
     for creation_request in spawn_events.iter() {
         let entity = commands
@@ -148,7 +148,7 @@ pub(crate) fn prepare_for_unload(
 /// Destroys all the chunks that have a load state of [`ChunkLoadState::Unload`]
 pub(crate) fn destroy_chunks(
     mut commands: Commands,
-    mut world: ResMut<ChunkMap>,
+    mut world: ResMut<ChunkEntityMap>,
     chunks: Query<(&Chunk, &ChunkLoadState)>,
 ) {
     for (chunk, load_state) in chunks.iter() {
