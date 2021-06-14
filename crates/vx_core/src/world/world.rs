@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use bevy::{math::IVec2, prelude::*, utils::HashMap};
+use bevy::{math::IVec2, prelude::*, render::pipeline::PrimitiveTopology, utils::HashMap};
 use building_blocks::prelude::*;
 use heron::prelude::*;
 
@@ -9,6 +9,7 @@ use crate::{config::GlobalConfig, voxel::Voxel, Player};
 use super::{
     chunk2global, chunk_extent, global2chunk,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
+    ChunkMeshInfo,
 };
 
 pub type ChunkEntityMap = HashMap<IVec2, Entity>;
@@ -43,6 +44,7 @@ pub struct ChunkDataBundle {
     pub chunk: Chunk,
     pub rigid_body: RigidBody,
     pub collision_shape: CollisionShape,
+    pub mesh_info: ChunkMeshInfo,
 }
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
@@ -94,6 +96,7 @@ pub(crate) fn create_chunks(
     mut commands: Commands,
     mut spawn_events: EventReader<ChunkSpawnRequest>,
     mut world: ResMut<ChunkEntityMap>,
+    mut meshes: ResMut<Assets<Mesh>>,
 ) {
     for creation_request in spawn_events.iter() {
         let entity = commands
@@ -106,6 +109,10 @@ pub(crate) fn create_chunks(
                 global_transform: Default::default(),
                 rigid_body: RigidBody::Static,
                 collision_shape: CollisionShape::Sphere { radius: 16.0 },
+                mesh_info: ChunkMeshInfo {
+                    fluid_mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
+                    chunk_mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
+                },
             })
             .insert(ChunkLoadState::Load)
             .id();

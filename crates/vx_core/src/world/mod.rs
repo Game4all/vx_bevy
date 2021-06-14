@@ -7,9 +7,17 @@ pub use world::*;
 
 mod worldgen;
 
+mod meshing;
+use meshing::*;
+
 pub const CHUNK_HEIGHT: i32 = 128;
 pub const CHUNK_WIDTH: i32 = 16;
 pub const CHUNK_DEPTH: i32 = 16;
+
+pub struct ChunkMeshInfo {
+    pub fluid_mesh: Handle<Mesh>,
+    pub chunk_mesh: Handle<Mesh>,
+}
 
 #[inline]
 pub fn chunk_extent() -> Extent3i {
@@ -57,6 +65,7 @@ impl Plugin for WorldSimulationPlugin {
             // internal events
             .add_event::<ChunkSpawnRequest>()
             .add_event::<ChunkDespawnRequest>()
+            .init_resource::<VecDeque<ChunkMeshingRequest>>()
             // public events
             .add_event::<ChunkReadyEvent>()
             // systems
@@ -66,6 +75,8 @@ impl Plugin for WorldSimulationPlugin {
             .add_system(world::generate_chunks.system())
             .add_system(world::prepare_for_unload.system())
             .add_system(world::mark_chunks_ready.system())
-            .add_system(world::destroy_chunks.system());
+            .add_system(world::destroy_chunks.system())
+            .add_system(meshing::handle_chunk_ready_events.system())
+            .add_system(meshing::mesh_chunks.system());
     }
 }
