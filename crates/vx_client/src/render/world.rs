@@ -8,7 +8,7 @@ use bevy::{
     },
 };
 
-use vx_core::world::{Chunk, ChunkMeshInfo};
+use vx_core::world::{ChunkInfo, ChunkMeshInfo};
 
 const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 541458694767869);
@@ -28,7 +28,7 @@ pub struct ChunkRenderBundle {
 
 /// Attach to the newly created chunk entities, the render components.
 fn attach_chunk_render_bundle(
-    chunks: Query<(&ChunkMeshInfo, Entity), Added<Chunk>>,
+    chunks: Query<(&ChunkMeshInfo, Entity), Added<ChunkInfo>>,
     mut commands: Commands,
     mut mats: ResMut<Assets<StandardMaterial>>,
 ) {

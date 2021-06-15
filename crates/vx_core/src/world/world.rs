@@ -9,8 +9,8 @@ use crate::{config::GlobalConfig, voxel::Voxel, Player};
 use super::{
     chunk2global, chunk_extent, global2chunk,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
-    Chunk, ChunkDataBundle, ChunkDespawnRequest, ChunkEntityMap, ChunkLoadRequest, ChunkLoadState,
-    ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
+    ChunkDataBundle, ChunkDespawnRequest, ChunkEntityMap, ChunkInfo, ChunkLoadRequest,
+    ChunkLoadState, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
 };
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
@@ -68,17 +68,17 @@ pub(crate) fn create_chunks(
         let entity = commands
             .spawn_bundle(ChunkDataBundle {
                 transform: Transform::from_translation(chunk2global(creation_request.0)),
-                chunk: Chunk {
+                chunk_info: ChunkInfo {
                     pos: creation_request.0,
                     block_data: Array3x1::fill(chunk_extent().padded(1), Voxel::default()),
                 },
-                global_transform: Default::default(),
-                rigid_body: RigidBody::Static,
-                collision_shape: CollisionShape::Sphere { radius: 16.0 },
                 mesh_info: ChunkMeshInfo {
                     fluid_mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
                     chunk_mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
                 },
+                global_transform: Default::default(),
+                rigid_body: RigidBody::Static,
+                collision_shape: CollisionShape::Sphere { radius: 16.0 },
             })
             .insert(ChunkLoadState::Load)
             .id();
@@ -92,7 +92,7 @@ pub(crate) fn create_chunks(
 /// Loads from disk the chunk data of chunks with a current load state of [`ChunkLoadState::Load`].
 /// If the chunk wasn't generated, the [`ChunkLoadState`] of the chunk is set to [`ChunkLoadState::Generate`].
 pub(crate) fn load_chunk_data(
-    mut chunks: Query<(&mut ChunkLoadState, Entity), Added<Chunk>>,
+    mut chunks: Query<(&mut ChunkLoadState, Entity), Added<ChunkInfo>>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
 ) {
     for (mut load_state, entity) in chunks.iter_mut() {
@@ -122,7 +122,7 @@ pub(crate) fn prepare_for_unload(
 pub(crate) fn destroy_chunks(
     mut commands: Commands,
     mut world: ResMut<ChunkEntityMap>,
-    chunks: Query<(&Chunk, &ChunkLoadState)>,
+    chunks: Query<(&ChunkInfo, &ChunkLoadState)>,
 ) {
     for (chunk, load_state) in chunks.iter() {
         match load_state {
@@ -136,7 +136,7 @@ pub(crate) fn destroy_chunks(
 }
 
 pub(crate) fn generate_chunks(
-    mut query: Query<(&mut Chunk, &mut ChunkLoadState)>,
+    mut query: Query<(&mut ChunkInfo, &mut ChunkLoadState)>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
     config: Res<GlobalConfig>,
     gen: Res<NoiseTerrainGenerator>,
@@ -153,7 +153,7 @@ pub(crate) fn generate_chunks(
 
 pub(crate) fn mark_chunks_ready(
     mut ready_events: EventWriter<ChunkReadyEvent>,
-    chunks: Query<(&Chunk, &ChunkLoadState, Entity), Changed<ChunkLoadState>>,
+    chunks: Query<(&ChunkInfo, &ChunkLoadState, Entity), Changed<ChunkLoadState>>,
 ) {
     for (chunk, load_state, entity) in chunks.iter() {
         match load_state {

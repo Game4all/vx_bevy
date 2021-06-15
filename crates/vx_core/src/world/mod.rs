@@ -34,7 +34,7 @@ pub(crate) struct ChunkLoadRequest(Entity);
 pub struct ChunkReadyEvent(pub IVec2, pub Entity);
 
 /// A component describing a chunk.
-pub struct Chunk {
+pub struct ChunkInfo {
     pub pos: IVec2,
     pub block_data: Array3x1<crate::voxel::Voxel>,
 }
@@ -43,10 +43,10 @@ pub struct Chunk {
 pub struct ChunkDataBundle {
     pub transform: Transform,
     pub global_transform: GlobalTransform,
-    pub chunk: Chunk,
+    pub chunk_info: ChunkInfo,
+    pub mesh_info: ChunkMeshInfo,
     pub rigid_body: RigidBody,
     pub collision_shape: CollisionShape,
-    pub mesh_info: ChunkMeshInfo,
 }
 
 pub struct ChunkMeshInfo {
