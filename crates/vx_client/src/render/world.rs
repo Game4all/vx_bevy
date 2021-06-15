@@ -70,10 +70,21 @@ fn attach_chunk_render_bundle(
 }
 
 fn update_meshes_visibility(
-    mut chunks: Query<(&mut Visible, Option<&Children>), Changed<ChunkMeshInfo>>,
+    mut chunks: QuerySet<(
+        Query<(Entity, &Children), Changed<ChunkMeshInfo>>,
+        Query<&mut Visible>,
+    )>,
+    mut entities: bevy::ecs::system::Local<Vec<Entity>>,
 ) {
-    for (mut terrain_visible, _) in chunks.iter_mut() {
-        terrain_visible.is_visible = true;
+    for (entity, children) in chunks.q0().iter() {
+        entities.push(entity);
+        entities.push(children.first().unwrap().clone());
+    }
+
+    for entity in entities.drain(..) {
+        if let Ok(mut visibility) = chunks.q1_mut().get_mut(entity) {
+            visibility.is_visible = true;
+        }
     }
 }
 
