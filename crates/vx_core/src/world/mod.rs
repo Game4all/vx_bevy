@@ -18,7 +18,7 @@ pub const CHUNK_WIDTH: i32 = 16;
 pub const CHUNK_DEPTH: i32 = 16;
 
 pub type ChunkEntityMap = HashMap<IVec2, Entity>;
-pub type WorldChunkMap = HashMap<IVec2, Array3x1<crate::voxel::Voxel>>;
+pub type ChunkMap = HashMap<IVec2, Array3x1<crate::voxel::Voxel>>;
 
 /// A component tracking the current loading state of a chunk.
 pub enum ChunkLoadState {
@@ -70,7 +70,7 @@ pub struct WorldSimulationPlugin;
 impl Plugin for WorldSimulationPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<ChunkEntityMap>()
-            .init_resource::<WorldChunkMap>()
+            .init_resource::<ChunkMap>()
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             //todo: move this to a struct or smth else
             .init_resource::<worldgen::NoiseTerrainGenerator>()

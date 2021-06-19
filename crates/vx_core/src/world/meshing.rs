@@ -16,7 +16,7 @@ use building_blocks::{
 
 use crate::utils::ChunkMeshBuilder;
 
-use super::{chunk_extent, ChunkInfo, ChunkMeshInfo, ChunkReadyEvent, WorldChunkMap};
+use super::{chunk_extent, ChunkInfo, ChunkMeshInfo, ChunkReadyEvent, ChunkMap};
 
 pub(crate) struct ChunkMeshingRequest(Entity);
 
@@ -51,7 +51,7 @@ pub(crate) fn mesh_chunks(
     mut chunks: Query<(&ChunkInfo, &mut ChunkMeshInfo)>,
     mut meshing_requests: ResMut<VecDeque<ChunkMeshingRequest>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    chunk_map: ResMut<WorldChunkMap>,
+    chunk_map: ResMut<ChunkMap>,
     task_pool: Res<ComputeTaskPool>,
 ) {
     let mesh_results = task_pool.scope(|scope| {

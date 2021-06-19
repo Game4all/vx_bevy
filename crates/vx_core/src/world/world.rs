@@ -10,7 +10,7 @@ use super::{
     chunk2global, chunk_extent, global2chunk,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
     ChunkDataBundle, ChunkDespawnRequest, ChunkEntityMap, ChunkInfo, ChunkLoadRequest,
-    ChunkLoadState, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest, WorldChunkMap,
+    ChunkLoadState, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest, ChunkMap,
 };
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
@@ -63,7 +63,7 @@ pub(crate) fn create_chunks(
     mut spawn_events: EventReader<ChunkSpawnRequest>,
     mut entities_map: ResMut<ChunkEntityMap>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut chunk_map: ResMut<WorldChunkMap>,
+    mut chunk_map: ResMut<ChunkMap>,
 ) {
     for creation_request in spawn_events.iter() {
         let entity = commands
@@ -142,7 +142,7 @@ pub(crate) fn destroy_chunks(
 pub(crate) fn generate_chunks(
     mut query: Query<(&ChunkInfo, &mut ChunkLoadState)>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
-    mut chunk_map: ResMut<WorldChunkMap>,
+    mut chunk_map: ResMut<ChunkMap>,
     config: Res<GlobalConfig>,
     gen: Res<NoiseTerrainGenerator>,
 ) {
