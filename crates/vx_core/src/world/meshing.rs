@@ -12,7 +12,7 @@ use building_blocks::{
 
 use crate::{config::GlobalConfig, utils::ChunkMeshBuilder};
 
-use super::{chunk_extent, ChunkInfo, ChunkMeshInfo, ChunkReadyEvent};
+use super::{chunk_extent, ChunkInfo, ChunkMeshInfo, ChunkReadyEvent, WorldChunkMap};
 
 pub(crate) struct ChunkMeshingRequest(Entity);
 
@@ -47,16 +47,18 @@ pub(crate) fn mesh_chunks(
     mut chunks: Query<(&ChunkInfo, &mut ChunkMeshInfo)>,
     mut meshing_requests: ResMut<VecDeque<ChunkMeshingRequest>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    chunk_map: ResMut<WorldChunkMap>,
     mut greedy_buffer: bevy::ecs::system::Local<ReusableGreedyQuadsBuffer>,
     config: Res<GlobalConfig>,
 ) {
     for _ in 0..(config.render_distance / 2) {
         if let Some(meshing_event) = meshing_requests.pop_back() {
             if let Ok((chunk_info, mut mesh_info)) = chunks.get_mut(meshing_event.0) {
+                let chunk_data = chunk_map.get(&chunk_info.pos).unwrap();
                 let extent = padded_chunk_extent();
 
                 greedy_buffer.reset(extent);
-                greedy_quads(&chunk_info.block_data, &extent, &mut greedy_buffer);
+                greedy_quads(chunk_data, &extent, &mut greedy_buffer);
 
                 let mut chunk_mesh_builder = ChunkMeshBuilder::default();
 
@@ -65,7 +67,7 @@ pub(crate) fn mesh_chunks(
                         chunk_mesh_builder.add_quad_to_mesh(
                             &group.face,
                             quad,
-                            &chunk_info.block_data.get(quad.minimum),
+                            &chunk_data.get(quad.minimum),
                         );
                     }
                 }
