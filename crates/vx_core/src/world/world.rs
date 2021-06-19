@@ -10,7 +10,7 @@ use super::{
     chunk2global, chunk_extent, global2chunk,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
     ChunkDataBundle, ChunkDespawnRequest, ChunkEntityMap, ChunkInfo, ChunkLoadRequest,
-    ChunkLoadState, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest, ChunkMap,
+    ChunkLoadState, ChunkMap, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
 };
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
@@ -126,6 +126,7 @@ pub(crate) fn prepare_for_unload(
 pub(crate) fn destroy_chunks(
     mut commands: Commands,
     mut world: ResMut<ChunkEntityMap>,
+    mut chunk_map: ResMut<ChunkMap>,
     chunks: Query<(&ChunkInfo, &ChunkLoadState)>,
 ) {
     for (chunk, load_state) in chunks.iter() {
@@ -133,6 +134,7 @@ pub(crate) fn destroy_chunks(
             ChunkLoadState::Unload => {
                 let entity = world.remove(&chunk.pos).unwrap();
                 commands.entity(entity).despawn_recursive();
+                chunk_map.remove(&chunk.pos).unwrap();
             }
             _ => {}
         }
@@ -149,9 +151,10 @@ pub(crate) fn generate_chunks(
     for _ in 0..(config.render_distance / 2) {
         if let Some(ev) = gen_requests.pop_back() {
             if let Ok((data, mut load_state)) = query.get_mut(ev.0) {
-                let mut chunk_data = chunk_map.get_mut(&data.pos).unwrap();
-                gen.generate(data.pos, &mut chunk_data);
-                *load_state = ChunkLoadState::Done;
+                if let Some(mut chunk_data) = chunk_map.get_mut(&data.pos) {
+                    gen.generate(data.pos, &mut chunk_data);
+                    *load_state = ChunkLoadState::Done;
+                }
             }
         }
     }
