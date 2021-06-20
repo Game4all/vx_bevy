@@ -1,8 +1,5 @@
-use bevy::{prelude::*, utils::HashMap};
-use building_blocks::{
-    core::{Extent3i, PointN},
-    storage::Array3x1,
-};
+use bevy::prelude::*;
+use building_blocks::core::{Extent3i, PointN};
 use heron::{CollisionShape, RigidBody};
 use std::collections::VecDeque;
 
@@ -10,15 +7,15 @@ mod meshing;
 mod world;
 mod worldgen;
 
+mod chunk_map;
+pub use chunk_map::*;
+
 mod coords;
 pub use coords::*;
 
 pub const CHUNK_HEIGHT: i32 = 128;
 pub const CHUNK_WIDTH: i32 = 16;
 pub const CHUNK_DEPTH: i32 = 16;
-
-pub type ChunkEntityMap = HashMap<IVec2, Entity>;
-pub type ChunkMap = HashMap<IVec2, Array3x1<crate::voxel::Voxel>>;
 
 /// A component tracking the current loading state of a chunk.
 pub enum ChunkLoadState {
@@ -39,7 +36,7 @@ pub struct ChunkReadyEvent(pub IVec2, pub Entity);
 
 /// A component describing a chunk.
 pub struct ChunkInfo {
-    pub pos: IVec2
+    pub pos: IVec2,
 }
 
 #[derive(Bundle)]
@@ -69,8 +66,7 @@ pub struct WorldSimulationPlugin;
 
 impl Plugin for WorldSimulationPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<ChunkEntityMap>()
-            .init_resource::<ChunkMap>()
+        app.init_resource::<ChunkMap>()
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             //todo: move this to a struct or smth else
             .init_resource::<worldgen::NoiseTerrainGenerator>()

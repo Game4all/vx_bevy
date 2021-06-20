@@ -9,8 +9,8 @@ use crate::{config::GlobalConfig, voxel::Voxel, Player};
 use super::{
     chunk2global, chunk_extent, global2chunk,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
-    ChunkDataBundle, ChunkDespawnRequest, ChunkEntityMap, ChunkInfo, ChunkLoadRequest,
-    ChunkLoadState, ChunkMap, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
+    ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMap,
+    ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
 };
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
@@ -18,7 +18,7 @@ use super::{
 /// chunks out of the player's view distance.
 pub(crate) fn update_visible_chunks(
     player: Query<(&Transform, &Player)>,
-    world: Res<ChunkEntityMap>,
+    chunk_map: Res<ChunkMap>,
     config: Res<GlobalConfig>,
     mut load_radius_chunks: bevy::ecs::system::Local<Vec<IVec2>>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
@@ -34,7 +34,7 @@ pub(crate) fn update_visible_chunks(
                 };
 
                 let chunk_pos = pos + (dx, dy).into();
-                if !world.contains_key(&chunk_pos) {
+                if !chunk_map.entities.contains_key(&chunk_pos) {
                     load_radius_chunks.push(chunk_pos);
                 }
             }
@@ -48,9 +48,9 @@ pub(crate) fn update_visible_chunks(
                 .map(|c| ChunkSpawnRequest(c.clone())),
         );
 
-        for key in world.keys() {
+        for key in chunk_map.entities.keys() {
             let delta = *key - pos;
-            let entity = world.get(key).unwrap().clone();
+            let entity = chunk_map.entities.get(key).unwrap().clone();
             if delta.x.abs().pow(2) + delta.y.abs().pow(2) > config.render_distance.pow(2) {
                 despawn_requests.send(ChunkDespawnRequest(key.clone(), entity));
             }
@@ -61,7 +61,6 @@ pub(crate) fn update_visible_chunks(
 pub(crate) fn create_chunks(
     mut commands: Commands,
     mut spawn_events: EventReader<ChunkSpawnRequest>,
-    mut entities_map: ResMut<ChunkEntityMap>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut chunk_map: ResMut<ChunkMap>,
 ) {
@@ -83,11 +82,11 @@ pub(crate) fn create_chunks(
             .insert(ChunkLoadState::Load)
             .id();
 
-        chunk_map.insert(
+        chunk_map.chunks.insert(
             creation_request.0,
             Array3x1::fill(chunk_extent().padded(1), Voxel::default()),
         );
-        entities_map.insert(creation_request.0, entity);
+        chunk_map.entities.insert(creation_request.0, entity);
     }
 }
 
@@ -125,16 +124,15 @@ pub(crate) fn prepare_for_unload(
 /// Destroys all the chunks that have a load state of [`ChunkLoadState::Unload`]
 pub(crate) fn destroy_chunks(
     mut commands: Commands,
-    mut world: ResMut<ChunkEntityMap>,
     mut chunk_map: ResMut<ChunkMap>,
     chunks: Query<(&ChunkInfo, &ChunkLoadState)>,
 ) {
     for (chunk, load_state) in chunks.iter() {
         match load_state {
             ChunkLoadState::Unload => {
-                let entity = world.remove(&chunk.pos).unwrap();
+                let entity = chunk_map.entities.remove(&chunk.pos).unwrap();
                 commands.entity(entity).despawn_recursive();
-                chunk_map.remove(&chunk.pos).unwrap();
+                chunk_map.chunks.remove(&chunk.pos).unwrap();
             }
             _ => {}
         }
@@ -151,7 +149,7 @@ pub(crate) fn generate_chunks(
     for _ in 0..(config.render_distance / 2) {
         if let Some(ev) = gen_requests.pop_back() {
             if let Ok((data, mut load_state)) = query.get_mut(ev.0) {
-                if let Some(mut chunk_data) = chunk_map.get_mut(&data.pos) {
+                if let Some(mut chunk_data) = chunk_map.chunks.get_mut(&data.pos) {
                     gen.generate(data.pos, &mut chunk_data);
                     *load_state = ChunkLoadState::Done;
                 }

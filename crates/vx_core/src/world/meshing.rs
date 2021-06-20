@@ -60,7 +60,7 @@ pub(crate) fn mesh_chunks(
                 //mark that the mesh_info was updated
                 mesh_info.set_changed();
 
-                if let Some(chunk_data) = chunk_map.get(&chunk_info.pos) {
+                if let Some(chunk_data) = chunk_map.chunks.get(&chunk_info.pos) {
                     scope.spawn(async move {
                         let mut greedy_buffer =
                             GreedyQuadsBuffer::new_with_y_up(padded_chunk_extent());
