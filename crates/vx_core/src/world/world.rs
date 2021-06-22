@@ -1,13 +1,12 @@
 use std::collections::VecDeque;
 
 use bevy::{math::IVec2, prelude::*, render::pipeline::PrimitiveTopology};
-use building_blocks::prelude::*;
 use heron::prelude::*;
 
-use crate::{config::GlobalConfig, voxel::Voxel, Player};
+use crate::{config::GlobalConfig, Player};
 
 use super::{
-    chunk2global, chunk_extent, global2chunk,
+    chunk2global, global2chunk,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
     ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMap,
     ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
@@ -82,11 +81,7 @@ pub(crate) fn create_chunks(
             .insert(ChunkLoadState::Load)
             .id();
 
-        chunk_map.chunks.insert(
-            creation_request.0,
-            Array3x1::fill(chunk_extent().padded(1), Voxel::default()),
-        );
-        chunk_map.entities.insert(creation_request.0, entity);
+        chunk_map.attach_chunk(creation_request.0, entity);
     }
 }
 
@@ -130,9 +125,8 @@ pub(crate) fn destroy_chunks(
     for (chunk, load_state) in chunks.iter() {
         match load_state {
             ChunkLoadState::Unload => {
-                let entity = chunk_map.entities.remove(&chunk.pos).unwrap();
+                let entity = chunk_map.detach_chunk(&chunk.pos);
                 commands.entity(entity).despawn_recursive();
-                chunk_map.chunks.remove(&chunk.pos).unwrap();
             }
             _ => {}
         }
