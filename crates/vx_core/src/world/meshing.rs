@@ -1,8 +1,3 @@
-use std::{
-    collections::VecDeque,
-    ops::{Deref, DerefMut},
-};
-
 use bevy::{
     prelude::*,
     render::{mesh::Indices, pipeline::PrimitiveTopology},
@@ -13,10 +8,11 @@ use building_blocks::{
     mesh::{greedy_quads, GreedyQuadsBuffer},
     storage::Get,
 };
+use std::ops::{Deref, DerefMut};
 
 use crate::utils::ChunkMeshBuilder;
 
-use super::{chunk_extent, ChunkInfo, ChunkMap, ChunkMeshInfo, ChunkReadyEvent};
+use super::{chunk_extent, ChunkInfo, ChunkLoadState, ChunkMap, ChunkMeshInfo};
 
 pub(crate) struct ChunkMeshingRequest(Entity);
 
@@ -48,17 +44,17 @@ fn padded_chunk_extent() -> Extent3i {
 }
 
 pub(crate) fn mesh_chunks(
-    mut chunks: Query<(&ChunkInfo, &mut ChunkMeshInfo)>,
-    mut meshing_requests: ResMut<VecDeque<ChunkMeshingRequest>>,
+    mut chunks: Query<(&ChunkInfo, &ChunkMeshInfo, &mut ChunkLoadState)>,
+    mut meshing_requests: EventReader<ChunkMeshingRequest>,
     mut meshes: ResMut<Assets<Mesh>>,
     chunk_map: ResMut<ChunkMap>,
     task_pool: Res<ComputeTaskPool>,
 ) {
     let mesh_results = task_pool.scope(|scope| {
-        for meshing_event in meshing_requests.drain(..) {
-            if let Ok((chunk_info, mut mesh_info)) = chunks.get_mut(meshing_event.0) {
+        for meshing_event in meshing_requests.iter() {
+            if let Ok((chunk_info, _, __)) = chunks.get_mut(meshing_event.0) {
                 //mark that the mesh_info was updated
-                mesh_info.set_changed();
+                //mesh_info.set_changed();
 
                 if let Some(chunk_data) = chunk_map.chunks.get(&chunk_info.pos) {
                     scope.spawn(async move {
@@ -118,18 +114,23 @@ pub(crate) fn mesh_chunks(
     });
 
     for (chunk, terrain_mesh, fluid_mesh) in mesh_results {
-        if let Ok((___, mesh_info)) = chunks.get_mut(chunk) {
+        if let Ok((___, mesh_info, mut load_state)) = chunks.get_mut(chunk) {
             *meshes.get_mut(&mesh_info.chunk_mesh).unwrap() = terrain_mesh;
             *meshes.get_mut(&mesh_info.fluid_mesh).unwrap() = fluid_mesh;
+            if *load_state < ChunkLoadState::Idle {
+                *load_state = ChunkLoadState::Idle;
+            }
         }
     }
 }
 
-pub(crate) fn handle_chunk_ready_events(
-    mut ready_events: EventReader<ChunkReadyEvent>,
-    mut meshing_events: ResMut<VecDeque<ChunkMeshingRequest>>,
+pub(crate) fn handle_chunk_loading_events(
+    mut meshing_events: EventWriter<ChunkMeshingRequest>,
+    query: Query<(Entity, &ChunkLoadState), Changed<ChunkLoadState>>,
 ) {
-    for ready_event in ready_events.iter() {
-        meshing_events.push_front(ChunkMeshingRequest(ready_event.1));
+    for (entity, load_state) in query.iter() {
+        if matches!(load_state, &ChunkLoadState::Loading) {
+            meshing_events.send(ChunkMeshingRequest(entity));
+        }
     }
 }

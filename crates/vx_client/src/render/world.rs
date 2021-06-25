@@ -8,7 +8,7 @@ use bevy::{
     },
 };
 
-use vx_core::world::{ChunkInfo, ChunkMeshInfo};
+use vx_core::world::{ChunkInfo, ChunkMeshInfo, ChunkReadyEvent};
 
 const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 541458694767869);
@@ -70,15 +70,15 @@ fn attach_chunk_render_bundle(
 }
 
 fn update_meshes_visibility(
-    mut chunks: QuerySet<(
-        Query<(Entity, &Children), Changed<ChunkMeshInfo>>,
-        Query<&mut Visible>,
-    )>,
+    mut chunks: QuerySet<(Query<(Entity, &Children)>, Query<&mut Visible>)>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,
+    mut ready_events: EventReader<ChunkReadyEvent>,
 ) {
-    for (entity, children) in chunks.q0().iter() {
-        entities.push(entity);
-        entities.push(children.first().unwrap().clone());
+    for ready_event in ready_events.iter() {
+        if let Ok((entity, children)) = chunks.q0().get(ready_event.1) {
+            entities.push(entity);
+            entities.push(children.first().unwrap().clone());
+        }
     }
 
     for entity in entities.drain(..) {

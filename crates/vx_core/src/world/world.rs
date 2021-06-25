@@ -78,7 +78,7 @@ pub(crate) fn create_chunks(
                 rigid_body: RigidBody::Static,
                 collision_shape: CollisionShape::Sphere { radius: 16.0 },
             })
-            .insert(ChunkLoadState::Load)
+            .insert(ChunkLoadState::LoadRequested)
             .id();
 
         chunk_map.attach_chunk(creation_request.0, entity);
@@ -95,7 +95,7 @@ pub(crate) fn load_chunk_data(
 ) {
     for (mut load_state, entity) in chunks.iter_mut() {
         match *load_state {
-            ChunkLoadState::Load => {
+            ChunkLoadState::LoadRequested => {
                 *load_state = ChunkLoadState::Generate;
                 gen_requests.push_front(ChunkLoadRequest(entity));
             }
@@ -120,7 +120,7 @@ pub(crate) fn prepare_for_unload(
 pub(crate) fn destroy_chunks(
     mut commands: Commands,
     mut chunk_map: ResMut<ChunkMap>,
-    chunks: Query<(&ChunkInfo, &ChunkLoadState)>,
+    chunks: Query<(&ChunkInfo, &ChunkLoadState), Changed<ChunkLoadState>>,
 ) {
     for (chunk, load_state) in chunks.iter() {
         match load_state {
@@ -145,7 +145,7 @@ pub(crate) fn generate_chunks(
             if let Ok((data, mut load_state)) = query.get_mut(ev.0) {
                 if let Some(mut chunk_data) = chunk_map.chunks.get_mut(&data.pos) {
                     gen.generate(data.pos, &mut chunk_data);
-                    *load_state = ChunkLoadState::Done;
+                    *load_state = ChunkLoadState::Loading;
                 }
             }
         }
@@ -158,7 +158,7 @@ pub(crate) fn mark_chunks_ready(
 ) {
     for (chunk, load_state, entity) in chunks.iter() {
         match load_state {
-            ChunkLoadState::Done => ready_events.send(ChunkReadyEvent(chunk.pos, entity)),
+            ChunkLoadState::Idle => ready_events.send(ChunkReadyEvent(chunk.pos, entity)),
             _ => {}
         }
     }
