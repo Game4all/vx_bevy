@@ -1,7 +1,7 @@
 use bevy::math::IVec2;
 use building_blocks::{
     core::{ExtentN, PointN},
-    storage::Array3x1,
+    storage::{Array3x1, FillExtent},
 };
 
 use super::{CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH};

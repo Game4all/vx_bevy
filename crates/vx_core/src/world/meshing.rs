@@ -5,7 +5,7 @@ use bevy::{
 };
 use building_blocks::{
     core::Extent3i,
-    mesh::{greedy_quads, GreedyQuadsBuffer},
+    mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG},
     storage::Get,
 };
 use std::ops::{Deref, DerefMut};
@@ -34,7 +34,10 @@ impl DerefMut for ReusableGreedyQuadsBuffer {
 
 impl FromWorld for ReusableGreedyQuadsBuffer {
     fn from_world(_: &mut World) -> Self {
-        Self(GreedyQuadsBuffer::new_with_y_up(padded_chunk_extent()))
+        Self(GreedyQuadsBuffer::new(
+            padded_chunk_extent(),
+            RIGHT_HANDED_Y_UP_CONFIG.quad_groups(),
+        ))
     }
 }
 
@@ -53,13 +56,12 @@ pub(crate) fn mesh_chunks(
     let mesh_results = task_pool.scope(|scope| {
         for meshing_event in meshing_requests.iter() {
             if let Ok((chunk_info, _, __)) = chunks.get_mut(meshing_event.0) {
-                //mark that the mesh_info was updated
-                //mesh_info.set_changed();
-
                 if let Some(chunk_data) = chunk_map.chunks.get(&chunk_info.pos) {
                     scope.spawn(async move {
-                        let mut greedy_buffer =
-                            GreedyQuadsBuffer::new_with_y_up(padded_chunk_extent());
+                        let mut greedy_buffer = GreedyQuadsBuffer::new(
+                            padded_chunk_extent(),
+                            RIGHT_HANDED_Y_UP_CONFIG.quad_groups(),
+                        );
                         let extent = padded_chunk_extent();
 
                         greedy_buffer.reset(extent);

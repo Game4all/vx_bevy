@@ -1,6 +1,11 @@
-use building_blocks::mesh::{OrientedCubeFace, UnorientedQuad};
+use building_blocks::{
+    core::Axis3,
+    mesh::{OrientedCubeFace, UnorientedQuad},
+};
 
 use crate::voxel::Voxel;
+
+const VOXEL_MESH_SIZE: f32 = 1.0;
 
 #[derive(Default)]
 pub struct ChunkMeshBuilder {
@@ -30,13 +35,13 @@ impl ChunkMeshBuilder {
             &Voxel::Fluid { attributes } => {
                 let start_index = self.fluid_positions.len() as u32;
                 self.fluid_positions
-                    .extend_from_slice(&face.quad_mesh_positions(quad));
+                    .extend_from_slice(&face.quad_mesh_positions(quad, VOXEL_MESH_SIZE));
 
                 self.fluid_normals
                     .extend_from_slice(&face.quad_mesh_normals());
 
                 self.fluid_uv
-                    .extend_from_slice(&face.simple_tex_coords(false, quad));
+                    .extend_from_slice(&face.tex_coords(Axis3::X, false, quad));
 
                 self.fluid_colors.extend_from_slice(&[attributes; 4]);
 
@@ -46,12 +51,12 @@ impl ChunkMeshBuilder {
             &Voxel::Solid { attributes } => {
                 let start_index = self.positions.len() as u32;
                 self.positions
-                    .extend_from_slice(&face.quad_mesh_positions(quad));
+                    .extend_from_slice(&face.quad_mesh_positions(quad, VOXEL_MESH_SIZE));
 
                 self.normals.extend_from_slice(&face.quad_mesh_normals());
 
                 self.uv
-                    .extend_from_slice(&face.simple_tex_coords(false, quad));
+                    .extend_from_slice(&face.tex_coords(Axis3::X, false, quad));
 
                 self.colors.extend_from_slice(&[attributes; 4]);
 

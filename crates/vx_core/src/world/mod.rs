@@ -25,7 +25,7 @@ pub enum ChunkLoadState {
     /// Chunk requested generation of its chunk data.
     Generate,
     /// The chunk is in a loading state (chunk data is loaded but still needs a few things like meshing before showing the chunk.)
-    Loading, 
+    Loading,
     /// Chunk is done loading and is in an idle state.
     Idle,
     /// Chunk requested saving of data to disk.
