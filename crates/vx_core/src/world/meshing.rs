@@ -55,7 +55,7 @@ pub(crate) fn mesh_chunks(
 ) {
     let mesh_results = task_pool.scope(|scope| {
         for meshing_event in meshing_requests.iter() {
-            if let Ok((chunk_info, _, __)) = chunks.get_mut(meshing_event.0) {
+            if let Ok(chunk_info) = chunks.get_component::<ChunkInfo>(meshing_event.0) {
                 if let Some(chunk_data) = chunk_map.chunks.get(&chunk_info.pos) {
                     scope.spawn(async move {
                         let mut greedy_buffer = GreedyQuadsBuffer::new(
