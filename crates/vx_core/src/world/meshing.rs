@@ -12,7 +12,7 @@ use std::ops::{Deref, DerefMut};
 
 use crate::utils::ChunkMeshBuilder;
 
-use super::{chunk_extent, ChunkInfo, ChunkLoadState, ChunkMap, ChunkMeshInfo};
+use super::{chunk_extent, ChunkInfo, ChunkLoadState, ChunkMapReader, ChunkMeshInfo};
 
 pub(crate) struct ChunkMeshingRequest(Entity);
 
@@ -50,13 +50,13 @@ pub(crate) fn mesh_chunks(
     mut chunks: Query<(&ChunkInfo, &ChunkMeshInfo, &mut ChunkLoadState)>,
     mut meshing_requests: EventReader<ChunkMeshingRequest>,
     mut meshes: ResMut<Assets<Mesh>>,
-    chunk_map: ResMut<ChunkMap>,
+    chunk_map: ChunkMapReader,
     task_pool: Res<ComputeTaskPool>,
 ) {
     let mesh_results = task_pool.scope(|scope| {
         for meshing_event in meshing_requests.iter() {
             if let Ok(chunk_info) = chunks.get_component::<ChunkInfo>(meshing_event.0) {
-                if let Some(chunk_data) = chunk_map.chunks.get(&chunk_info.pos) {
+                if let Some(chunk_data) = chunk_map.get_chunk_data(&chunk_info.pos) {
                     scope.spawn(async move {
                         let mut greedy_buffer = GreedyQuadsBuffer::new(
                             padded_chunk_extent(),

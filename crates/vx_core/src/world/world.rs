@@ -1,23 +1,23 @@
 use std::collections::VecDeque;
 
 use bevy::{math::IVec2, prelude::*, render::pipeline::PrimitiveTopology};
+use building_blocks::storage::Array3x1;
 use heron::prelude::*;
 
-use crate::{config::GlobalConfig, Player};
-
 use super::{
-    chunk2global, global2chunk,
+    chunk2global, chunk_extent, global2chunk,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
-    ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMap,
-    ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
+    ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState,
+    ChunkMapReader, ChunkMapWriter, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
 };
+use crate::{config::GlobalConfig, Player};
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
 /// This will accordingly emit [`ChunkSpawnRequest`] events for chunks that need to be loaded since they entered the player's view distance and [`ChunkDespawnRequest`] for
 /// chunks out of the player's view distance.
 pub(crate) fn update_visible_chunks(
     player: Query<(&Transform, &Player)>,
-    chunk_map: Res<ChunkMap>,
+    chunk_map: ChunkMapReader,
     config: Res<GlobalConfig>,
     mut load_radius_chunks: bevy::ecs::system::Local<Vec<IVec2>>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
@@ -33,7 +33,7 @@ pub(crate) fn update_visible_chunks(
                 };
 
                 let chunk_pos = pos + (dx, dy).into();
-                if !chunk_map.entities.contains_key(&chunk_pos) {
+                if !chunk_map.chunk_exists(&chunk_pos) {
                     load_radius_chunks.push(chunk_pos);
                 }
             }
@@ -47,9 +47,9 @@ pub(crate) fn update_visible_chunks(
                 .map(|c| ChunkSpawnRequest(c.clone())),
         );
 
-        for key in chunk_map.entities.keys() {
+        for key in chunk_map.chunk_entities.keys() {
             let delta = *key - pos;
-            let entity = chunk_map.entities.get(key).unwrap().clone();
+            let entity = chunk_map.get_entity(key).unwrap();
             if delta.x.abs().pow(2) + delta.y.abs().pow(2) > config.render_distance.pow(2) {
                 despawn_requests.send(ChunkDespawnRequest(key.clone(), entity));
             }
@@ -61,7 +61,7 @@ pub(crate) fn create_chunks(
     mut commands: Commands,
     mut spawn_events: EventReader<ChunkSpawnRequest>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut chunk_map: ResMut<ChunkMap>,
+    mut chunk_map: ChunkMapWriter,
 ) {
     for creation_request in spawn_events.iter() {
         let entity = commands
@@ -81,7 +81,11 @@ pub(crate) fn create_chunks(
             .insert(ChunkLoadState::LoadRequested)
             .id();
 
-        chunk_map.attach_chunk(creation_request.0, entity);
+        chunk_map.insert_entity(creation_request.0, entity);
+        chunk_map.chunk_data.insert(
+            creation_request.0,
+            Array3x1::fill(chunk_extent().padded(1), Default::default()),
+        );
     }
 }
 
@@ -119,13 +123,14 @@ pub(crate) fn prepare_for_unload(
 /// Destroys all the chunks that have a load state of [`ChunkLoadState::Unload`]
 pub(crate) fn destroy_chunks(
     mut commands: Commands,
-    mut chunk_map: ResMut<ChunkMap>,
+    mut chunk_map: ChunkMapWriter,
     chunks: Query<(&ChunkInfo, &ChunkLoadState), Changed<ChunkLoadState>>,
 ) {
     for (chunk, load_state) in chunks.iter() {
         match load_state {
             ChunkLoadState::Unload => {
-                let entity = chunk_map.detach_chunk(&chunk.pos);
+                let entity = chunk_map.remove_entity(&chunk.pos);
+                chunk_map.chunk_data.remove(&chunk.pos);
                 commands.entity(entity).despawn_recursive();
             }
             _ => {}
@@ -136,14 +141,14 @@ pub(crate) fn destroy_chunks(
 pub(crate) fn generate_chunks(
     mut query: Query<(&ChunkInfo, &mut ChunkLoadState)>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
-    mut chunk_map: ResMut<ChunkMap>,
+    mut chunk_map: ChunkMapWriter,
     config: Res<GlobalConfig>,
     gen: Res<NoiseTerrainGenerator>,
 ) {
     for _ in 0..(config.render_distance / 2) {
         if let Some(ev) = gen_requests.pop_back() {
             if let Ok((data, mut load_state)) = query.get_mut(ev.0) {
-                if let Some(mut chunk_data) = chunk_map.chunks.get_mut(&data.pos) {
+                if let Some(mut chunk_data) = chunk_map.get_chunk_data_mut(&data.pos) {
                     gen.generate(data.pos, &mut chunk_data);
                     *load_state = ChunkLoadState::Loading;
                 }

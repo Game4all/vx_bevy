@@ -74,7 +74,8 @@ pub struct WorldSimulationPlugin;
 
 impl Plugin for WorldSimulationPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<ChunkMap>()
+        app.init_resource::<ChunkDataMap>()
+            .init_resource::<ChunkEntityMap>()
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             //todo: move this to a struct or smth else
             .init_resource::<worldgen::NoiseTerrainGenerator>()
