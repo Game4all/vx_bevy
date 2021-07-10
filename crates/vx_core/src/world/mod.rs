@@ -1,7 +1,10 @@
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    tasks::{TaskPool, TaskPoolBuilder},
+};
 use building_blocks::core::{Extent3i, PointN};
 use heron::{CollisionShape, RigidBody};
-use std::collections::VecDeque;
+use std::{collections::VecDeque, ops::Deref};
 
 mod meshing;
 mod world;
@@ -62,6 +65,27 @@ pub struct ChunkMeshInfo {
     pub chunk_mesh: Handle<Mesh>,
 }
 
+pub struct WorldTaskPool(TaskPool);
+
+impl Default for WorldTaskPool {
+    fn default() -> Self {
+        Self(
+            TaskPoolBuilder::new()
+                .num_threads(4)
+                .thread_name("WorldThreadPool".to_owned())
+                .build(),
+        )
+    }
+}
+
+impl Deref for WorldTaskPool {
+    type Target = TaskPool;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 #[inline]
 pub fn chunk_extent() -> Extent3i {
     Extent3i::from_min_and_shape(
@@ -77,6 +101,7 @@ impl Plugin for WorldSimulationPlugin {
         app.init_resource::<ChunkDataMap>()
             .init_resource::<ChunkEntityMap>()
             .init_resource::<VecDeque<ChunkLoadRequest>>()
+            .init_resource::<WorldTaskPool>()
             //todo: move this to a struct or smth else
             .init_resource::<worldgen::NoiseTerrainGenerator>()
             // internal events

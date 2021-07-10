@@ -1,7 +1,6 @@
 use bevy::{
     prelude::*,
     render::{mesh::Indices, pipeline::PrimitiveTopology},
-    tasks::ComputeTaskPool,
 };
 use building_blocks::{
     core::Extent3i,
@@ -12,7 +11,9 @@ use std::ops::{Deref, DerefMut};
 
 use crate::utils::ChunkMeshBuilder;
 
-use super::{chunk_extent, ChunkInfo, ChunkLoadState, ChunkMapReader, ChunkMeshInfo};
+use super::{
+    chunk_extent, ChunkInfo, ChunkLoadState, ChunkMapReader, ChunkMeshInfo, WorldTaskPool,
+};
 
 pub(crate) struct ChunkMeshingRequest(Entity);
 
@@ -51,7 +52,7 @@ pub(crate) fn mesh_chunks(
     mut meshing_requests: EventReader<ChunkMeshingRequest>,
     mut meshes: ResMut<Assets<Mesh>>,
     chunk_map: ChunkMapReader,
-    task_pool: Res<ComputeTaskPool>,
+    task_pool: Res<WorldTaskPool>,
 ) {
     let mesh_results = task_pool.scope(|scope| {
         for meshing_event in meshing_requests.iter() {
