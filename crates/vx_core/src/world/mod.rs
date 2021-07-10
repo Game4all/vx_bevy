@@ -4,7 +4,7 @@ use bevy::{
 };
 use building_blocks::core::{Extent3i, PointN};
 use heron::{CollisionShape, RigidBody};
-use std::{collections::VecDeque, ops::Deref};
+use std::{collections::VecDeque, ops::Deref, sync::Arc};
 
 mod meshing;
 mod world;
@@ -103,7 +103,7 @@ impl Plugin for WorldSimulationPlugin {
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             .init_resource::<WorldTaskPool>()
             //todo: move this to a struct or smth else
-            .init_resource::<worldgen::NoiseTerrainGenerator>()
+            .init_resource::<Arc<worldgen::NoiseTerrainGenerator>>()
             // internal events
             .add_event::<ChunkSpawnRequest>()
             .add_event::<ChunkDespawnRequest>()

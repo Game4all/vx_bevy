@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, sync::Arc};
 
 use bevy::{math::IVec2, prelude::*, render::pipeline::PrimitiveTopology};
 use building_blocks::storage::Array3x1;
@@ -9,6 +9,7 @@ use super::{
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
     ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState,
     ChunkMapReader, ChunkMapWriter, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
+    WorldTaskPool,
 };
 use crate::{config::GlobalConfig, Player};
 
@@ -142,17 +143,26 @@ pub(crate) fn generate_chunks(
     mut query: Query<(&ChunkInfo, &mut ChunkLoadState)>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
     mut chunk_map: ChunkMapWriter,
-    config: Res<GlobalConfig>,
-    gen: Res<NoiseTerrainGenerator>,
+    gen: Res<Arc<NoiseTerrainGenerator>>,
+    task_pool: Res<WorldTaskPool>,
 ) {
-    for _ in 0..(config.render_distance / 2) {
-        if let Some(ev) = gen_requests.pop_back() {
-            if let Ok((data, mut load_state)) = query.get_mut(ev.0) {
-                if let Some(mut chunk_data) = chunk_map.get_chunk_data_mut(&data.pos) {
-                    gen.generate(data.pos, &mut chunk_data);
-                    *load_state = ChunkLoadState::Loading;
-                }
+    let chunks = task_pool.scope(|scope| {
+        for req in gen_requests.drain(..) {
+            if let Ok(info) = query.get_component::<ChunkInfo>(req.0) {
+                let generator = gen.clone();
+                scope.spawn(async move {
+                    let mut data = Array3x1::fill(chunk_extent().padded(1), Default::default());
+                    generator.generate(info.pos, &mut data);
+                    (req.0, data)
+                });
             }
+        }
+    });
+
+    for (entity, chunk_data) in chunks {
+        if let Ok((info, mut load_state)) = query.get_mut(entity) {
+            chunk_map.chunk_data.insert(info.pos, chunk_data);
+            *load_state = ChunkLoadState::Loading;
         }
     }
 }
