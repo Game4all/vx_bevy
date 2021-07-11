@@ -83,10 +83,6 @@ pub(crate) fn create_chunks(
             .id();
 
         chunk_map.insert_entity(creation_request.0, entity);
-        chunk_map.chunk_data.insert(
-            creation_request.0,
-            Array3x1::fill(chunk_extent().padded(1), Default::default()),
-        );
     }
 }
 
