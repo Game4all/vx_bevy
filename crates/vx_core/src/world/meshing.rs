@@ -17,31 +17,6 @@ use super::{
 
 pub(crate) struct ChunkMeshingRequest(Entity);
 
-pub(crate) struct ReusableGreedyQuadsBuffer(GreedyQuadsBuffer);
-
-impl Deref for ReusableGreedyQuadsBuffer {
-    type Target = GreedyQuadsBuffer;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for ReusableGreedyQuadsBuffer {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl FromWorld for ReusableGreedyQuadsBuffer {
-    fn from_world(_: &mut World) -> Self {
-        Self(GreedyQuadsBuffer::new(
-            padded_chunk_extent(),
-            RIGHT_HANDED_Y_UP_CONFIG.quad_groups(),
-        ))
-    }
-}
-
 #[inline]
 fn padded_chunk_extent() -> Extent3i {
     chunk_extent().padded(1)
