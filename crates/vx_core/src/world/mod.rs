@@ -20,6 +20,8 @@ pub const CHUNK_HEIGHT: i32 = 128;
 pub const CHUNK_WIDTH: i32 = 16;
 pub const CHUNK_DEPTH: i32 = 16;
 
+pub const MAX_FRAME_CHUNK_GEN_COUNT: usize = 16;
+
 /// A component tracking the current loading state of a chunk.
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub enum ChunkLoadState {

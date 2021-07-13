@@ -9,7 +9,7 @@ use super::{
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
     ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState,
     ChunkMapReader, ChunkMapWriter, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
-    WorldTaskPool,
+    WorldTaskPool, MAX_FRAME_CHUNK_GEN_COUNT,
 };
 use crate::{config::GlobalConfig, Player};
 
@@ -98,7 +98,7 @@ pub(crate) fn load_chunk_data(
         match *load_state {
             ChunkLoadState::LoadRequested => {
                 *load_state = ChunkLoadState::Generate;
-                gen_requests.push_front(ChunkLoadRequest(entity));
+                gen_requests.push_back(ChunkLoadRequest(entity));
             }
             _ => continue,
         }
@@ -143,7 +143,8 @@ pub(crate) fn generate_chunks(
     task_pool: Res<WorldTaskPool>,
 ) {
     let chunks = task_pool.scope(|scope| {
-        for req in gen_requests.drain(..) {
+        let gen_req_count = gen_requests.len().min(MAX_FRAME_CHUNK_GEN_COUNT);
+        for req in gen_requests.drain(..gen_req_count) {
             if let Ok(info) = query.get_component::<ChunkInfo>(req.0) {
                 let generator = gen.clone();
                 scope.spawn(async move {
