@@ -7,7 +7,6 @@ use building_blocks::{
     mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG},
     storage::Get,
 };
-use std::ops::{Deref, DerefMut};
 
 use crate::utils::ChunkMeshBuilder;
 
