@@ -18,5 +18,5 @@ serde = "1.0.126"
 [replace]
 "bevy:0.5.0" = { git = "https://github.com/bevyengine/bevy", branch = "main" }
 
-[profile.release]
-lto = true
+# [profile.release]
+# lto = true
