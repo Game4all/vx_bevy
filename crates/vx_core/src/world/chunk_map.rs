@@ -33,18 +33,6 @@ impl<'a> ChunkMapReader<'a> {
 }
 
 impl<'a> ChunkMapWriter<'a> {
-    #[inline]
-    pub fn insert_entity(&mut self, chunk_coords: IVec2, entity: Entity) {
-        self.chunk_entities.insert(chunk_coords, entity);
-    }
-
-    #[inline]
-    pub fn remove_entity(&mut self, chunk_coords: &IVec2) -> Entity {
-        self.chunk_entities
-            .remove(chunk_coords)
-            .expect("Chunk is missing an attached entity")
-    }
-
     pub fn get_chunk_data_mut(
         &mut self,
         chunk_coords: &IVec2,

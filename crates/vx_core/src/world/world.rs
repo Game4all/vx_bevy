@@ -82,7 +82,7 @@ pub(crate) fn create_chunks(
             .insert(ChunkLoadState::LoadRequested)
             .id();
 
-        chunk_map.insert_entity(creation_request.0, entity);
+        chunk_map.chunk_entities.insert(creation_request.0, entity);
     }
 }
 
@@ -126,7 +126,7 @@ pub(crate) fn destroy_chunks(
     for (chunk, load_state) in chunks.iter() {
         match load_state {
             ChunkLoadState::Unload => {
-                let entity = chunk_map.remove_entity(&chunk.pos);
+                let entity = chunk_map.chunk_entities.remove(&chunk.pos).expect("Expected valid chunk");
                 chunk_map.chunk_data.remove(&chunk.pos);
                 commands.entity(entity).despawn_recursive();
             }
