@@ -97,7 +97,7 @@ fn update_meshes_visibility(
     }
 }
 
-const ANIMATION_DURATION: f32 = 1.4;
+const ANIMATION_DURATION: f32 = 0.8;
 const ANIMATION_HEIGHT: f32 = 128.;
 
 fn step_chunk_ready_animation(
@@ -107,7 +107,8 @@ fn step_chunk_ready_animation(
 ) {
     for (entity, mut transform, animation) in chunks.iter_mut() {
         let delta = (time.time_since_startup().as_secs_f32() - animation.0).min(ANIMATION_DURATION);
-        let xtransform = -ANIMATION_HEIGHT + (delta / ANIMATION_DURATION) * ANIMATION_HEIGHT;
+        let xtransform = -ANIMATION_HEIGHT
+            + (1. - (1. - (delta / ANIMATION_DURATION)).powi(5)) * ANIMATION_HEIGHT;
 
         transform.translation.y = xtransform;
 
