@@ -82,11 +82,17 @@ fn update_meshes_visibility(
         if let Ok(children) = chunks.q0().get(ready_event.1) {
             entities.push(ready_event.1);
             entities.push(children.first().unwrap().clone());
-        }
 
-        commands.entity(ready_event.1).insert(ChunkAnimationTracker(
-            time.time_since_startup().as_secs_f32(),
-        ));
+            commands.entity(ready_event.1).insert(ChunkAnimationTracker(
+                time.time_since_startup().as_secs_f32(),
+            ));
+
+            commands
+                .entity(children.first().unwrap().clone())
+                .insert(ChunkAnimationTracker(
+                    time.time_since_startup().as_secs_f32(),
+                ));
+        }
     }
 
     for entity in entities.drain(..) {
