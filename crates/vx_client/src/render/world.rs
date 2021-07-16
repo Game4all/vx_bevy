@@ -69,21 +69,50 @@ fn attach_chunk_render_bundle(
     }
 }
 
+struct ChunkAnimationTracker(f32);
+
 fn update_meshes_visibility(
-    mut chunks: QuerySet<(Query<(Entity, &Children)>, Query<&mut Visible>)>,
-    mut entities: bevy::ecs::system::Local<Vec<Entity>>,
     mut ready_events: EventReader<ChunkReadyEvent>,
+    mut chunks: QuerySet<(Query<&Children>, Query<(&mut Visible, &mut Transform)>)>,
+    mut entities: bevy::ecs::system::Local<Vec<Entity>>,
+    mut commands: Commands,
+    time: Res<Time>,
 ) {
     for ready_event in ready_events.iter() {
-        if let Ok((entity, children)) = chunks.q0().get(ready_event.1) {
-            entities.push(entity);
+        if let Ok(children) = chunks.q0().get(ready_event.1) {
+            entities.push(ready_event.1);
             entities.push(children.first().unwrap().clone());
         }
+
+        commands.entity(ready_event.1).insert(ChunkAnimationTracker(
+            time.time_since_startup().as_secs_f32(),
+        ));
     }
 
     for entity in entities.drain(..) {
-        if let Ok(mut visibility) = chunks.q1_mut().get_mut(entity) {
+        if let Ok((mut visibility, mut transform)) = chunks.q1_mut().get_mut(entity) {
             visibility.is_visible = true;
+            transform.translation.y = -128.0
+        }
+    }
+}
+
+const ANIMATION_DURATION: f32 = 1.4;
+const ANIMATION_HEIGHT: f32 = 128.;
+
+fn step_chunk_ready_animation(
+    mut chunks: Query<(Entity, &mut Transform, &ChunkAnimationTracker)>,
+    time: Res<Time>,
+    mut commands: Commands,
+) {
+    for (entity, mut transform, animation) in chunks.iter_mut() {
+        let delta = (time.time_since_startup().as_secs_f32() - animation.0).min(ANIMATION_DURATION);
+        let xtransform = -ANIMATION_HEIGHT + (delta / ANIMATION_DURATION) * ANIMATION_HEIGHT;
+
+        transform.translation.y = xtransform;
+
+        if delta == ANIMATION_DURATION {
+            commands.entity(entity).remove::<ChunkAnimationTracker>();
         }
     }
 }
@@ -117,6 +146,7 @@ impl Plugin for WorldRenderPlugin {
         app.insert_resource(ClearColor(Color::hex("87CEEB").unwrap()))
             .add_startup_system(setup_render_resources.system())
             .add_system(attach_chunk_render_bundle.system())
-            .add_system(update_meshes_visibility.system());
+            .add_system(update_meshes_visibility.system())
+            .add_system(step_chunk_ready_animation.system());
     }
 }
