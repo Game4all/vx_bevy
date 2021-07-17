@@ -16,6 +16,8 @@ pub use chunk_map::*;
 mod coords;
 pub use coords::*;
 
+use crate::worldgen::NoiseTerrainGenerator;
+
 pub const CHUNK_HEIGHT: i32 = 128;
 pub const CHUNK_WIDTH: i32 = 16;
 pub const CHUNK_DEPTH: i32 = 16;
@@ -105,7 +107,7 @@ impl Plugin for WorldSimulationPlugin {
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             .init_resource::<WorldTaskPool>()
             //todo: move this to a struct or smth else
-            .init_resource::<Arc<worldgen::NoiseTerrainGenerator>>()
+            .init_resource::<Arc<NoiseTerrainGenerator>>()
             // internal events
             .add_event::<ChunkSpawnRequest>()
             .add_event::<ChunkDespawnRequest>()

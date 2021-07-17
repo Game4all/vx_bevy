@@ -6,6 +6,7 @@ pub mod platform;
 pub mod utils;
 pub mod voxel;
 pub mod world;
+pub mod worldgen;
 
 pub struct Player;
 

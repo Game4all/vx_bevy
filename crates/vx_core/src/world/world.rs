@@ -5,9 +5,9 @@ use bevy::{math::IVec2, prelude::*, render::pipeline::PrimitiveTopology};
 use heron::prelude::*;
 
 use super::{
-    chunk2global, global2chunk,
-    ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState,
-    ChunkMapReader, ChunkMapWriter, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest,
+    chunk2global, global2chunk, ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest,
+    ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkMeshInfo, ChunkReadyEvent,
+    ChunkSpawnRequest,
 };
 use crate::{config::GlobalConfig, Player};
 
