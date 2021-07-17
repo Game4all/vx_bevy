@@ -116,7 +116,7 @@ impl Plugin for WorldSimulationPlugin {
             .add_system(world::update_visible_chunks.system())
             .add_system(world::create_chunks.system())
             .add_system(world::load_chunk_data.system())
-            .add_system(world::generate_chunks.system())
+            .add_system(worldgen::generate_terrain_data.system())
             .add_system(world::prepare_for_unload.system())
             .add_system(world::mark_chunks_ready.system())
             .add_system(world::destroy_chunks.system())
