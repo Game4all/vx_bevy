@@ -20,6 +20,7 @@ pub enum Action {
     WalkRight,
     WalkLeft,
     CursorLock,
+    ToggleDebugUi
 }
 
 //todo: this is a super simple action map but it may be cool to move to something like **Kurinji** when it updates to bevy 0.5
@@ -52,6 +53,7 @@ impl Default for Keybindings {
         keybinds.insert(KeyCode::A, Action::WalkLeft);
         keybinds.insert(KeyCode::D, Action::WalkRight);
         keybinds.insert(KeyCode::Escape, Action::CursorLock);
+        keybinds.insert(KeyCode::F3, Action::ToggleDebugUi);
         Keybindings(keybinds)
     }
 }

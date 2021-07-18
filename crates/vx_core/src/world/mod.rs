@@ -22,6 +22,7 @@ pub const CHUNK_DEPTH: i32 = 16;
 pub const MAX_FRAME_CHUNK_GEN_COUNT: usize = 16;
 
 pub const CHUNK_MESHING_TIME: DiagnosticId = DiagnosticId::from_u128(489617772449846);
+pub const CHUNK_DATA_GEN_TIME: DiagnosticId = DiagnosticId::from_u128(975647521301976);
 
 /// A component tracking the current loading state of a chunk.
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
