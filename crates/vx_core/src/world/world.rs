@@ -2,13 +2,10 @@ use std::collections::VecDeque;
 
 use bevy::{math::IVec2, prelude::*, render::pipeline::PrimitiveTopology};
 
+use building_blocks::storage::ChunkKey3;
 use heron::prelude::*;
 
-use super::{
-    chunk2global, global2chunk, ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest,
-    ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkMeshInfo, ChunkReadyEvent,
-    ChunkSpawnRequest,
-};
+use super::{ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest, chunk2global, chunk2point, global2chunk};
 use crate::{config::GlobalConfig, Player};
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
@@ -128,7 +125,7 @@ pub(crate) fn destroy_chunks(
                     .chunk_entities
                     .remove(&chunk.pos)
                     .expect("Expected valid chunk");
-                chunk_map.chunk_data.remove(&chunk.pos);
+                chunk_map.chunk_data.pop_chunk(ChunkKey3::new(0, chunk2point(chunk.pos)));
                 commands.entity(entity).despawn_recursive();
             }
             _ => {}

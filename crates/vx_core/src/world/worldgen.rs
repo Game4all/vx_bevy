@@ -1,11 +1,11 @@
 use std::{collections::VecDeque, sync::Arc};
 
 use bevy::{diagnostic::Diagnostics, prelude::*, utils::Instant};
-use building_blocks::storage::Array3x1;
+use building_blocks::storage::{Array3x1, ChunkKey3};
 
 use super::{
-    chunk_extent, ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMapWriter, WorldTaskPool,
-    CHUNK_DATA_GEN_TIME, MAX_FRAME_CHUNK_GEN_COUNT,
+    chunk2point, chunk_extent, ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMapWriter,
+    WorldTaskPool, CHUNK_DATA_GEN_TIME, MAX_FRAME_CHUNK_GEN_COUNT,
 };
 use crate::worldgen::{NoiseTerrainGenerator, TerrainGenerator};
 
@@ -35,7 +35,9 @@ pub(crate) fn generate_terrain_data(
 
     for (entity, chunk_data) in chunks {
         if let Ok((info, mut load_state)) = query.get_mut(entity) {
-            chunk_map.chunk_data.insert(info.pos, chunk_data);
+            chunk_map
+                .chunk_data
+                .write_chunk(ChunkKey3::new(0, chunk2point(info.pos)), chunk_data);
             *load_state = ChunkLoadState::Loading;
         }
     }

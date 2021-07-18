@@ -1,5 +1,12 @@
-use bevy::{diagnostic::DiagnosticId, prelude::*, tasks::{TaskPool, TaskPoolBuilder}};
-use building_blocks::core::{Extent3i, PointN};
+use bevy::{
+    diagnostic::DiagnosticId,
+    prelude::*,
+    tasks::{TaskPool, TaskPoolBuilder},
+};
+use building_blocks::{
+    core::{Extent3i, PointN},
+    storage::{ChunkMapBuilder, ChunkMapBuilder3x1},
+};
 use heron::{CollisionShape, RigidBody};
 use std::{collections::VecDeque, ops::Deref, sync::Arc};
 
@@ -13,7 +20,7 @@ pub use chunk_map::*;
 mod coords;
 pub use coords::*;
 
-use crate::worldgen::NoiseTerrainGenerator;
+use crate::{voxel::Voxel, worldgen::NoiseTerrainGenerator};
 
 pub const CHUNK_HEIGHT: i32 = 128;
 pub const CHUNK_WIDTH: i32 = 16;
@@ -102,12 +109,18 @@ pub struct WorldSimulationPlugin;
 
 impl Plugin for WorldSimulationPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<ChunkDataMap>()
-            .init_resource::<ChunkEntityMap>()
+        app.init_resource::<ChunkEntityMap>()
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             .init_resource::<WorldTaskPool>()
             //todo: move this to a struct or smth else
             .init_resource::<Arc<NoiseTerrainGenerator>>()
+            .insert_resource(
+                ChunkMapBuilder3x1::new(
+                    PointN([CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH]),
+                    Voxel::Empty,
+                )
+                .build_with_hash_map_storage(),
+            )
             // internal events
             .add_event::<ChunkSpawnRequest>()
             .add_event::<ChunkDespawnRequest>()

@@ -1,20 +1,21 @@
 use bevy::ecs::system::SystemParam;
 use bevy::{math::IVec2, prelude::*, utils::HashMap};
-use building_blocks::storage::Array3x1;
+use building_blocks::storage::{Array3x1, ChunkHashMap3x1, ChunkKey3};
+
+use super::chunk2point;
 
 pub type ChunkEntityMap = HashMap<IVec2, Entity>;
-pub type ChunkDataMap = HashMap<IVec2, Array3x1<crate::voxel::Voxel>>;
 
 #[derive(SystemParam)]
 pub struct ChunkMapReader<'a> {
     pub chunk_entities: Res<'a, ChunkEntityMap>,
-    pub chunk_data: Res<'a, ChunkDataMap>,
+    pub chunk_data: Res<'a, ChunkHashMap3x1<crate::voxel::Voxel>>,
 }
 
 #[derive(SystemParam)]
 pub struct ChunkMapWriter<'a> {
     pub chunk_entities: ResMut<'a, ChunkEntityMap>,
-    pub chunk_data: ResMut<'a, ChunkDataMap>,
+    pub chunk_data: ResMut<'a, ChunkHashMap3x1<crate::voxel::Voxel>>,
 }
 
 impl<'a> ChunkMapReader<'a> {
@@ -28,7 +29,8 @@ impl<'a> ChunkMapReader<'a> {
     }
 
     pub fn get_chunk_data(&self, chunk_coords: &IVec2) -> Option<&Array3x1<crate::voxel::Voxel>> {
-        self.chunk_data.get(chunk_coords)
+        self.chunk_data
+            .get_chunk(ChunkKey3::new(0, chunk2point(*chunk_coords)))
     }
 }
 
@@ -37,6 +39,7 @@ impl<'a> ChunkMapWriter<'a> {
         &mut self,
         chunk_coords: &IVec2,
     ) -> Option<&mut Array3x1<crate::voxel::Voxel>> {
-        self.chunk_data.get_mut(chunk_coords)
+        self.chunk_data
+            .get_mut_chunk(ChunkKey3::new(0, chunk2point(*chunk_coords)))
     }
 }
