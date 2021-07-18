@@ -1,5 +1,6 @@
-use bevy::prelude::*;
+use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 
+pub mod debug;
 pub mod input;
 pub mod player;
 pub mod render;
@@ -9,9 +10,11 @@ pub struct ClientPlugins;
 impl PluginGroup for ClientPlugins {
     fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
         group
+            .add(FrameTimeDiagnosticsPlugin::default())
             .add(input::PlayerInputPlugin)
             .add(player::PlayerControllerPlugin)
             .add(render::WorldRenderPlugin)
-            .add(render::EnvLightingPlugin);
+            .add(render::EnvLightingPlugin)
+            .add(debug::DebugUIPlugin);
     }
 }

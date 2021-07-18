@@ -1,7 +1,4 @@
-use bevy::{
-    prelude::*,
-    tasks::{TaskPool, TaskPoolBuilder},
-};
+use bevy::{diagnostic::DiagnosticId, prelude::*, tasks::{TaskPool, TaskPoolBuilder}};
 use building_blocks::core::{Extent3i, PointN};
 use heron::{CollisionShape, RigidBody};
 use std::{collections::VecDeque, ops::Deref, sync::Arc};
@@ -23,6 +20,8 @@ pub const CHUNK_WIDTH: i32 = 16;
 pub const CHUNK_DEPTH: i32 = 16;
 
 pub const MAX_FRAME_CHUNK_GEN_COUNT: usize = 16;
+
+pub const CHUNK_MESHING_TIME: DiagnosticId = DiagnosticId::from_u128(489617772449846);
 
 /// A component tracking the current loading state of a chunk.
 #[derive(PartialEq, Eq, PartialOrd, Ord)]

@@ -1,6 +1,8 @@
 use bevy::{
+    diagnostic::Diagnostics,
     prelude::*,
     render::{mesh::Indices, pipeline::PrimitiveTopology},
+    utils::Instant,
 };
 use building_blocks::{
     core::Extent3i,
@@ -12,6 +14,7 @@ use crate::utils::ChunkMeshBuilder;
 
 use super::{
     chunk_extent, ChunkInfo, ChunkLoadState, ChunkMapReader, ChunkMeshInfo, WorldTaskPool,
+    CHUNK_MESHING_TIME,
 };
 
 pub(crate) struct ChunkMeshingRequest(Entity);
@@ -27,7 +30,10 @@ pub(crate) fn mesh_chunks(
     mut meshes: ResMut<Assets<Mesh>>,
     chunk_map: ChunkMapReader,
     task_pool: Res<WorldTaskPool>,
+    mut diagnostics: ResMut<Diagnostics>,
 ) {
+    let before_meshing_time = Instant::now();
+
     let mesh_results = task_pool.scope(|scope| {
         for meshing_event in meshing_requests.iter() {
             if let Ok(chunk_info) = chunks.get_component::<ChunkInfo>(meshing_event.0) {
@@ -99,6 +105,9 @@ pub(crate) fn mesh_chunks(
             }
         }
     }
+
+    let after_chunk_meshing = Instant::now() - before_meshing_time;
+    diagnostics.add_measurement(CHUNK_MESHING_TIME, after_chunk_meshing.as_secs_f64());
 }
 
 pub(crate) fn handle_chunk_loading_events(
