@@ -1,7 +1,7 @@
 use bevy::math::IVec2;
 use building_blocks::{
     core::{ExtentN, PointN},
-    storage::{Array3x1, FillExtent},
+    storage::{Array3x1, FillExtent, GetMut},
 };
 
 use crate::{
@@ -25,7 +25,14 @@ impl TerrainGenerator for NoiseTerrainGenerator {
         let heightmap = NoiseMap::new(chunk_pos, self.seed, 5);
 
         data.fill_extent(
-            &ExtentN::from_min_and_max(PointN([0; 3]), PointN([CHUNK_WIDTH, 4, CHUNK_DEPTH])),
+            &ExtentN::from_min_and_max(PointN([0; 3]), PointN([CHUNK_WIDTH, 1, CHUNK_DEPTH])),
+            Voxel::Solid {
+                attributes: [0, 0, 0, 255],
+            },
+        );
+
+        data.fill_extent(
+            &ExtentN::from_min_and_max(PointN([0, 1, 0]), PointN([CHUNK_WIDTH, 8, CHUNK_DEPTH])),
             Voxel::Fluid {
                 attributes: [102, 133, 254, 255],
             },
@@ -34,30 +41,30 @@ impl TerrainGenerator for NoiseTerrainGenerator {
         for x in 0..CHUNK_WIDTH {
             for z in 0..CHUNK_DEPTH {
                 let original_height = heightmap.value_at(x, z).abs();
-
-                let height = original_height * 8.0;
                 let block_height = (original_height * CHUNK_HEIGHT as f32) as i32;
-                let color = self.get_color_for_height(height);
 
-                let extent =
-                    ExtentN::from_min_and_max(PointN([x, 0, z]), PointN([x, block_height, z]));
-                data.fill_extent(&extent, Voxel::Solid { attributes: color })
+                for y in 1..block_height {
+                    *data.get_mut(PointN([x, y, z])) = Voxel::Solid {
+                        attributes: self.get_color_for_height(y),
+                    }
+                }
             }
         }
     }
 }
 
 impl NoiseTerrainGenerator {
-    fn get_color_for_height(&self, height: f32) -> [u8; 4] {
-        if height < 0.30 {
+    #[inline]
+    fn get_color_for_height(&self, height: i32) -> [u8; 4] {
+        if height < 12 {
             [236, 230, 214, 255]
-        } else if height < 0.45 {
+        } else if height < 24 {
             [96, 200, 102, 255]
-        } else if height < 0.65 {
+        } else if height < 83 {
             [64, 152, 72, 255]
-        } else if height < 0.8 {
+        } else if height < 102 {
             [122, 121, 87, 255]
-        } else if height < 0.9 {
+        } else if height < 115 {
             [99, 99, 88, 255]
         } else {
             [255; 4]
