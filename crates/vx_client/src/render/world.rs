@@ -16,6 +16,9 @@ const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
 const FLUID_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 494984949444979);
 
+const SHARED_STANDARD_MATERIAL_HANDLE: HandleUntyped =
+    HandleUntyped::weak_from_u64(StandardMaterial::TYPE_UUID, 9734486248927);
+
 #[derive(Bundle)]
 pub struct ChunkRenderBundle {
     pub mesh: Handle<Mesh>,
@@ -30,14 +33,13 @@ pub struct ChunkRenderBundle {
 fn attach_chunk_render_bundle(
     chunks: Query<(&ChunkMeshInfo, Entity), Added<ChunkInfo>>,
     mut commands: Commands,
-    mut mats: ResMut<Assets<StandardMaterial>>,
 ) {
     for (mesh_info, ent) in chunks.iter() {
         commands
             .entity(ent)
             .insert_bundle(ChunkRenderBundle {
                 mesh: mesh_info.chunk_mesh.clone(),
-                material: mats.add(Default::default()),
+                material: SHARED_STANDARD_MATERIAL_HANDLE.typed(),
                 render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
                     TERRAIN_PIPELINE_HANDLE.typed(),
                 )]),
@@ -52,7 +54,7 @@ fn attach_chunk_render_bundle(
                 parent
                     .spawn_bundle(ChunkRenderBundle {
                         mesh: mesh_info.fluid_mesh.clone(),
-                        material: mats.add(Default::default()),
+                        material: SHARED_STANDARD_MATERIAL_HANDLE.typed(),
                         render_pipelines: RenderPipelines::from_pipelines(vec![
                             RenderPipeline::new(FLUID_PIPELINE_HANDLE.typed()),
                         ]),
@@ -127,6 +129,7 @@ fn step_chunk_ready_animation(
 /// Setups all the required resources for rendering (ie: shader pipelines)
 fn setup_render_resources(
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
     let _ = pipelines.set_untracked(
@@ -144,6 +147,8 @@ fn setup_render_resources(
             fragment: Some(asset_server.load("shaders/fluid_pbr.frag")),
         }),
     );
+
+    materials.set_untracked(SHARED_STANDARD_MATERIAL_HANDLE, Default::default());
 }
 
 pub struct WorldRenderPlugin;
