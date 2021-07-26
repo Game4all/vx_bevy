@@ -13,8 +13,8 @@ use building_blocks::{
 use crate::utils::ChunkMeshBuilder;
 
 use super::{
-    chunk_extent, ChunkInfo, ChunkLoadState, ChunkMapReader, ChunkMeshInfo, WorldTaskPool,
-    CHUNK_MESHING_TIME,
+    chunk_extent, ChunkInfo, ChunkLoadState, ChunkMapReader, ChunkMeshInfo, ChunkUpdateEvent,
+    WorldTaskPool, CHUNK_MESHING_TIME,
 };
 
 pub(crate) struct ChunkMeshingRequest(Entity);
@@ -125,4 +125,11 @@ pub(crate) fn handle_chunk_loading_events(
             meshing_events.send(ChunkMeshingRequest(entity));
         }
     }
+}
+
+pub(crate) fn handle_chunk_update_events(
+    mut update_events: EventReader<ChunkUpdateEvent>,
+    mut meshing_events: EventWriter<ChunkMeshingRequest>,
+) {
+    meshing_events.send_batch(update_events.iter().map(|x| ChunkMeshingRequest(x.0)));
 }

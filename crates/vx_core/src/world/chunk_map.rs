@@ -2,7 +2,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::{math::IVec2, prelude::*, utils::HashMap};
 use building_blocks::storage::{Array3x1, ChunkHashMap3x1, ChunkKey3};
 
-use super::chunk2point;
+use super::{chunk2point, ChunkUpdateEvent};
 
 pub type ChunkEntityMap = HashMap<IVec2, Entity>;
 
@@ -16,6 +16,7 @@ pub struct ChunkMapReader<'a> {
 pub struct ChunkMapWriter<'a> {
     pub chunk_entities: ResMut<'a, ChunkEntityMap>,
     pub chunk_data: ResMut<'a, ChunkHashMap3x1<crate::voxel::Voxel>>,
+    pub chunk_updates: EventWriter<'a, ChunkUpdateEvent>,
 }
 
 impl<'a> ChunkMapReader<'a> {
@@ -41,5 +42,11 @@ impl<'a> ChunkMapWriter<'a> {
     ) -> Option<&mut Array3x1<crate::voxel::Voxel>> {
         self.chunk_data
             .get_mut_chunk(ChunkKey3::new(0, chunk2point(*chunk_coords)))
+    }
+
+    pub fn mark_updated(&mut self, chunk_coords: &IVec2) {
+        if let Some(entity) = self.chunk_entities.get(chunk_coords) {
+            self.chunk_updates.send(ChunkUpdateEvent(*entity));
+        }
     }
 }

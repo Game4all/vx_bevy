@@ -56,6 +56,9 @@ pub(crate) struct ChunkLoadRequest(Entity);
 /// An event signaling that a chunk and its data have finished loading and are ready to be displayed.
 pub struct ChunkReadyEvent(pub IVec2, pub Entity);
 
+/// An event signaling that the data of a chunk has been modified.
+pub struct ChunkUpdateEvent(pub Entity);
+
 /// A component describing a chunk.
 pub struct ChunkInfo {
     pub pos: IVec2,
@@ -124,6 +127,7 @@ impl Plugin for WorldSimulationPlugin {
             // internal events
             .add_event::<ChunkSpawnRequest>()
             .add_event::<ChunkDespawnRequest>()
+            .add_event::<ChunkUpdateEvent>()
             .add_event::<meshing::ChunkMeshingRequest>()
             // public events
             .add_event::<ChunkReadyEvent>()
@@ -176,10 +180,16 @@ impl Plugin for WorldSimulationPlugin {
                     .after("destroy_chunks"),
             )
             .add_system(
+                meshing::handle_chunk_update_events
+                    .system()
+                    .label("handle_chunk_update_events")
+                    .after("handle_chunk_loading_events"),
+            )
+            .add_system(
                 meshing::mesh_chunks
                     .system()
                     .label("mesh_chunks")
-                    .after("handle_chunk_loading_events"),
+                    .after("handle_chunk_update_events"),
             );
     }
 }
