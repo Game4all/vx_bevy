@@ -49,7 +49,7 @@ pub enum ChunkLoadState {
 }
 
 pub(crate) struct ChunkSpawnRequest(IVec2);
-pub(crate) struct ChunkDespawnRequest(IVec2, Entity);
+pub(crate) struct ChunkDespawnRequest(Entity);
 
 pub(crate) struct ChunkLoadRequest(Entity);
 

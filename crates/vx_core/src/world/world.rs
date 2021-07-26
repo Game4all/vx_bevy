@@ -5,7 +5,11 @@ use bevy::{math::IVec2, prelude::*, render::pipeline::PrimitiveTopology};
 use building_blocks::storage::ChunkKey3;
 use heron::prelude::*;
 
-use super::{ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkMeshInfo, ChunkReadyEvent, ChunkSpawnRequest, chunk2global, chunk2point, global2chunk};
+use super::{
+    chunk2global, chunk2point, global2chunk, ChunkDataBundle, ChunkDespawnRequest, ChunkInfo,
+    ChunkLoadRequest, ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkMeshInfo,
+    ChunkReadyEvent, ChunkSpawnRequest,
+};
 use crate::{config::GlobalConfig, Player};
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
@@ -47,7 +51,7 @@ pub(crate) fn update_visible_chunks(
             let delta = *key - pos;
             let entity = chunk_map.get_entity(key).unwrap();
             if delta.x.abs().pow(2) + delta.y.abs().pow(2) > config.render_distance.pow(2) {
-                despawn_requests.send(ChunkDespawnRequest(key.clone(), entity));
+                despawn_requests.send(ChunkDespawnRequest(entity));
             }
         }
     }
@@ -106,7 +110,7 @@ pub(crate) fn prepare_for_unload(
     mut chunks: Query<&mut ChunkLoadState>,
 ) {
     for despawn_event in despawn_events.iter() {
-        if let Ok(mut load_state) = chunks.get_mut(despawn_event.1) {
+        if let Ok(mut load_state) = chunks.get_mut(despawn_event.0) {
             *load_state = ChunkLoadState::Unload;
         }
     }
@@ -125,7 +129,9 @@ pub(crate) fn destroy_chunks(
                     .chunk_entities
                     .remove(&chunk.pos)
                     .expect("Expected valid chunk");
-                chunk_map.chunk_data.pop_chunk(ChunkKey3::new(0, chunk2point(chunk.pos)));
+                chunk_map
+                    .chunk_data
+                    .pop_chunk(ChunkKey3::new(0, chunk2point(chunk.pos)));
                 commands.entity(entity).despawn_recursive();
             }
             _ => {}
