@@ -1,6 +1,6 @@
 use bevy::{
     app::AppExit,
-    input::{keyboard::KeyboardInput, ElementState},
+    input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ElementState},
     prelude::*,
     utils::HashMap,
 };
@@ -20,15 +20,21 @@ pub enum Action {
     WalkRight,
     WalkLeft,
     CursorLock,
-    ToggleDebugUi
+    ToggleDebugUi,
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
+pub enum KeyButton {
+    Keyboard(KeyCode),
+    Mouse(MouseButton),
 }
 
 //todo: this is a super simple action map but it may be cool to move to something like **Kurinji** when it updates to bevy 0.5
 #[derive(Serialize, Deserialize)]
-pub struct Keybindings(HashMap<KeyCode, Action>);
+pub struct Keybindings(HashMap<KeyButton, Action>);
 
 impl Deref for Keybindings {
-    type Target = HashMap<KeyCode, Action>;
+    type Target = HashMap<KeyButton, Action>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -48,12 +54,12 @@ impl Configuration for Keybindings {
 impl Default for Keybindings {
     fn default() -> Self {
         let mut keybinds = HashMap::default();
-        keybinds.insert(KeyCode::Z, Action::WalkForward);
-        keybinds.insert(KeyCode::S, Action::WalkBackward);
-        keybinds.insert(KeyCode::A, Action::WalkLeft);
-        keybinds.insert(KeyCode::D, Action::WalkRight);
-        keybinds.insert(KeyCode::Escape, Action::CursorLock);
-        keybinds.insert(KeyCode::F3, Action::ToggleDebugUi);
+        keybinds.insert(KeyButton::Keyboard(KeyCode::Z), Action::WalkForward);
+        keybinds.insert(KeyButton::Keyboard(KeyCode::S), Action::WalkBackward);
+        keybinds.insert(KeyButton::Keyboard(KeyCode::A), Action::WalkLeft);
+        keybinds.insert(KeyButton::Keyboard(KeyCode::D), Action::WalkRight);
+        keybinds.insert(KeyButton::Keyboard(KeyCode::Escape), Action::CursorLock);
+        keybinds.insert(KeyButton::Keyboard(KeyCode::F3), Action::ToggleDebugUi);
         Keybindings(keybinds)
     }
 }
@@ -61,21 +67,32 @@ impl Default for Keybindings {
 fn update_actions(
     mut actions: ResMut<Input<Action>>,
     keybinds: Res<Keybindings>,
-    mut key_events: EventReader<KeyboardInput>,
+    mut kb_events: EventReader<KeyboardInput>,
+    mut mouse_events: EventReader<MouseButtonInput>,
 ) {
     actions.clear();
-    for event in key_events.iter() {
+    for kb_event in kb_events.iter() {
         if let KeyboardInput {
             key_code: Some(key_code),
             state,
             ..
-        } = event
+        } = kb_event
         {
-            if let Some(action) = keybinds.get(key_code) {
+            if let Some(action) = keybinds.get(&KeyButton::Keyboard(*key_code)) {
                 match state {
                     ElementState::Pressed => actions.press(*action),
                     ElementState::Released => actions.release(*action),
                 }
+            }
+        }
+    }
+
+    for mouse_event in mouse_events.iter() {
+        let MouseButtonInput { button, state } = mouse_event;
+        if let Some(action) = keybinds.get(&KeyButton::Mouse(*button)) {
+            match state {
+                ElementState::Pressed => actions.press(*action),
+                ElementState::Released => actions.release(*action),
             }
         }
     }
