@@ -51,6 +51,8 @@ pub enum ChunkLoadState {
 pub(crate) struct ChunkSpawnRequest(IVec2);
 pub(crate) struct ChunkDespawnRequest(Entity);
 
+pub struct ChunkMeshingRequest(pub Entity);
+
 pub(crate) struct ChunkLoadRequest(Entity);
 
 /// An event signaling that a chunk and its data have finished loading and are ready to be displayed.
@@ -128,9 +130,9 @@ impl Plugin for WorldSimulationPlugin {
             .add_event::<ChunkSpawnRequest>()
             .add_event::<ChunkDespawnRequest>()
             .add_event::<ChunkUpdateEvent>()
-            .add_event::<meshing::ChunkMeshingRequest>()
             // public events
             .add_event::<ChunkReadyEvent>()
+            .add_event::<ChunkMeshingRequest>()
             // systems
             .add_system(
                 world::update_visible_chunks

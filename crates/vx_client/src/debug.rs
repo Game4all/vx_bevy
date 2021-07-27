@@ -2,7 +2,9 @@ use bevy::{
     diagnostic::{Diagnostic, DiagnosticId, Diagnostics, FrameTimeDiagnosticsPlugin},
     prelude::*,
 };
-use vx_core::world::{CHUNK_DATA_GEN_TIME, CHUNK_MESHING_TIME};
+use vx_core::world::{
+    ChunkEntityMap, ChunkMeshingRequest, CHUNK_DATA_GEN_TIME, CHUNK_MESHING_TIME,
+};
 
 use crate::input::Action;
 
@@ -14,7 +16,8 @@ impl Plugin for DebugUIPlugin {
     fn build(&self, app: &mut bevy::prelude::AppBuilder) {
         app.add_startup_system(setup.system())
             .add_system(update_counters.system())
-            .add_system(toggle_counters.system());
+            .add_system(toggle_counters.system())
+            .add_system(remesh_chunks.system());
     }
 }
 
@@ -125,5 +128,16 @@ fn toggle_counters(
         for mut visible in counters.iter_mut() {
             visible.is_visible = !visible.is_visible;
         }
+    }
+}
+
+fn remesh_chunks(
+    actions: Res<Input<Action>>,
+    chunk_map: Res<ChunkEntityMap>,
+    mut meshing_events: EventWriter<ChunkMeshingRequest>,
+) {
+    if actions.just_pressed(Action::RemeshChunks) {
+        meshing_events.send_batch(chunk_map.values().map(|k| ChunkMeshingRequest(*k)));
+        info!("Queued remesh of all visible chunks.");
     }
 }

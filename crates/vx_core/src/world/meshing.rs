@@ -13,11 +13,9 @@ use building_blocks::{
 use crate::utils::ChunkMeshBuilder;
 
 use super::{
-    chunk_extent, ChunkInfo, ChunkLoadState, ChunkMapReader, ChunkMeshInfo, ChunkUpdateEvent,
-    WorldTaskPool, CHUNK_MESHING_TIME,
+    chunk_extent, ChunkInfo, ChunkLoadState, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest,
+    ChunkUpdateEvent, WorldTaskPool, CHUNK_MESHING_TIME,
 };
-
-pub(crate) struct ChunkMeshingRequest(Entity);
 
 #[inline]
 fn padded_chunk_extent() -> Extent3i {

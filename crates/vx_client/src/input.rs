@@ -20,7 +20,10 @@ pub enum Action {
     WalkRight,
     WalkLeft,
     CursorLock,
+
+    //debug stuff
     ToggleDebugUi,
+    RemeshChunks,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
@@ -60,6 +63,7 @@ impl Default for Keybindings {
         keybinds.insert(KeyButton::Keyboard(KeyCode::D), Action::WalkRight);
         keybinds.insert(KeyButton::Keyboard(KeyCode::Escape), Action::CursorLock);
         keybinds.insert(KeyButton::Keyboard(KeyCode::F3), Action::ToggleDebugUi);
+        keybinds.insert(KeyButton::Keyboard(KeyCode::F5), Action::RemeshChunks);
         Keybindings(keybinds)
     }
 }
