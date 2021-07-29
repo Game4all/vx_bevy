@@ -1,5 +1,5 @@
 use bevy::{
-    diagnostic::DiagnosticId,
+    diagnostic::{Diagnostic, DiagnosticId, Diagnostics},
     prelude::*,
     tasks::{TaskPool, TaskPoolBuilder},
 };
@@ -220,5 +220,22 @@ impl Plugin for WorldSimulationPlugin {
                     .label("destroy_chunks")
                     .after("mark_chunks_ready"),
             );
+
+
+        //registering debug diagnostics
+        app.world_mut()
+            .resource_scope(|_, mut diagnostics: Mut<Diagnostics>| {
+                diagnostics.add(Diagnostic::new(
+                    CHUNK_MESHING_TIME,
+                    "Avg. chunk meshing time (s)",
+                    3,
+                ));
+
+                diagnostics.add(Diagnostic::new(
+                    CHUNK_DATA_GEN_TIME,
+                    "Avg. worldgen time (s)",
+                    3,
+                ));
+            });
     }
 }

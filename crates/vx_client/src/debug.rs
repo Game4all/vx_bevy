@@ -1,5 +1,5 @@
 use bevy::{
-    diagnostic::{Diagnostic, DiagnosticId, Diagnostics, FrameTimeDiagnosticsPlugin},
+    diagnostic::{DiagnosticId, Diagnostics, FrameTimeDiagnosticsPlugin},
     prelude::*,
 };
 use vx_core::world::{
@@ -7,6 +7,12 @@ use vx_core::world::{
 };
 
 use crate::input::Action;
+
+const LOGGED_DIAGS: &[DiagnosticId] = &[
+    FrameTimeDiagnosticsPlugin::FPS,
+    CHUNK_MESHING_TIME,
+    CHUNK_DATA_GEN_TIME,
+];
 
 struct DebugCounter(DiagnosticId);
 
@@ -21,38 +27,23 @@ impl Plugin for DebugUIPlugin {
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut diagnostics: ResMut<Diagnostics>,
-) {
-    diagnostics.add(Diagnostic::new(CHUNK_MESHING_TIME, "Chunk meshing time", 3));
-    diagnostics.add(Diagnostic::new(CHUNK_DATA_GEN_TIME, "worldgen time", 3));
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>, diagnostics: Res<Diagnostics>) {
     commands.spawn_bundle(UiCameraBundle::default());
 
-    register_counter(
-        FrameTimeDiagnosticsPlugin::FPS,
-        "FPS ".to_string(),
-        &mut commands,
-        &asset_server,
-        Val::Px(15.0),
-    );
+    let mut val = Val::Px(15.0);
 
-    register_counter(
-        CHUNK_MESHING_TIME,
-        "Avg. chunk meshing time (s) ".to_string(),
-        &mut commands,
-        &asset_server,
-        Val::Px(30.0),
-    );
-
-    register_counter(
-        CHUNK_DATA_GEN_TIME,
-        "Avg. world gen time (s) ".to_string(),
-        &mut commands,
-        &asset_server,
-        Val::Px(45.0),
-    );
+    for diag in LOGGED_DIAGS {
+        if let Some(diagnostic) = diagnostics.get(*diag) {
+            register_counter(
+                *diag,
+                diagnostic.name.to_string(),
+                &mut commands,
+                &asset_server,
+                val,
+            );
+            val += 20.0;
+        }
+    }
 }
 
 fn register_counter(
@@ -78,6 +69,14 @@ fn register_counter(
                 sections: vec![
                     TextSection {
                         value: name,
+                        style: TextStyle {
+                            font: asset_server.load("fonts/dogica.ttf"),
+                            font_size: 8.0,
+                            color: Color::WHITE,
+                        },
+                    },
+                    TextSection {
+                        value: " ".to_string(),
                         style: TextStyle {
                             font: asset_server.load("fonts/dogica.ttf"),
                             font_size: 8.0,
@@ -114,7 +113,7 @@ fn update_counters(
     for (mut text, counter) in counter.iter_mut() {
         if let Some(diag) = diagnostics.get(counter.0) {
             if let Some(avg) = diag.average() {
-                text.sections[1].value = format!("{:.4}", avg);
+                text.sections[2].value = format!("{:.4}", avg);
             }
         }
     }
