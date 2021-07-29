@@ -8,7 +8,7 @@ use bevy::{
     },
 };
 
-use vx_core::world::{ChunkInfo, ChunkMeshInfo, ChunkReadyEvent};
+use vx_core::world::{ChunkInfo, ChunkMeshInfo, ChunkReadyEvent, WorldUpdateStage};
 
 const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 541458694767869);
@@ -157,8 +157,17 @@ impl Plugin for WorldRenderPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(ClearColor(Color::hex("87CEEB").unwrap()))
             .add_startup_system(setup_render_resources.system())
-            .add_system(attach_chunk_render_bundle.system())
-            .add_system(update_meshes_visibility.system())
-            .add_system(step_chunk_ready_animation.system());
+            .add_system_to_stage(
+                WorldUpdateStage::PostUpdate,
+                attach_chunk_render_bundle.system(),
+            )
+            .add_system_to_stage(
+                WorldUpdateStage::PostUpdate,
+                update_meshes_visibility.system(),
+            )
+            .add_system_to_stage(
+                WorldUpdateStage::PostUpdate,
+                step_chunk_ready_animation.system(),
+            );
     }
 }

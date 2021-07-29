@@ -27,9 +27,15 @@ pub const CHUNK_WIDTH: i32 = 16;
 pub const CHUNK_DEPTH: i32 = 16;
 
 pub const MAX_FRAME_CHUNK_GEN_COUNT: usize = 16;
-
 pub const CHUNK_MESHING_TIME: DiagnosticId = DiagnosticId::from_u128(489617772449846);
 pub const CHUNK_DATA_GEN_TIME: DiagnosticId = DiagnosticId::from_u128(975647521301976);
+
+#[derive(StageLabel, Clone, Copy, Hash, Debug, PartialEq, Eq)]
+pub enum WorldUpdateStage {
+    Update,
+    PostUpdate,
+    Cleanup,
+}
 
 /// A component tracking the current loading state of a chunk.
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
@@ -134,64 +140,85 @@ impl Plugin for WorldSimulationPlugin {
             .add_event::<ChunkReadyEvent>()
             .add_event::<ChunkMeshingRequest>()
             // systems
-            .add_system(
+            .add_stage(WorldUpdateStage::Update, SystemStage::parallel())
+            .add_stage_after(
+                WorldUpdateStage::Update,
+                WorldUpdateStage::PostUpdate,
+                SystemStage::parallel(),
+            )
+            .add_stage_after(
+                WorldUpdateStage::PostUpdate,
+                WorldUpdateStage::Cleanup,
+                SystemStage::parallel(),
+            )
+            .add_system_to_stage(
+                WorldUpdateStage::Update,
                 world::update_visible_chunks
                     .system()
                     .label("update_visible_chunks"),
             )
-            .add_system(
+            .add_system_to_stage(
+                WorldUpdateStage::Update,
                 world::create_chunks
                     .system()
                     .label("create_chunks")
                     .after("update_visible_chunks"),
             )
-            .add_system(
+            .add_system_to_stage(
+                WorldUpdateStage::Update,
                 world::load_chunk_data
                     .system()
                     .label("load_chunk_data")
                     .after("create_chunks"),
             )
-            .add_system(
+            .add_system_to_stage(
+                WorldUpdateStage::Update,
                 worldgen::generate_terrain_data
                     .system()
                     .label("generate_terrain_data")
                     .after("load_chunk_data"),
             )
-            .add_system(
-                world::prepare_for_unload
-                    .system()
-                    .label("prepare_for_unload")
-                    .after("generate_terrain_data"),
-            )
-            .add_system(
+            .add_system_to_stage(
+                WorldUpdateStage::Update,
                 world::mark_chunks_ready
                     .system()
                     .label("mark_chunks_ready")
                     .after("prepare_for_unload"),
             )
-            .add_system(
-                world::destroy_chunks
-                    .system()
-                    .label("destroy_chunks")
-                    .after("mark_chunks_ready"),
-            )
-            .add_system(
+            .add_system_to_stage(
+                WorldUpdateStage::Update,
                 meshing::handle_chunk_loading_events
                     .system()
                     .label("handle_chunk_loading_events")
                     .after("destroy_chunks"),
             )
-            .add_system(
+            .add_system_to_stage(
+                WorldUpdateStage::Update,
                 meshing::handle_chunk_update_events
                     .system()
                     .label("handle_chunk_update_events")
                     .after("handle_chunk_loading_events"),
             )
-            .add_system(
+            .add_system_to_stage(
+                WorldUpdateStage::Update,
                 meshing::mesh_chunks
                     .system()
                     .label("mesh_chunks")
                     .after("handle_chunk_update_events"),
+            )
+            .add_system_to_stage(
+                WorldUpdateStage::Cleanup,
+                world::prepare_for_unload
+                    .system()
+                    .label("prepare_for_unload")
+                    .after("generate_terrain_data"),
+            )
+            .add_system_to_stage(
+                WorldUpdateStage::Cleanup,
+                world::destroy_chunks
+                    .system()
+                    .label("destroy_chunks")
+                    .after("mark_chunks_ready"),
             );
     }
 }
