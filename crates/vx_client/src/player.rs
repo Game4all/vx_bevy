@@ -1,4 +1,4 @@
-use bevy::{input::mouse::MouseMotion, prelude::*};
+use bevy::{input::mouse::MouseMotion, math::const_vec3, prelude::*};
 
 use std::f32::consts::FRAC_PI_2;
 
@@ -58,7 +58,8 @@ pub fn handle_player_input(
 
         let mut direction = Vec3::ZERO;
 
-        let forward = transform.rotation.mul_vec3(Vec3::Z).normalize();
+        let forward =
+            transform.rotation.mul_vec3(Vec3::Z).normalize() * const_vec3!([1.0, 0., 1.0]);
         let right = transform.rotation.mul_vec3(Vec3::X).normalize();
 
         if actions.pressed(Action::WalkForward) {
@@ -77,7 +78,16 @@ pub fn handle_player_input(
             direction.x -= 1.0;
         }
 
-        transform.translation += direction.x * right + direction.z * forward;
+        if actions.pressed(Action::WalkJump) {
+            direction.y += 1.0;
+        }
+
+        if actions.pressed(Action::WalkCrouch) {
+            direction.y -= 1.0;
+        }
+
+        transform.translation +=
+            direction.x * right + direction.z * forward + direction.y * Vec3::Y;
     }
 }
 

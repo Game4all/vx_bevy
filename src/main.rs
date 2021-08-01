@@ -14,7 +14,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-2.0, 150.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(0., 150.0, 0.0),
             ..Default::default()
         })
         .insert(Player)

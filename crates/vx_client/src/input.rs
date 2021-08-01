@@ -19,6 +19,8 @@ pub enum Action {
     WalkBackward,
     WalkRight,
     WalkLeft,
+    WalkJump,
+    WalkCrouch,
     CursorLock,
 
     //debug stuff
@@ -61,6 +63,8 @@ impl Default for Keybindings {
         keybinds.insert(KeyButton::Keyboard(KeyCode::S), Action::WalkBackward);
         keybinds.insert(KeyButton::Keyboard(KeyCode::A), Action::WalkLeft);
         keybinds.insert(KeyButton::Keyboard(KeyCode::D), Action::WalkRight);
+        keybinds.insert(KeyButton::Keyboard(KeyCode::Space), Action::WalkJump);
+        keybinds.insert(KeyButton::Keyboard(KeyCode::LShift), Action::WalkCrouch);
         keybinds.insert(KeyButton::Keyboard(KeyCode::Escape), Action::CursorLock);
         keybinds.insert(KeyButton::Keyboard(KeyCode::F3), Action::ToggleDebugUi);
         keybinds.insert(KeyButton::Keyboard(KeyCode::F5), Action::RemeshChunks);
