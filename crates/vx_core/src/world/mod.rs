@@ -183,14 +183,14 @@ impl Plugin for WorldSimulationPlugin {
                 world::mark_chunks_ready
                     .system()
                     .label("mark_chunks_ready")
-                    .after("prepare_for_unload"),
+                    .after("generate_terrain_data"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::Update,
                 meshing::handle_chunk_loading_events
                     .system()
                     .label("handle_chunk_loading_events")
-                    .after("destroy_chunks"),
+                    .after("mark_chunks_ready"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::Update,
@@ -211,14 +211,13 @@ impl Plugin for WorldSimulationPlugin {
                 world::prepare_for_unload
                     .system()
                     .label("prepare_for_unload")
-                    .after("generate_terrain_data"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::Cleanup,
                 world::destroy_chunks
                     .system()
                     .label("destroy_chunks")
-                    .after("mark_chunks_ready"),
+                    .after("prepare_for_unload"),
             );
 
 
