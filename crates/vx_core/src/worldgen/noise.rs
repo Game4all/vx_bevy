@@ -1,4 +1,4 @@
-use bevy::math::IVec2;
+use bevy::math::IVec3;
 use building_blocks::{
     core::{ExtentN, PointN},
     storage::{Array3x1, FillExtent, GetMut},
@@ -21,7 +21,7 @@ impl TerrainGenerator for NoiseTerrainGenerator {
         self.seed = seed;
     }
 
-    fn generate(&self, chunk_pos: IVec2, data: &mut Array3x1<Voxel>) {
+    fn generate(&self, chunk_pos: IVec3, data: &mut Array3x1<Voxel>) {
         let heightmap = NoiseMap::new(chunk_pos, self.seed, 5);
 
         data.fill_extent(
@@ -77,13 +77,13 @@ pub(crate) struct NoiseMap {
 }
 
 impl NoiseMap {
-    pub fn new(chunk_pos: IVec2, seed: i32, octave_nb: u8) -> Self {
+    pub fn new(chunk_pos: IVec3, seed: i32, octave_nb: u8) -> Self {
         Self {
             noise: {
                 simdnoise::NoiseBuilder::fbm_2d_offset(
                     (chunk_pos.x * CHUNK_WIDTH) as f32,
                     CHUNK_WIDTH as usize,
-                    (chunk_pos.y * CHUNK_DEPTH) as f32,
+                    (chunk_pos.z * CHUNK_DEPTH) as f32,
                     CHUNK_DEPTH as usize,
                 )
                 .with_seed(seed)

@@ -54,7 +54,7 @@ pub enum ChunkLoadState {
     Despawn,
 }
 
-pub(crate) struct ChunkSpawnRequest(IVec2);
+pub(crate) struct ChunkSpawnRequest(IVec3);
 pub(crate) struct ChunkDespawnRequest(Entity);
 
 pub struct ChunkMeshingRequest(pub Entity);
@@ -62,14 +62,14 @@ pub struct ChunkMeshingRequest(pub Entity);
 pub(crate) struct ChunkLoadRequest(Entity);
 
 /// An event signaling that a chunk and its data have finished loading and are ready to be displayed.
-pub struct ChunkReadyEvent(pub IVec2, pub Entity);
+pub struct ChunkReadyEvent(pub IVec3, pub Entity);
 
 /// An event signaling that the data of a chunk has been modified.
 pub struct ChunkUpdateEvent(pub Entity);
 
 /// A component describing a chunk.
 pub struct ChunkInfo {
-    pub pos: IVec2,
+    pub pos: IVec3,
 }
 
 #[derive(Bundle)]

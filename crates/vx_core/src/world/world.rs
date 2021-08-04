@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use bevy::{math::IVec2, prelude::*, render::pipeline::PrimitiveTopology};
+use bevy::{prelude::*, render::pipeline::PrimitiveTopology};
 
 use building_blocks::storage::ChunkKey3;
 use heron::prelude::*;
@@ -19,7 +19,7 @@ pub(crate) fn update_visible_chunks(
     player: Query<(&Transform, &Player)>,
     chunk_map: ChunkMapReader,
     config: Res<GlobalConfig>,
-    mut load_radius_chunks: bevy::ecs::system::Local<Vec<IVec2>>,
+    mut load_radius_chunks: bevy::ecs::system::Local<Vec<IVec3>>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
     mut despawn_requests: EventWriter<ChunkDespawnRequest>,
 ) {
@@ -32,14 +32,14 @@ pub(crate) fn update_visible_chunks(
                     continue;
                 };
 
-                let chunk_pos = pos + (dx, dy).into();
+                let chunk_pos = pos + (dx, 0, dy).into();
                 if !chunk_map.chunk_exists(&chunk_pos) {
                     load_radius_chunks.push(chunk_pos);
                 }
             }
         }
 
-        load_radius_chunks.sort_by_key(|a| (a.x.pow(2) + a.y.pow(2)));
+        load_radius_chunks.sort_by_key(|a| (a.x.pow(2) + a.z.pow(2)));
 
         spawn_requests.send_batch(
             load_radius_chunks
@@ -50,7 +50,9 @@ pub(crate) fn update_visible_chunks(
         for key in chunk_map.chunk_entities.keys() {
             let delta = *key - pos;
             let entity = chunk_map.get_entity(key).unwrap();
-            if delta.x.abs().pow(2) + delta.y.abs().pow(2) > config.render_distance.pow(2) {
+            if delta.x.abs().pow(2) + delta.y.abs().pow(2) + delta.z.abs().pow(2)
+                > config.render_distance.pow(2)
+            {
                 despawn_requests.send(ChunkDespawnRequest(entity));
             }
         }
