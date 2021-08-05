@@ -8,7 +8,7 @@ use bevy::{
     },
 };
 
-use vx_core::world::{ChunkInfo, ChunkMeshInfo, ChunkReadyEvent, WorldUpdateStage};
+use vx_core::world::{ChunkInfo, ChunkMeshInfo, ChunkReadyEvent, WorldUpdateStage, CHUNK_HEIGHT};
 
 const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 541458694767869);
@@ -71,29 +71,39 @@ fn attach_chunk_render_bundle(
     }
 }
 
-struct ChunkAnimationTracker(f32);
+struct ChunkTransformAnimation {
+    pub start_time: f32,
+    pub final_y: f32,
+}
 
 fn update_meshes_visibility(
     mut ready_events: EventReader<ChunkReadyEvent>,
-    mut chunks: QuerySet<(Query<&Children>, Query<(&mut Visible, &mut Transform)>)>,
+    mut chunks: QuerySet<(
+        Query<(&Children, &ChunkInfo)>,
+        Query<(&mut Visible, &mut Transform)>,
+    )>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,
     mut commands: Commands,
     time: Res<Time>,
 ) {
     for ready_event in ready_events.iter() {
-        if let Ok(children) = chunks.q0().get(ready_event.1) {
+        if let Ok((children, chunk_info)) = chunks.q0().get(ready_event.1) {
             entities.push(ready_event.1);
             entities.push(children.first().unwrap().clone());
 
-            commands.entity(ready_event.1).insert(ChunkAnimationTracker(
-                time.time_since_startup().as_secs_f32(),
-            ));
+            commands
+                .entity(ready_event.1)
+                .insert(ChunkTransformAnimation {
+                    start_time: time.time_since_startup().as_secs_f32(),
+                    final_y: (chunk_info.pos.y * CHUNK_HEIGHT) as f32,
+                });
 
             commands
                 .entity(children.first().unwrap().clone())
-                .insert(ChunkAnimationTracker(
-                    time.time_since_startup().as_secs_f32(),
-                ));
+                .insert(ChunkTransformAnimation {
+                    start_time: time.time_since_startup().as_secs_f32(),
+                    final_y: (chunk_info.pos.y * CHUNK_HEIGHT) as f32,
+                });
         }
     }
 
@@ -109,19 +119,21 @@ const ANIMATION_DURATION: f32 = 0.8;
 const ANIMATION_HEIGHT: f32 = 128.;
 
 fn step_chunk_ready_animation(
-    mut chunks: Query<(Entity, &mut Transform, &ChunkAnimationTracker)>,
+    mut chunks: Query<(Entity, &mut Transform, &ChunkTransformAnimation)>,
     time: Res<Time>,
     mut commands: Commands,
 ) {
     for (entity, mut transform, animation) in chunks.iter_mut() {
-        let delta = (time.time_since_startup().as_secs_f32() - animation.0).min(ANIMATION_DURATION);
-        let xtransform = -ANIMATION_HEIGHT
-            + (1. - (1. - (delta / ANIMATION_DURATION)).powi(5)) * ANIMATION_HEIGHT;
+        let delta = (time.time_since_startup().as_secs_f32() - animation.start_time)
+            .min(ANIMATION_DURATION);
+        let ytransform = -ANIMATION_HEIGHT
+            + (1. - (1. - (delta / ANIMATION_DURATION)).powi(5))
+                * (ANIMATION_HEIGHT + animation.final_y);
 
-        transform.translation.y = xtransform;
+        transform.translation.y = ytransform;
 
         if delta == ANIMATION_DURATION {
-            commands.entity(entity).remove::<ChunkAnimationTracker>();
+            commands.entity(entity).remove::<ChunkTransformAnimation>();
         }
     }
 }
