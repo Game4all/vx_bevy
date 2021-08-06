@@ -1,13 +1,13 @@
 use bevy::math::{IVec2, IVec3, Vec3};
 use building_blocks::core::{Point3i, PointN};
 
-use super::{CHUNK_DEPTH, CHUNK_WIDTH};
+use super::{CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH};
 
 /// Gets the corresponding chunks coordinates from a point in global space.
 pub fn global2chunk(position: Vec3) -> IVec3 {
     IVec3::new(
         position.x.floor() as i32 / CHUNK_WIDTH,
-        /*position.y.floor() as i32 / CHUNK_HEIGHT*/ 0,
+        position.y.floor() as i32 / CHUNK_HEIGHT,
         position.z.floor() as i32 / CHUNK_DEPTH,
     )
 }
@@ -35,7 +35,7 @@ pub fn chunk2global(chunk_coords: IVec3) -> Vec3 {
 pub fn chunk2point(chunk_coords: IVec3) -> Point3i {
     PointN([
         chunk_coords.x * CHUNK_WIDTH,
-        0,
+        chunk_coords.y * CHUNK_HEIGHT,
         chunk_coords.z * CHUNK_DEPTH,
     ])
 }

@@ -27,14 +27,16 @@ pub(crate) fn update_visible_chunks(
         let pos = global2chunk(transform.translation);
 
         for dx in -config.render_distance..=config.render_distance {
-            for dy in -config.render_distance..=config.render_distance {
-                if dx.pow(2) + dy.pow(2) >= config.render_distance.pow(2) {
-                    continue;
-                };
+            for dz in -config.render_distance..=config.render_distance {
+                for dy in -config.render_distance..=config.render_distance {
+                    if dx.pow(2) + dy.pow(2) + dz.pow(2) >= config.render_distance.pow(2) {
+                        continue;
+                    };
 
-                let chunk_pos = pos + (dx, 0, dy).into();
-                if !chunk_map.chunk_exists(&chunk_pos) {
-                    load_radius_chunks.push(chunk_pos);
+                    let chunk_pos = pos + (dx, dy, dz).into();
+                    if !chunk_map.chunk_exists(&chunk_pos) {
+                        load_radius_chunks.push(chunk_pos);
+                    }
                 }
             }
         }

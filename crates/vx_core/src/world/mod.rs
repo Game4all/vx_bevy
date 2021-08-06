@@ -22,9 +22,9 @@ pub use coords::*;
 
 use crate::{voxel::Voxel, worldgen::NoiseTerrainGenerator};
 
-pub const CHUNK_HEIGHT: i32 = 128;
-pub const CHUNK_WIDTH: i32 = 16;
-pub const CHUNK_DEPTH: i32 = 16;
+pub const CHUNK_HEIGHT: i32 = 32;
+pub const CHUNK_WIDTH: i32 = 32;
+pub const CHUNK_DEPTH: i32 = 32;
 
 pub const MAX_FRAME_CHUNK_GEN_COUNT: usize = 16;
 pub const CHUNK_MESHING_TIME: DiagnosticId = DiagnosticId::from_u128(489617772449846);

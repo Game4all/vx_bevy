@@ -11,6 +11,8 @@ use crate::{
 
 use super::TerrainGenerator;
 
+const MAX_TERRAIN_HEIGHT: i32 = 256;
+
 #[derive(Default)]
 pub struct NoiseTerrainGenerator {
     seed: i32,
@@ -24,28 +26,39 @@ impl TerrainGenerator for NoiseTerrainGenerator {
     fn generate(&self, chunk_pos: IVec3, data: &mut Array3x1<Voxel>) {
         let heightmap = NoiseMap::new(chunk_pos, self.seed, 5);
 
-        data.fill_extent(
-            &ExtentN::from_min_and_max(PointN([0; 3]), PointN([CHUNK_WIDTH, 1, CHUNK_DEPTH])),
-            Voxel::Solid {
-                attributes: [0, 0, 0, 255],
-            },
-        );
+        let base_height = chunk_pos.y * CHUNK_HEIGHT;
 
-        data.fill_extent(
-            &ExtentN::from_min_and_max(PointN([0, 1, 0]), PointN([CHUNK_WIDTH, 8, CHUNK_DEPTH])),
-            Voxel::Fluid {
-                attributes: [102, 133, 254, 255],
-            },
-        );
+        //todo: fix thiss
+        // gen water only for first vertical chunk.
+        if base_height == 0 {
+            data.fill_extent(
+                &ExtentN::from_min_and_max(PointN([0; 3]), PointN([CHUNK_WIDTH, 1, CHUNK_DEPTH])),
+                Voxel::Solid {
+                    attributes: [0, 0, 0, 255],
+                },
+            );
+
+            data.fill_extent(
+                &ExtentN::from_min_and_max(
+                    PointN([0, 1, 0]),
+                    PointN([CHUNK_WIDTH, 8, CHUNK_DEPTH]),
+                ),
+                Voxel::Fluid {
+                    attributes: [102, 133, 254, 255],
+                },
+            );
+        }
 
         for x in 0..CHUNK_WIDTH {
             for z in 0..CHUNK_DEPTH {
-                let original_height = heightmap.value_at(x, z).abs();
-                let block_height = (original_height * CHUNK_HEIGHT as f32) as i32;
+                let block_height =
+                    (heightmap.value_at(x, z).abs() * MAX_TERRAIN_HEIGHT as f32) as i32;
 
-                for y in 1..block_height {
+                let local_height = (block_height - base_height).max(0).min(CHUNK_HEIGHT);
+
+                for y in 0..local_height {
                     *data.get_mut(PointN([x, y, z])) = Voxel::Solid {
-                        attributes: self.get_color_for_height(y),
+                        attributes: self.get_color_for_height(base_height + y),
                     }
                 }
             }

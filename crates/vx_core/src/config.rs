@@ -13,7 +13,7 @@ pub struct GlobalConfig {
 impl Default for GlobalConfig {
     fn default() -> Self {
         GlobalConfig {
-            render_distance: 24,
+            render_distance: 8,
         }
     }
 }
