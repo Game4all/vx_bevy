@@ -1,25 +1,30 @@
+use crate::{input::Action, player::PlayerController};
 use bevy::{
     diagnostic::{DiagnosticId, Diagnostics, FrameTimeDiagnosticsPlugin},
     ecs::system::EntityCommands,
     prelude::*,
 };
-use vx_core::world::{
-    ChunkEntityMap, ChunkMeshingRequest, CHUNK_DATA_GEN_TIME, CHUNK_MESHING_TIME,
+use enum_iterator::IntoEnumIterator;
+use vx_core::{
+    config::GlobalConfig,
+    world::{
+        ChunkEntityMap, ChunkMeshingRequest, CHUNK_DATA_GEN_TIME, CHUNK_MESHING_TIME, CHUNK_WIDTH,
+    },
 };
 
-use crate::{input::Action, player::PlayerController};
-
-const TRACKED_DIAGS: &[DiagnosticId] = &[
+const DEBUG_DIAGS: &[DiagnosticId] = &[
     FrameTimeDiagnosticsPlugin::FPS,
     CHUNK_MESHING_TIME,
     CHUNK_DATA_GEN_TIME,
 ];
 
-const TRACKED_VALUES: &[&'static str] = &["Pos"];
+#[derive(Debug, IntoEnumIterator, PartialEq, Clone, Copy)]
+enum DebugValue {
+    Position,
+    HRenderDistance,
+}
 
 struct DiagnosticCounter(DiagnosticId);
-
-struct DebugValue(&'static str);
 
 struct DebugUIComponent;
 
@@ -28,7 +33,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, diagnostics: Re
 
     let mut val = Val::Px(15.0);
 
-    for diag in TRACKED_DIAGS {
+    for diag in DEBUG_DIAGS {
         if let Some(diagnostic) = diagnostics.get(*diag) {
             create_counter(
                 &mut commands,
@@ -50,7 +55,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, diagnostics: Re
 
     let mut val = Val::Px(15.0);
 
-    for value in TRACKED_VALUES {
+    for value in DebugValue::into_enum_iter() {
         create_counter(
             &mut commands,
             &asset_server,
@@ -60,9 +65,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, diagnostics: Re
                 ..Default::default()
             },
             HorizontalAlign::Right,
-            value.to_string(),
+            format!("{:?}", value),
             |cmds| {
-                cmds.insert(DebugValue(*value));
+                cmds.insert(value);
             },
         );
         val += 20.0;
@@ -145,11 +150,21 @@ fn update_diagnostic_counters(
 fn update_debug_values(
     mut counters: Query<(&mut Text, &DebugValue)>,
     player: Query<(&PlayerController, &Transform)>,
+    config: Res<GlobalConfig>,
 ) {
     for (mut text, debug_cnt) in counters.iter_mut() {
         for (_, transform) in player.single() {
-            if debug_cnt.0 == TRACKED_VALUES[0] {
-                text.sections[2].value = format!("{}", &transform.translation.round());
+            match &debug_cnt {
+                &DebugValue::Position => {
+                    text.sections[2].value = format!("{}", &transform.translation.round());
+                }
+                &DebugValue::HRenderDistance => {
+                    text.sections[2].value = format!(
+                        "{} chunks ({} blocks)",
+                        &config.render_distance,
+                        CHUNK_WIDTH * config.render_distance
+                    );
+                }
             }
         }
     }
