@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use heron::prelude::*;
 
 pub mod config;
 pub mod platform;
@@ -17,7 +16,6 @@ impl PluginGroup for CorePlugins {
         group
             .add(platform::PlatformPlugin)
             .add(config::ConfigurationPlugin)
-            .add(PhysicsPlugin::default())
             .add(world::WorldSimulationPlugin);
     }
 }

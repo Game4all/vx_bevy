@@ -9,7 +9,6 @@ publish = false
 
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", features = ["serialize"] }
-heron = "0.8.0"
 vx_core = { path = "../vx_core" }
 building-blocks = "0.7.0"
 ron = "0.6.4"

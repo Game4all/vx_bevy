@@ -2,15 +2,13 @@ use std::collections::VecDeque;
 
 use bevy::{prelude::*, render::pipeline::PrimitiveTopology};
 
-use building_blocks::storage::ChunkKey3;
-use heron::prelude::*;
-
 use super::{
     chunk2global, chunk2point, global2chunk, ChunkDataBundle, ChunkDespawnRequest, ChunkInfo,
     ChunkLoadRequest, ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkMeshInfo,
     ChunkReadyEvent, ChunkSpawnRequest,
 };
 use crate::{config::GlobalConfig, Player};
+use building_blocks::storage::ChunkKey3;
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
 /// This will accordingly emit [`ChunkSpawnRequest`] events for chunks that need to be loaded since they entered the player's view distance and [`ChunkDespawnRequest`] for
@@ -79,8 +77,6 @@ pub(crate) fn create_chunks(
                     chunk_mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
                 },
                 global_transform: Default::default(),
-                rigid_body: RigidBody::Static,
-                collision_shape: CollisionShape::Sphere { radius: 16.0 },
             })
             .insert(ChunkLoadState::LoadRequested)
             .id();

@@ -7,7 +7,6 @@ use building_blocks::{
     core::{Extent3i, PointN},
     storage::{ChunkMapBuilder, ChunkMapBuilder3x1},
 };
-use heron::{CollisionShape, RigidBody};
 use std::{collections::VecDeque, ops::Deref, sync::Arc};
 
 mod meshing;
@@ -78,8 +77,6 @@ pub struct ChunkDataBundle {
     pub global_transform: GlobalTransform,
     pub chunk_info: ChunkInfo,
     pub mesh_info: ChunkMeshInfo,
-    pub rigid_body: RigidBody,
-    pub collision_shape: CollisionShape,
 }
 
 pub struct ChunkMeshInfo {
@@ -210,7 +207,7 @@ impl Plugin for WorldSimulationPlugin {
                 WorldUpdateStage::Cleanup,
                 world::prepare_for_unload
                     .system()
-                    .label("prepare_for_unload")
+                    .label("prepare_for_unload"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::Cleanup,
@@ -219,7 +216,6 @@ impl Plugin for WorldSimulationPlugin {
                     .label("destroy_chunks")
                     .after("prepare_for_unload"),
             );
-
 
         //registering debug diagnostics
         app.world_mut()
