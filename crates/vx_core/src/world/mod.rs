@@ -90,7 +90,6 @@ impl Default for WorldTaskPool {
     fn default() -> Self {
         Self(
             TaskPoolBuilder::new()
-                .num_threads(4)
                 .thread_name("WorldThreadPool".to_owned())
                 .build(),
         )
