@@ -14,6 +14,7 @@ impl PluginGroup for ClientPlugins {
             .add(input::PlayerInputPlugin)
             .add(player::PlayerControllerPlugin)
             .add(render::WorldRenderPlugin)
+            .add(render::MeshCullingPlugin)
             .add(render::EnvLightingPlugin)
             .add(debug::DebugUIPlugin);
     }

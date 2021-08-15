@@ -8,6 +8,8 @@ use bevy::{
     },
 };
 
+use super::Visibility;
+
 use vx_core::world::{ChunkInfo, ChunkMeshInfo, ChunkReadyEvent, WorldUpdateStage, CHUNK_HEIGHT};
 
 const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
@@ -25,8 +27,9 @@ pub struct ChunkRenderBundle {
     pub material: Handle<StandardMaterial>,
     pub main_pass: MainPass,
     pub draw: Draw,
-    pub visible: Visible,
+    pub render_visibility: Visible,
     pub render_pipelines: RenderPipelines,
+    pub visibility: Visibility,
 }
 
 /// Attach to the newly created chunk entities, the render components.
@@ -45,10 +48,11 @@ fn attach_chunk_render_bundle(
                 )]),
                 draw: Default::default(),
                 main_pass: Default::default(),
-                visible: Visible {
+                render_visibility: Visible {
                     is_visible: false,
                     is_transparent: false,
                 },
+                visibility: Default::default(),
             })
             .with_children(|parent| {
                 parent
@@ -60,10 +64,11 @@ fn attach_chunk_render_bundle(
                         ]),
                         draw: Default::default(),
                         main_pass: Default::default(),
-                        visible: Visible {
+                        render_visibility: Visible {
                             is_visible: false,
                             is_transparent: true,
                         },
+                        visibility: Default::default(),
                     })
                     .insert(GlobalTransform::default())
                     .insert(Transform::default());
@@ -80,7 +85,7 @@ fn update_meshes_visibility(
     mut ready_events: EventReader<ChunkReadyEvent>,
     mut chunks: QuerySet<(
         Query<(&Children, &ChunkInfo)>,
-        Query<(&mut Visible, &mut Transform)>,
+        Query<(&mut Visibility, &mut Transform)>,
     )>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,
     mut commands: Commands,
@@ -109,7 +114,7 @@ fn update_meshes_visibility(
 
     for entity in entities.drain(..) {
         if let Ok((mut visibility, mut transform)) = chunks.q1_mut().get_mut(entity) {
-            visibility.is_visible = true;
+            visibility.visible = true;
             transform.translation.y = -128.0
         }
     }
