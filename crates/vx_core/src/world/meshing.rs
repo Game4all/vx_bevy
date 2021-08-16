@@ -114,7 +114,7 @@ pub(crate) fn mesh_chunks(
     diagnostics.add_measurement(CHUNK_MESHING_TIME, after_chunk_meshing.as_secs_f64());
 }
 
-pub(crate) fn handle_chunk_loading_events(
+pub(crate) fn queue_chunk_meshing(
     mut meshing_events: EventWriter<ChunkMeshingRequest>,
     query: Query<(Entity, &ChunkLoadState), Changed<ChunkLoadState>>,
 ) {

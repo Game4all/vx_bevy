@@ -176,24 +176,24 @@ impl Plugin for WorldSimulationPlugin {
             )
             .add_system_to_stage(
                 WorldUpdateStage::Update,
-                world::mark_chunks_ready
+                meshing::queue_chunk_meshing
                     .system()
-                    .label("mark_chunks_ready")
+                    .label("queue_chunk_meshing")
                     .after("generate_terrain_data"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::Update,
-                meshing::handle_chunk_loading_events
+                world::mark_chunks_ready
                     .system()
-                    .label("handle_chunk_loading_events")
-                    .after("mark_chunks_ready"),
+                    .label("mark_chunks_ready")
+                    .after("queue_chunk_meshing"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::Update,
                 meshing::handle_chunk_update_events
                     .system()
                     .label("handle_chunk_update_events")
-                    .after("handle_chunk_loading_events"),
+                    .after("mark_chunks_ready"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::Update,
