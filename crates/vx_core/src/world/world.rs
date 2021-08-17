@@ -14,14 +14,14 @@ use building_blocks::storage::ChunkKey3;
 /// This will accordingly emit [`ChunkSpawnRequest`] events for chunks that need to be loaded since they entered the player's view distance and [`ChunkDespawnRequest`] for
 /// chunks out of the player's view distance.
 pub(crate) fn update_visible_chunks(
-    player: Query<(&Transform, &Player)>,
+    player: Query<&GlobalTransform, (Changed<GlobalTransform>, With<Player>)>,
     chunk_map: ChunkMapReader,
     config: Res<GlobalConfig>,
     mut load_radius_chunks: bevy::ecs::system::Local<Vec<IVec3>>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
     mut despawn_requests: EventWriter<ChunkDespawnRequest>,
 ) {
-    if let Ok((transform, _)) = player.single() {
+    if let Ok(transform) = player.single() {
         let pos = global2chunk(transform.translation);
 
         for dx in -config.render_distance..=config.render_distance {
