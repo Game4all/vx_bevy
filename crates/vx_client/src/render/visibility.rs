@@ -1,7 +1,4 @@
-use bevy::{
-    diagnostic::{Diagnostic, DiagnosticId, Diagnostics},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct Visibility {
