@@ -1,4 +1,5 @@
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
+use vx_core::utils::ConfigurationPlugin;
 
 pub mod debug;
 pub mod input;
@@ -11,6 +12,7 @@ impl PluginGroup for ClientPlugins {
     fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
         group
             .add(FrameTimeDiagnosticsPlugin::default())
+            .add(ConfigurationPlugin::<input::Keybindings>::default())
             .add(input::PlayerInputPlugin)
             .add(player::PlayerControllerPlugin)
             .add(render::WorldRenderPlugin)

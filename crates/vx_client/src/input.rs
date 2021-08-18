@@ -1,14 +1,10 @@
 use bevy::{
-    app::AppExit,
     input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ElementState},
     prelude::*,
     utils::HashMap,
 };
 use serde::{Deserialize, Serialize};
-use vx_core::{
-    platform::UserData,
-    utils::{self, Configuration},
-};
+use vx_core::utils::Configuration;
 
 use std::ops::{Deref, DerefMut};
 
@@ -106,45 +102,11 @@ fn update_actions(
     }
 }
 
-fn load_bindings(In(bindings): In<Option<Keybindings>>, mut user_bindings: ResMut<Keybindings>) {
-    match bindings {
-        Some(keybinds) => {
-            for key in keybinds.keys() {
-                if user_bindings.contains_key(key) {
-                    // unmap a key from the previous binding if an action in the loaded bindings uses that key
-                    user_bindings.remove(key);
-                }
-                user_bindings.insert(*key, *keybinds.get_key_value(key).unwrap().1);
-            }
-            info!("Bindings loaded successfully");
-        }
-        None => {}
-    }
-}
-
-fn save_bindings(
-    binds: Res<Keybindings>,
-    mut exit_events: EventReader<AppExit>,
-    userdata: Res<UserData>,
-) {
-    for _ in exit_events.iter() {
-        utils::save_config_file(userdata, binds);
-        break;
-    }
-}
-
 pub struct PlayerInputPlugin;
 
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<Keybindings>()
-            .init_resource::<Input<Action>>()
-            .add_startup_system(
-                utils::load_config_file::<Keybindings>
-                    .system()
-                    .chain(load_bindings.system()),
-            )
-            .add_system(update_actions.system())
-            .add_system(save_bindings.system());
+        app.init_resource::<Input<Action>>()
+            .add_system(update_actions.system());
     }
 }
