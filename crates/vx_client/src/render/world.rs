@@ -37,7 +37,7 @@ fn attach_chunk_render_bundle(
     chunks: Query<(&ChunkMeshInfo, Entity), Added<ChunkInfo>>,
     mut commands: Commands,
 ) {
-    for (mesh_info, ent) in chunks.iter() {
+    chunks.for_each(|(mesh_info, ent)| {
         commands
             .entity(ent)
             .insert_bundle(ChunkRenderBundle {
@@ -73,7 +73,7 @@ fn attach_chunk_render_bundle(
                     .insert(GlobalTransform::default())
                     .insert(Transform::default());
             });
-    }
+    });
 }
 
 struct ChunkTransformAnimation {
@@ -128,7 +128,7 @@ fn step_chunk_ready_animation(
     time: Res<Time>,
     mut commands: Commands,
 ) {
-    for (entity, mut transform, animation) in chunks.iter_mut() {
+    chunks.for_each_mut(|(entity, mut transform, animation)| {
         let delta = (time.time_since_startup().as_secs_f32() - animation.start_time)
             .min(ANIMATION_DURATION);
         let ytransform = -ANIMATION_HEIGHT
@@ -140,7 +140,7 @@ fn step_chunk_ready_animation(
         if delta == ANIMATION_DURATION {
             commands.entity(entity).remove::<ChunkTransformAnimation>();
         }
-    }
+    });
 }
 
 /// Setups all the required resources for rendering (ie: shader pipelines)

@@ -9,9 +9,8 @@ pub struct Visibility {
 fn update_visibility(
     mut visible_entities: Query<(&mut Visible, &Visibility), Changed<Visibility>>,
 ) {
-    for (mut visible, visibility) in visible_entities.iter_mut() {
-        visible.is_visible = visibility.visible;
-    }
+    visible_entities
+        .for_each_mut(|(mut visible, visibility)| visible.is_visible = visibility.visible);
 }
 
 pub struct MeshCullingPlugin;

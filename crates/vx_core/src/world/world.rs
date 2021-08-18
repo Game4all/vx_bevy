@@ -93,15 +93,13 @@ pub(crate) fn load_chunk_data(
     mut chunks: Query<(&mut ChunkLoadState, Entity), Added<ChunkInfo>>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
 ) {
-    for (mut load_state, entity) in chunks.iter_mut() {
-        match *load_state {
-            ChunkLoadState::LoadRequested => {
-                *load_state = ChunkLoadState::Generate;
-                gen_requests.push_back(ChunkLoadRequest(entity));
-            }
-            _ => continue,
+    chunks.for_each_mut(|(mut load_state, entity)| match *load_state {
+        ChunkLoadState::LoadRequested => {
+            *load_state = ChunkLoadState::Generate;
+            gen_requests.push_back(ChunkLoadRequest(entity));
         }
-    }
+        _ => {}
+    });
 }
 
 /// Marks the load state of all chunk that are queued to be unloaded as [`ChunkLoadState::Unload`]
@@ -122,31 +120,27 @@ pub(crate) fn destroy_chunks(
     mut chunk_map: ChunkMapWriter,
     chunks: Query<(&ChunkInfo, &ChunkLoadState), Changed<ChunkLoadState>>,
 ) {
-    for (chunk, load_state) in chunks.iter() {
-        match load_state {
-            ChunkLoadState::Unload => {
-                let entity = chunk_map
-                    .chunk_entities
-                    .remove(&chunk.pos)
-                    .expect("Expected valid chunk");
-                chunk_map
-                    .chunk_data
-                    .pop_chunk(ChunkKey3::new(0, chunk2point(chunk.pos)));
-                commands.entity(entity).despawn_recursive();
-            }
-            _ => {}
+    chunks.for_each(|(chunk, load_state)| match load_state {
+        ChunkLoadState::Unload => {
+            let entity = chunk_map
+                .chunk_entities
+                .remove(&chunk.pos)
+                .expect("Expected valid chunk");
+            chunk_map
+                .chunk_data
+                .pop_chunk(ChunkKey3::new(0, chunk2point(chunk.pos)));
+            commands.entity(entity).despawn_recursive();
         }
-    }
+        _ => {}
+    });
 }
 
 pub(crate) fn mark_chunks_ready(
     mut ready_events: EventWriter<ChunkReadyEvent>,
     chunks: Query<(&ChunkInfo, &ChunkLoadState, Entity), Changed<ChunkLoadState>>,
 ) {
-    for (chunk, load_state, entity) in chunks.iter() {
-        match load_state {
-            ChunkLoadState::Idle => ready_events.send(ChunkReadyEvent(chunk.pos, entity)),
-            _ => {}
-        }
-    }
+    chunks.for_each(|(chunk, load_state, entity)| match load_state {
+        ChunkLoadState::Idle => ready_events.send(ChunkReadyEvent(chunk.pos, entity)),
+        _ => {}
+    });
 }
