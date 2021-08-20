@@ -34,6 +34,10 @@ pub fn handle_player_mouse_move(
             first_win.set_cursor_position((first_win.width() / 2., first_win.height() / 2.).into());
         }
 
+        if delta == Vec2::ZERO {
+            break;
+        }
+
         let mut new_pitch = controller.pitch + delta.y * CAMERA_SENS;
         let new_yaw = controller.yaw - delta.x * CAMERA_SENS;
 
@@ -84,6 +88,10 @@ pub fn handle_player_input(
 
         if actions.pressed(Action::WalkCrouch) {
             direction.y -= 1.0;
+        }
+
+        if direction == Vec3::ZERO {
+            break;
         }
 
         transform.translation +=
