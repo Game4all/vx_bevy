@@ -1,5 +1,5 @@
-mod world;
-pub use world::*;
+mod chunks;
+pub use chunks::*;
 
 mod env;
 pub use env::*;
