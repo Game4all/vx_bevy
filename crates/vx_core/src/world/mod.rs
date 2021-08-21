@@ -9,7 +9,7 @@ use building_blocks::{
 };
 use std::{collections::VecDeque, ops::Deref, sync::Arc};
 
-mod meshing;
+//mod meshing;
 mod world;
 mod worldgen;
 
@@ -82,6 +82,7 @@ pub struct ChunkDataBundle {
 pub struct ChunkMeshInfo {
     pub fluid_mesh: Handle<Mesh>,
     pub chunk_mesh: Handle<Mesh>,
+    pub is_empty: bool
 }
 
 pub struct WorldTaskPool(TaskPool);
@@ -176,31 +177,10 @@ impl Plugin for WorldSimulationPlugin {
             )
             .add_system_to_stage(
                 WorldUpdateStage::Update,
-                meshing::queue_chunk_meshing
-                    .system()
-                    .label("queue_chunk_meshing")
-                    .after("generate_terrain_data"),
-            )
-            .add_system_to_stage(
-                WorldUpdateStage::Update,
                 world::mark_chunks_ready
                     .system()
                     .label("mark_chunks_ready")
-                    .after("queue_chunk_meshing"),
-            )
-            .add_system_to_stage(
-                WorldUpdateStage::Update,
-                meshing::handle_chunk_update_events
-                    .system()
-                    .label("handle_chunk_update_events")
-                    .after("mark_chunks_ready"),
-            )
-            .add_system_to_stage(
-                WorldUpdateStage::Update,
-                meshing::mesh_chunks
-                    .system()
-                    .label("mesh_chunks")
-                    .after("handle_chunk_update_events"),
+                    .after("generate_terrain_data"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::Cleanup,

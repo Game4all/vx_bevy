@@ -38,7 +38,7 @@ pub(crate) fn generate_terrain_data(
             chunk_map
                 .chunk_data
                 .write_chunk(ChunkKey3::new(0, chunk2point(info.pos)), chunk_data);
-            *load_state = ChunkLoadState::Loading;
+            *load_state = ChunkLoadState::Idle;
         }
     }
 

@@ -75,6 +75,7 @@ pub(crate) fn create_chunks(
                 mesh_info: ChunkMeshInfo {
                     fluid_mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
                     chunk_mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
+                    is_empty: true,
                 },
                 global_transform: Default::default(),
             })
