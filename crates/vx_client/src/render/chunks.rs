@@ -18,9 +18,8 @@ use building_blocks::{
 use vx_core::{
     utils::ChunkMeshBuilder,
     world::{
-        chunk_extent, ChunkInfo, ChunkLoadState, ChunkMapReader, ChunkMeshInfo,
-        ChunkMeshingRequest, ChunkReadyEvent, WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT,
-        CHUNK_MESHING_TIME,
+        chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkReadyEvent, WorldTaskPool,
+        WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
     },
 };
 
