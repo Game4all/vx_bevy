@@ -18,8 +18,8 @@ use building_blocks::{
 use vx_core::{
     utils::ChunkMeshBuilder,
     world::{
-        chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkReadyEvent, WorldTaskPool,
-        WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
+        chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest,
+        ChunkReadyEvent, WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
     },
 };
 
@@ -166,9 +166,20 @@ fn padded_chunk_extent() -> Extent3i {
     chunk_extent().padded(1)
 }
 
+fn queue_meshing_for_ready_chunks(
+    mut ready_entities: EventReader<ChunkReadyEvent>,
+    mut meshing_events: EventWriter<ChunkMeshingRequest>,
+) {
+    meshing_events.send_batch(
+        ready_entities
+            .iter()
+            .map(|event| ChunkMeshingRequest(event.1)),
+    )
+}
+
 fn mesh_chunks(
     mut chunks: Query<(&ChunkInfo, &mut ChunkMeshInfo)>,
-    mut ready_entities: EventReader<ChunkReadyEvent>,
+    mut ready_entities: EventReader<ChunkMeshingRequest>,
     mut meshes: ResMut<Assets<Mesh>>,
     chunk_map: ChunkMapReader,
     task_pool: Res<WorldTaskPool>,
@@ -178,7 +189,7 @@ fn mesh_chunks(
 
     let mesh_results = task_pool.scope(|scope| {
         for meshing_event in ready_entities.iter() {
-            match chunks.get_component::<ChunkInfo>(meshing_event.1) {
+            match chunks.get_component::<ChunkInfo>(meshing_event.0) {
                 Ok(chunk_info) => {
                     if let Some(chunk_data) = chunk_map.get_chunk_data(&chunk_info.pos) {
                         scope.spawn(async move {
@@ -233,7 +244,7 @@ fn mesh_chunks(
                                 fluid_mesh.set_attribute(Mesh::ATTRIBUTE_COLOR, fluid_colors);
                                 fluid_mesh.set_indices(Some(Indices::U32(fluid_indices)));
 
-                                Some((meshing_event.1, terrain_mesh, fluid_mesh))
+                                Some((meshing_event.0, terrain_mesh, fluid_mesh))
                             } else {
                                 None
                             }
@@ -242,7 +253,7 @@ fn mesh_chunks(
                 }
                 Err(err) => warn!(
                     "Mesh data generation failed for chunk entity {:?}: {:?}",
-                    meshing_event.1, err
+                    meshing_event.0, err
                 ),
             }
         }
@@ -302,10 +313,17 @@ impl Plugin for WorldRenderPlugin {
             )
             .add_system_to_stage(
                 WorldUpdateStage::PostUpdate,
+                queue_meshing_for_ready_chunks
+                    .system()
+                    .label("queue_meshing_for_ready_chunks")
+                    .after("attach_chunk_render_bundle"),
+            )
+            .add_system_to_stage(
+                WorldUpdateStage::PostUpdate,
                 mesh_chunks
                     .system()
                     .label("mesh_chunks")
-                    .after("attach_chunk_render_bundle"),
+                    .after("queue_meshing_for_ready_chunks"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::PostUpdate,
