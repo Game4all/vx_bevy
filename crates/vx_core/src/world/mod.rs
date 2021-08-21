@@ -9,9 +9,7 @@ use building_blocks::{
 };
 use std::{collections::VecDeque, ops::Deref, sync::Arc};
 
-//mod meshing;
 mod world;
-mod worldgen;
 
 mod chunk_map;
 pub use chunk_map::*;
@@ -82,7 +80,7 @@ pub struct ChunkDataBundle {
 pub struct ChunkMeshInfo {
     pub fluid_mesh: Handle<Mesh>,
     pub chunk_mesh: Handle<Mesh>,
-    pub is_empty: bool
+    pub is_empty: bool,
 }
 
 pub struct WorldTaskPool(TaskPool);
@@ -170,7 +168,7 @@ impl Plugin for WorldSimulationPlugin {
             )
             .add_system_to_stage(
                 WorldUpdateStage::Update,
-                worldgen::generate_terrain_data
+                world::generate_terrain_data
                     .system()
                     .label("generate_terrain_data")
                     .after("load_chunk_data"),
