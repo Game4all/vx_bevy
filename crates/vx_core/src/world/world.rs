@@ -1,7 +1,8 @@
 use std::{collections::VecDeque, sync::Arc};
 
 use bevy::{
-    diagnostic::Diagnostics, prelude::*, render::pipeline::PrimitiveTopology, utils::Instant,
+    diagnostic::Diagnostics, ecs::schedule::ShouldRun, prelude::*,
+    render::pipeline::PrimitiveTopology, utils::Instant,
 };
 
 use super::{
@@ -64,6 +65,20 @@ pub(crate) fn update_visible_chunks(
             }
         }
     }
+}
+
+pub(crate) fn update_visible_chunks_run_criteria(
+    player: Query<&GlobalTransform, (Changed<GlobalTransform>, With<Player>)>,
+    mut previous_pos: bevy::ecs::system::Local<IVec3>,
+) -> ShouldRun {
+    for transform in player.iter() {
+        let new_pos = global2chunk(transform.translation);
+        if *previous_pos != new_pos {
+            *previous_pos = new_pos;
+            return ShouldRun::Yes;
+        }
+    }
+    ShouldRun::No
 }
 
 pub(crate) fn create_chunks(

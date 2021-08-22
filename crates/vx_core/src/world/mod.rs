@@ -19,6 +19,8 @@ pub use coords::*;
 
 use crate::{voxel::Voxel, worldgen::NoiseTerrainGenerator};
 
+use self::world::update_visible_chunks_run_criteria;
+
 pub const CHUNK_HEIGHT: i32 = 32;
 pub const CHUNK_WIDTH: i32 = 32;
 pub const CHUNK_DEPTH: i32 = 32;
@@ -150,7 +152,8 @@ impl Plugin for WorldSimulationPlugin {
                 WorldUpdateStage::Update,
                 world::update_visible_chunks
                     .system()
-                    .label("update_visible_chunks"),
+                    .label("update_visible_chunks")
+                    .with_run_criteria(update_visible_chunks_run_criteria.system()),
             )
             .add_system_to_stage(
                 WorldUpdateStage::Update,
