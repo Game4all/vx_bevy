@@ -5,7 +5,21 @@ A voxel engine prototype made using the Bevy game engine.
 ![animated chunk loading](assets/screenshots/chunkloading.gif)
 ![not much to see](assets/screenshots/ss.png)
 
-## Features (this is still a big WIP and is also very unoptimized)
-- Very basic worldgen (no complex structures)
-- Animated chunk loading (ala cube world)
-- Performance is okayish
+## Goals and features
+- [x] Very basic worldgen
+- [x] Animated chunk loading (ala cube world)
+
+_Optimizations_:
+
+- [ ] Frustum culling
+- [ ] Change view distance calculation
+
+_Interactivity_:
+
+- [ ] Add ability to interact with the world (placing & breaking blocks)
+
+
+_World_:
+- [ ] Revamp worldgen
+- [ ] Add generation of flora (trees)
+- [ ] Get a better shader for voxels.
