@@ -3,7 +3,7 @@ use building_blocks::{
     mesh::{OrientedCubeFace, UnorientedQuad},
 };
 
-use crate::voxel::Voxel;
+use vx_core::voxel::Voxel;
 
 const VOXEL_MESH_SIZE: f32 = 1.0;
 

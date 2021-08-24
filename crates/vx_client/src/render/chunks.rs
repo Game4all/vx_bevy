@@ -1,3 +1,4 @@
+use crate::utils::ChunkMeshBuilder;
 use bevy::{
     diagnostic::Diagnostics,
     prelude::*,
@@ -15,12 +16,9 @@ use building_blocks::{
     mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG},
     prelude::Get,
 };
-use vx_core::{
-    utils::ChunkMeshBuilder,
-    world::{
-        chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest,
-        ChunkReadyEvent, WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
-    },
+use vx_core::world::{
+    chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest, ChunkReadyEvent,
+    WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
 };
 
 use super::Visibility;

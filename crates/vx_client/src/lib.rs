@@ -5,6 +5,7 @@ pub mod debug;
 pub mod input;
 pub mod player;
 pub mod render;
+pub mod utils;
 
 pub struct ClientPlugins;
 
