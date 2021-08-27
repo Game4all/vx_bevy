@@ -14,6 +14,7 @@ building-blocks = "0.7.0"
 ron = "0.6.4"
 serde = "1.0.126"
 enum-iterator = "0.7.0"
+thread_local = "1.1.3"
 
 # [profile.release]
 # lto = true

@@ -1,4 +1,4 @@
-use crate::utils::ChunkMeshBuilder;
+use crate::utils::{ChunkMeshBuilder, ThreadLocalRes};
 use bevy::{
     diagnostic::Diagnostics,
     prelude::*,
@@ -15,10 +15,15 @@ use building_blocks::{
     core::Extent3i,
     mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG},
     prelude::Get,
+    storage::Array3x1,
 };
-use vx_core::world::{
-    chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest, ChunkReadyEvent,
-    WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
+use std::cell::RefCell;
+use vx_core::{
+    voxel::Voxel,
+    world::{
+        chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest,
+        ChunkReadyEvent, WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
+    },
 };
 
 use super::Visibility;
@@ -175,10 +180,28 @@ fn queue_meshing_for_ready_chunks(
     )
 }
 
+struct ReusableMeshBuffer {
+    greedy_buffer: GreedyQuadsBuffer,
+    padded_buffer: Array3x1<Voxel>,
+}
+
+impl Default for ReusableMeshBuffer {
+    fn default() -> Self {
+        Self {
+            greedy_buffer: GreedyQuadsBuffer::new(
+                padded_chunk_extent(),
+                RIGHT_HANDED_Y_UP_CONFIG.quad_groups(),
+            ),
+            padded_buffer: Array3x1::fill(padded_chunk_extent(), Voxel::Empty),
+        }
+    }
+}
+
 fn mesh_chunks(
     mut chunks: Query<(&ChunkInfo, &mut ChunkMeshInfo)>,
     mut ready_entities: EventReader<ChunkMeshingRequest>,
     mut meshes: ResMut<Assets<Mesh>>,
+    local_buffers: bevy::ecs::system::Local<ThreadLocalRes<RefCell<ReusableMeshBuffer>>>,
     chunk_map: ChunkMapReader,
     task_pool: Res<WorldTaskPool>,
     mut diagnostics: ResMut<Diagnostics>,
@@ -190,20 +213,20 @@ fn mesh_chunks(
             match chunks.get_component::<ChunkInfo>(meshing_event.0) {
                 Ok(chunk_info) => {
                     if let Some(chunk_data) = chunk_map.get_chunk_data(&chunk_info.pos) {
+                        let buffer_handle = local_buffers.get_handle();
                         scope.spawn(async move {
-                            let mut greedy_buffer = GreedyQuadsBuffer::new(
-                                padded_chunk_extent(),
-                                RIGHT_HANDED_Y_UP_CONFIG.quad_groups(),
-                            );
+                            let buffer: &mut ReusableMeshBuffer =
+                                &mut buffer_handle.get().borrow_mut();
+
                             let extent = padded_chunk_extent();
 
-                            greedy_buffer.reset(extent);
-                            greedy_quads(chunk_data, &extent, &mut greedy_buffer);
+                            buffer.greedy_buffer.reset(extent);
+                            greedy_quads(chunk_data, &extent, &mut buffer.greedy_buffer);
 
-                            if greedy_buffer.num_quads() != 0 {
+                            if buffer.greedy_buffer.num_quads() != 0 {
                                 let mut chunk_mesh_builder = ChunkMeshBuilder::default();
 
-                                for group in greedy_buffer.quad_groups.iter() {
+                                for group in buffer.greedy_buffer.quad_groups.iter() {
                                     for quad in group.quads.iter() {
                                         chunk_mesh_builder.add_quad_to_mesh(
                                             &group.face,
