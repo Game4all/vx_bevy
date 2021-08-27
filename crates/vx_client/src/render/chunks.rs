@@ -18,13 +18,7 @@ use building_blocks::{
     storage::{copy_extent, Array3x1},
 };
 use std::cell::RefCell;
-use vx_core::{
-    voxel::Voxel,
-    world::{
-        chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest,
-        ChunkReadyEvent, WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
-    },
-};
+use vx_core::{voxel::Voxel, world::{CHUNK_HEIGHT, CHUNK_MESHING_TIME, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest, ChunkReadyEvent, ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, chunk_extent}};
 
 use super::Visibility;
 
@@ -169,15 +163,22 @@ fn padded_chunk_extent() -> Extent3i {
     chunk_extent().padded(1)
 }
 
-fn queue_meshing_for_ready_chunks(
+fn queue_meshing(
     mut ready_entities: EventReader<ChunkReadyEvent>,
+    mut update_events: EventReader<ChunkUpdateEvent>,
     mut meshing_events: EventWriter<ChunkMeshingRequest>,
 ) {
     meshing_events.send_batch(
         ready_entities
             .iter()
             .map(|event| ChunkMeshingRequest(event.1)),
-    )
+    );
+
+    meshing_events.send_batch(
+        update_events
+            .iter()
+            .map(|event| ChunkMeshingRequest(event.0)),
+    );
 }
 
 struct ReusableMeshBuffer {
@@ -336,7 +337,7 @@ impl Plugin for WorldRenderPlugin {
             )
             .add_system_to_stage(
                 WorldUpdateStage::PostUpdate,
-                queue_meshing_for_ready_chunks
+                queue_meshing
                     .system()
                     .label("queue_meshing_for_ready_chunks")
                     .after("attach_chunk_render_bundle"),
