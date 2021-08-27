@@ -184,7 +184,7 @@ pub(crate) fn generate_terrain_data(
             if let Ok(info) = query.get_component::<ChunkInfo>(req.0) {
                 let generator = gen.clone();
                 scope.spawn(async move {
-                    let mut data = Array3x1::fill(chunk_extent().padded(1), Default::default());
+                    let mut data = Array3x1::fill(chunk_extent(), Default::default());
                     generator.generate(info.pos, &mut data);
                     (req.0, data)
                 });

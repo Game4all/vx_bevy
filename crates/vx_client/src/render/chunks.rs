@@ -15,7 +15,7 @@ use building_blocks::{
     core::Extent3i,
     mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG},
     prelude::Get,
-    storage::Array3x1,
+    storage::{copy_extent, Array3x1},
 };
 use std::cell::RefCell;
 use vx_core::{
@@ -220,8 +220,10 @@ fn mesh_chunks(
 
                             let extent = padded_chunk_extent();
 
+                            copy_extent(&chunk_extent(), chunk_data, &mut buffer.padded_buffer);
+
                             buffer.greedy_buffer.reset(extent);
-                            greedy_quads(chunk_data, &extent, &mut buffer.greedy_buffer);
+                            greedy_quads(&buffer.padded_buffer, &extent, &mut buffer.greedy_buffer);
 
                             if buffer.greedy_buffer.num_quads() != 0 {
                                 let mut chunk_mesh_builder = ChunkMeshBuilder::default();
@@ -231,7 +233,7 @@ fn mesh_chunks(
                                         chunk_mesh_builder.add_quad_to_mesh(
                                             &group.face,
                                             quad,
-                                            &chunk_data.get(quad.minimum),
+                                            &buffer.padded_buffer.get(quad.minimum),
                                         );
                                     }
                                 }
