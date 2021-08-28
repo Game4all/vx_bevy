@@ -18,7 +18,14 @@ use building_blocks::{
     storage::{copy_extent, Array3x1},
 };
 use std::cell::RefCell;
-use vx_core::{voxel::Voxel, world::{CHUNK_HEIGHT, CHUNK_MESHING_TIME, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest, ChunkReadyEvent, ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, chunk_extent}};
+use vx_core::{
+    voxel::Voxel,
+    world::{
+        chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest,
+        ChunkReadyEvent, ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT,
+        CHUNK_MESHING_TIME,
+    },
+};
 
 use super::Visibility;
 
@@ -268,9 +275,9 @@ fn mesh_chunks(
                                 fluid_mesh.set_attribute(Mesh::ATTRIBUTE_COLOR, fluid_colors);
                                 fluid_mesh.set_indices(Some(Indices::U32(fluid_indices)));
 
-                                Some((meshing_event.0, terrain_mesh, fluid_mesh))
+                                (meshing_event.0, Some((terrain_mesh, fluid_mesh)))
                             } else {
-                                None
+                                (meshing_event.0, None)
                             }
                         });
                     }
@@ -283,13 +290,15 @@ fn mesh_chunks(
         }
     });
 
-    for meshing_result in mesh_results {
-        if let Some((chunk, terrain_mesh, fluid_mesh)) = meshing_result {
-            if let Ok((___, mut mesh_info)) = chunks.get_mut(chunk) {
+    for meshing_results in mesh_results {
+        if let Ok(mut mesh_info) = chunks.get_component_mut::<ChunkMeshInfo>(meshing_results.0) {
+            if let Some((terrain_mesh, fluid_mesh)) = meshing_results.1 {
                 *meshes.get_mut(&mesh_info.chunk_mesh).unwrap() = terrain_mesh;
                 *meshes.get_mut(&mesh_info.fluid_mesh).unwrap() = fluid_mesh;
 
                 mesh_info.is_empty = false;
+            } else {
+                mesh_info.is_empty = true;
             }
         }
     }
