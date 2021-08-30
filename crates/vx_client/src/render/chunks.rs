@@ -98,11 +98,11 @@ struct ChunkTransformAnimation {
     pub final_y: f32,
 }
 
-fn update_meshes_visibility(
+fn attach_animation_components(
     mut ready_events: EventReader<ChunkReadyEvent>,
     mut chunks: QuerySet<(
         Query<(&Children, &ChunkInfo, &ChunkMeshInfo)>,
-        Query<(&mut Visibility, &mut Transform)>,
+        Query<&mut Transform>,
     )>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,
     mut commands: Commands,
@@ -110,8 +110,8 @@ fn update_meshes_visibility(
 ) {
     for ready_event in ready_events.iter() {
         if let Ok((children, chunk_info, mesh_info)) = chunks.q0().get(ready_event.1) {
-            //todo: support updating state when chunk data is modified.
             if mesh_info.is_empty {
+                //don't animate empty chunks.
                 continue;
             }
 
@@ -135,8 +135,7 @@ fn update_meshes_visibility(
     }
 
     for entity in entities.drain(..) {
-        if let Ok((mut visibility, mut transform)) = chunks.q1_mut().get_mut(entity) {
-            visibility.visible = true;
+        if let Ok(mut transform) = chunks.q1_mut().get_mut(entity) {
             transform.translation.y = -128.0
         }
     }
@@ -163,6 +162,26 @@ fn step_chunk_ready_animation(
             commands.entity(entity).remove::<ChunkTransformAnimation>();
         }
     });
+}
+
+fn update_meshes_visibility(
+    mut meshes: QuerySet<(
+        Query<(&Children, &ChunkMeshInfo, Entity)>,
+        Query<&mut Visibility>,
+    )>,
+    mut entities: bevy::ecs::system::Local<Vec<Entity>>,
+) {
+    meshes.q0().for_each(|(child, mesh_info, entity)| {
+        if !mesh_info.is_empty {
+            entities.extend(&[child.first().unwrap().clone(), entity]);
+        }
+    });
+
+    for entity in entities.drain(..) {
+        if let Ok(mut visibility) = meshes.q1_mut().get_mut(entity) {
+            visibility.visible = true;
+        }
+    }
 }
 
 #[inline]
@@ -360,10 +379,17 @@ impl Plugin for WorldRenderPlugin {
             )
             .add_system_to_stage(
                 WorldUpdateStage::PostUpdate,
+                attach_animation_components
+                    .system()
+                    .label("attach_animation_components")
+                    .after("mesh_chunks"),
+            )
+            .add_system_to_stage(
+                WorldUpdateStage::PostUpdate,
                 update_meshes_visibility
                     .system()
                     .label("update_meshes_visibility")
-                    .after("mesh_chunks"),
+                    .after("attach_animation_components"),
             )
             .add_system_to_stage(
                 WorldUpdateStage::PostUpdate,
