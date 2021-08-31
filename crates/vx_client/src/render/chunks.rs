@@ -115,6 +115,11 @@ fn attach_animation_components(
                 continue;
             }
 
+            if chunk_info.pos.y < 0 {
+                // don't animate chunks underground.
+                continue;
+            }
+
             entities.push(ready_event.1);
             entities.push(children.first().unwrap().clone());
 
@@ -166,7 +171,7 @@ fn step_chunk_ready_animation(
 
 fn update_meshes_visibility(
     mut meshes: QuerySet<(
-        Query<(&Children, &ChunkMeshInfo, Entity)>,
+        Query<(&Children, &ChunkMeshInfo, Entity), Changed<ChunkMeshInfo>>,
         Query<&mut Visibility>,
     )>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,

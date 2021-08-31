@@ -26,7 +26,7 @@ pub fn global2chunki(position: IVec3) -> IVec2 {
 pub fn chunk2global(chunk_coords: IVec3) -> Vec3 {
     Vec3::new(
         (chunk_coords.x * CHUNK_WIDTH) as f32,
-        0.,
+        (chunk_coords.y * CHUNK_HEIGHT) as f32,
         (chunk_coords.z * CHUNK_DEPTH) as f32,
     )
 }
