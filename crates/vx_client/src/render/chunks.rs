@@ -21,9 +21,8 @@ use std::cell::RefCell;
 use vx_core::{
     voxel::Voxel,
     world::{
-        chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshInfo, ChunkMeshingRequest,
-        ChunkReadyEvent, ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT,
-        CHUNK_MESHING_TIME,
+        chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshingRequest, ChunkReadyEvent,
+        ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
     },
 };
 
@@ -38,6 +37,16 @@ const FLUID_PIPELINE_HANDLE: HandleUntyped =
 const SHARED_STANDARD_MATERIAL_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(StandardMaterial::TYPE_UUID, 9734486248927);
 
+// A system stage used exclusively for meshing systems to allow using change detection.
+#[derive(StageLabel, Clone, Copy, Hash, Debug, PartialEq, Eq)]
+pub struct ChunkRenderStage;
+
+pub struct ChunkMeshInfo {
+    pub fluid_mesh: Handle<Mesh>,
+    pub chunk_mesh: Handle<Mesh>,
+    pub is_empty: bool,
+}
+
 #[derive(Bundle)]
 pub struct ChunkRenderBundle {
     pub mesh: Handle<Mesh>,
@@ -51,14 +60,18 @@ pub struct ChunkRenderBundle {
 
 /// Attach to the newly created chunk entities, the render components.
 fn attach_chunk_render_bundle(
-    chunks: Query<(&ChunkMeshInfo, Entity), Added<ChunkInfo>>,
+    chunks: Query<Entity, Added<ChunkInfo>>,
+    mut meshes: ResMut<Assets<Mesh>>,
     mut commands: Commands,
 ) {
-    chunks.for_each(|(mesh_info, ent)| {
+    chunks.for_each(|ent| {
+        let chunk_mesh = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
+        let fluid_mesh = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
+
         commands
             .entity(ent)
             .insert_bundle(ChunkRenderBundle {
-                mesh: mesh_info.chunk_mesh.clone(),
+                mesh: chunk_mesh.clone(),
                 material: SHARED_STANDARD_MATERIAL_HANDLE.typed(),
                 render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
                     TERRAIN_PIPELINE_HANDLE.typed(),
@@ -71,10 +84,15 @@ fn attach_chunk_render_bundle(
                 },
                 visibility: Default::default(),
             })
+            .insert(ChunkMeshInfo {
+                chunk_mesh,
+                fluid_mesh: fluid_mesh.clone(),
+                is_empty: true,
+            })
             .with_children(|parent| {
                 parent
                     .spawn_bundle(ChunkRenderBundle {
-                        mesh: mesh_info.fluid_mesh.clone(),
+                        mesh: fluid_mesh.clone(),
                         material: SHARED_STANDARD_MATERIAL_HANDLE.typed(),
                         render_pipelines: RenderPipelines::from_pipelines(vec![
                             RenderPipeline::new(FLUID_PIPELINE_HANDLE.typed()),
@@ -362,6 +380,11 @@ impl Plugin for WorldRenderPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(ClearColor(Color::hex("87CEEB").unwrap()))
             .add_startup_system(setup_render_resources.system())
+            .add_stage_after(
+                WorldUpdateStage::PostUpdate,
+                ChunkRenderStage,
+                SystemStage::parallel(),
+            )
             .add_system_to_stage(
                 WorldUpdateStage::PostUpdate,
                 attach_chunk_render_bundle
@@ -369,35 +392,34 @@ impl Plugin for WorldRenderPlugin {
                     .label("attach_chunk_render_bundle"),
             )
             .add_system_to_stage(
-                WorldUpdateStage::PostUpdate,
+                ChunkRenderStage,
                 queue_meshing
                     .system()
-                    .label("queue_meshing_for_ready_chunks")
-                    .after("attach_chunk_render_bundle"),
+                    .label("queue_meshing_for_ready_chunks"),
             )
             .add_system_to_stage(
-                WorldUpdateStage::PostUpdate,
+                ChunkRenderStage,
                 mesh_chunks
                     .system()
                     .label("mesh_chunks")
                     .after("queue_meshing_for_ready_chunks"),
             )
             .add_system_to_stage(
-                WorldUpdateStage::PostUpdate,
+                ChunkRenderStage,
                 attach_animation_components
                     .system()
                     .label("attach_animation_components")
                     .after("mesh_chunks"),
             )
             .add_system_to_stage(
-                WorldUpdateStage::PostUpdate,
+                ChunkRenderStage,
                 update_meshes_visibility
                     .system()
                     .label("update_meshes_visibility")
                     .after("attach_animation_components"),
             )
             .add_system_to_stage(
-                WorldUpdateStage::PostUpdate,
+                ChunkRenderStage,
                 step_chunk_ready_animation
                     .system()
                     .label("step_chunk_ready_animation")

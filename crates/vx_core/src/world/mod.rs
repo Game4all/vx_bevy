@@ -76,13 +76,6 @@ pub struct ChunkDataBundle {
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub chunk_info: ChunkInfo,
-    pub mesh_info: ChunkMeshInfo,
-}
-
-pub struct ChunkMeshInfo {
-    pub fluid_mesh: Handle<Mesh>,
-    pub chunk_mesh: Handle<Mesh>,
-    pub is_empty: bool,
 }
 
 pub struct WorldTaskPool(TaskPool);

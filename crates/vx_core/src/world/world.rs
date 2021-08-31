@@ -1,22 +1,16 @@
-use std::{collections::VecDeque, sync::Arc};
-
-use bevy::{
-    diagnostic::Diagnostics, ecs::schedule::ShouldRun, prelude::*,
-    render::pipeline::PrimitiveTopology, utils::Instant,
-};
-
 use super::{
     chunk2global, chunk2point, chunk_extent, global2chunk, ChunkDataBundle, ChunkDespawnRequest,
-    ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkMeshInfo,
-    ChunkReadyEvent, ChunkSpawnRequest, WorldTaskPool, CHUNK_DATA_GEN_TIME,
-    MAX_FRAME_CHUNK_GEN_COUNT,
+    ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkReadyEvent,
+    ChunkSpawnRequest, WorldTaskPool, CHUNK_DATA_GEN_TIME, MAX_FRAME_CHUNK_GEN_COUNT,
 };
 use crate::{
     config::GlobalConfig,
     worldgen::{NoiseTerrainGenerator, TerrainGenerator},
     Player,
 };
+use bevy::{diagnostic::Diagnostics, ecs::schedule::ShouldRun, prelude::*, utils::Instant};
 use building_blocks::storage::{Array3x1, ChunkKey3};
+use std::{collections::VecDeque, sync::Arc};
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
 /// This will accordingly emit [`ChunkSpawnRequest`] events for chunks that need to be loaded since they entered the player's view distance and [`ChunkDespawnRequest`] for
@@ -84,7 +78,6 @@ pub(crate) fn update_visible_chunks_run_criteria(
 pub(crate) fn create_chunks(
     mut commands: Commands,
     mut spawn_events: EventReader<ChunkSpawnRequest>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut chunk_map: ChunkMapWriter,
 ) {
     for creation_request in spawn_events.iter() {
@@ -93,11 +86,6 @@ pub(crate) fn create_chunks(
                 transform: Transform::from_translation(chunk2global(creation_request.0)),
                 chunk_info: ChunkInfo {
                     pos: creation_request.0,
-                },
-                mesh_info: ChunkMeshInfo {
-                    fluid_mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
-                    chunk_mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
-                    is_empty: true,
                 },
                 global_transform: Default::default(),
             })
