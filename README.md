@@ -23,3 +23,6 @@ _World_:
 - [ ] Revamp worldgen
 - [ ] Add generation of flora (trees)
 - [ ] Get a better shader for voxels.
+
+_Other_:
+- [ ] Rewrite this from scratch as this has turned into a mess.
