@@ -11,5 +11,8 @@ vx_core = { path = "crates/vx_core" }
 vx_client = { path = "crates/vx_client" }
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
 
-# [profile.release]
-# lto = true
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+lto = true
