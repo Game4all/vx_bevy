@@ -133,11 +133,6 @@ fn attach_animation_components(
                 continue;
             }
 
-            if chunk_info.pos.y < 0 {
-                // don't animate chunks underground.
-                continue;
-            }
-
             entities.push(ready_event.1);
             entities.push(children.first().unwrap().clone());
 
