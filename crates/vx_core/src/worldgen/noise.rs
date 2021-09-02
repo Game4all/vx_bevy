@@ -32,13 +32,6 @@ impl TerrainGenerator for NoiseTerrainGenerator {
         // gen water only for first vertical chunk.
         if base_height == 0 {
             data.fill_extent(
-                &ExtentN::from_min_and_max(PointN([0; 3]), PointN([CHUNK_WIDTH, 1, CHUNK_DEPTH])),
-                Voxel::Solid {
-                    attributes: [0, 0, 0, 255],
-                },
-            );
-
-            data.fill_extent(
                 &ExtentN::from_min_and_max(
                     PointN([0, 1, 0]),
                     PointN([CHUNK_WIDTH, 8, CHUNK_DEPTH]),
