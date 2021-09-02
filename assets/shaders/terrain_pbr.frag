@@ -271,8 +271,6 @@ vec3 point_light(PointLight light, float roughness, float NdotV, vec3 N, vec3 V,
     float NoH = saturate(dot(N, H));
     float LoH = saturate(dot(L, H));
 
-    vec3 specular = specular(F0, roughness, H, NdotV, NoL, NoH, LoH, specularIntensity);
-
     // Diffuse.
     // Comes after specular since its NoL is used in the lighting equation.
     L = normalize(light_to_frag);
@@ -294,7 +292,7 @@ vec3 point_light(PointLight light, float roughness, float NdotV, vec3 N, vec3 V,
     // See https://google.github.io/filament/Filament.html#mjx-eqn-pointLightLuminanceEquation
     // TODO compensate for energy loss https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
     // light.color.rgb is premultiplied with light.intensity on the CPU
-    return ((diffuse + specular) * light.color.rgb) * (rangeAttenuation * NoL);
+    return (diffuse * light.color.rgb) * (rangeAttenuation * NoL);
 }
 
 vec3 dir_light(DirectionalLight light, float roughness, float NdotV, vec3 normal, vec3 view, vec3 R, vec3 F0, vec3 diffuseColor) {
@@ -306,10 +304,7 @@ vec3 dir_light(DirectionalLight light, float roughness, float NdotV, vec3 normal
     float LoH = saturate(dot(incident_light, half_vector));
 
     vec3 diffuse = diffuseColor * Fd_Burley(roughness, NdotV, NoL, LoH);
-    float specularIntensity = 1.0;
-    vec3 specular = specular(F0, roughness, half_vector, NdotV, NoL, NoH, LoH, specularIntensity);
-
-    return (specular + diffuse) * light.color.rgb * NoL;
+    return diffuse * light.color.rgb * NoL;
 }
 
 
