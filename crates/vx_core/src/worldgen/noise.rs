@@ -6,7 +6,7 @@ use building_blocks::{
 
 use crate::{
     voxel::Voxel,
-    world::{CHUNK_DEPTH, CHUNK_HEIGHT, CHUNK_WIDTH},
+    world::CHUNK_LENGTH,
 };
 
 use super::TerrainGenerator;
@@ -26,7 +26,7 @@ impl TerrainGenerator for NoiseTerrainGenerator {
     fn generate(&self, chunk_pos: IVec3, data: &mut Array3x1<Voxel>) {
         let heightmap = NoiseMap::new(chunk_pos, self.seed, 5);
 
-        let base_height = chunk_pos.y * CHUNK_HEIGHT;
+        let base_height = chunk_pos.y * CHUNK_LENGTH;
 
         //todo: fix thiss
         // gen water only for first vertical chunk.
@@ -34,7 +34,7 @@ impl TerrainGenerator for NoiseTerrainGenerator {
             data.fill_extent(
                 &ExtentN::from_min_and_max(
                     PointN([0, 1, 0]),
-                    PointN([CHUNK_WIDTH, 8, CHUNK_DEPTH]),
+                    PointN([CHUNK_LENGTH, 8, CHUNK_LENGTH]),
                 ),
                 Voxel::Fluid {
                     attributes: [102, 133, 254, 255],
@@ -42,12 +42,12 @@ impl TerrainGenerator for NoiseTerrainGenerator {
             );
         }
 
-        for x in 0..CHUNK_WIDTH {
-            for z in 0..CHUNK_DEPTH {
+        for x in 0..CHUNK_LENGTH {
+            for z in 0..CHUNK_LENGTH {
                 let block_height =
                     (heightmap.value_at(x, z).abs() * MAX_TERRAIN_HEIGHT as f32) as i32;
 
-                let local_height = (block_height - base_height).max(0).min(CHUNK_HEIGHT);
+                let local_height = (block_height - base_height).max(0).min(CHUNK_LENGTH);
 
                 for y in 0..local_height {
                     *data.get_mut(PointN([x, y, z])) = Voxel::Solid {
@@ -87,10 +87,10 @@ impl NoiseMap {
         Self {
             noise: {
                 simdnoise::NoiseBuilder::fbm_2d_offset(
-                    (chunk_pos.x * CHUNK_WIDTH) as f32,
-                    CHUNK_WIDTH as usize,
-                    (chunk_pos.z * CHUNK_DEPTH) as f32,
-                    CHUNK_DEPTH as usize,
+                    (chunk_pos.x * CHUNK_LENGTH) as f32,
+                    CHUNK_LENGTH as usize,
+                    (chunk_pos.z * CHUNK_LENGTH) as f32,
+                    CHUNK_LENGTH as usize,
                 )
                 .with_seed(seed)
                 .with_octaves(octave_nb)
@@ -102,6 +102,6 @@ impl NoiseMap {
 
     #[inline]
     pub fn value_at(&self, x: i32, z: i32) -> f32 {
-        unsafe { *self.noise.get_unchecked((z * CHUNK_WIDTH + x) as usize) }
+        unsafe { *self.noise.get_unchecked((z * CHUNK_LENGTH + x) as usize) }
     }
 }

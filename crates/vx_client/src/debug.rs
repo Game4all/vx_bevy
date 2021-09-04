@@ -8,7 +8,7 @@ use enum_iterator::IntoEnumIterator;
 use vx_core::{
     config::GlobalConfig,
     world::{
-        ChunkEntityMap, ChunkMeshingRequest, CHUNK_DATA_GEN_TIME, CHUNK_MESHING_TIME, CHUNK_WIDTH,
+        ChunkEntityMap, ChunkMeshingRequest, CHUNK_DATA_GEN_TIME, CHUNK_MESHING_TIME, CHUNK_LENGTH,
     },
 };
 
@@ -162,7 +162,7 @@ fn update_debug_values(
                     text.sections[2].value = format!(
                         "{} chunks ({} blocks)",
                         &config.render_distance,
-                        CHUNK_WIDTH * config.render_distance
+                        CHUNK_LENGTH * config.render_distance
                     );
                 }
             }

@@ -22,7 +22,7 @@ use vx_core::{
     voxel::Voxel,
     world::{
         chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshingRequest, ChunkReadyEvent,
-        ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, CHUNK_HEIGHT, CHUNK_MESHING_TIME,
+        ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, CHUNK_LENGTH, CHUNK_MESHING_TIME,
     },
 };
 
@@ -140,14 +140,14 @@ fn attach_animation_components(
                 .entity(ready_event.1)
                 .insert(ChunkTransformAnimation {
                     start_time: time.time_since_startup().as_secs_f32(),
-                    final_y: (chunk_info.pos.y * CHUNK_HEIGHT) as f32,
+                    final_y: (chunk_info.pos.y * CHUNK_LENGTH) as f32,
                 });
 
             commands
                 .entity(children.first().unwrap().clone())
                 .insert(ChunkTransformAnimation {
                     start_time: time.time_since_startup().as_secs_f32(),
-                    final_y: (chunk_info.pos.y * CHUNK_HEIGHT) as f32,
+                    final_y: (chunk_info.pos.y * CHUNK_LENGTH) as f32,
                 });
         }
     }

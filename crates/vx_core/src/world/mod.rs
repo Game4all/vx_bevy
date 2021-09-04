@@ -21,9 +21,7 @@ use crate::{voxel::Voxel, worldgen::NoiseTerrainGenerator};
 
 use self::world::update_visible_chunks_run_criteria;
 
-pub const CHUNK_HEIGHT: i32 = 32;
-pub const CHUNK_WIDTH: i32 = 32;
-pub const CHUNK_DEPTH: i32 = 32;
+pub const CHUNK_LENGTH: i32 = 32;
 
 pub const MAX_FRAME_CHUNK_GEN_COUNT: usize = 16;
 pub const CHUNK_MESHING_TIME: DiagnosticId = DiagnosticId::from_u128(489617772449846);
@@ -102,7 +100,7 @@ impl Deref for WorldTaskPool {
 pub fn chunk_extent() -> Extent3i {
     Extent3i::from_min_and_shape(
         PointN([0; 3]),
-        PointN([CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH]),
+        PointN([CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH]),
     )
 }
 
@@ -117,7 +115,7 @@ impl Plugin for WorldSimulationPlugin {
             .init_resource::<Arc<NoiseTerrainGenerator>>()
             .insert_resource(
                 ChunkMapBuilder3x1::new(
-                    PointN([CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH]),
+                    PointN([CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH]),
                     Voxel::Empty,
                 )
                 .build_with_hash_map_storage(),
