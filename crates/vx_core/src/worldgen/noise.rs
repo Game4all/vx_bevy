@@ -4,10 +4,7 @@ use building_blocks::{
     storage::{Array3x1, FillExtent, GetMut},
 };
 
-use crate::{
-    voxel::Voxel,
-    world::CHUNK_LENGTH,
-};
+use crate::{utils::ValueMap2D, voxel::Voxel, world::CHUNK_LENGTH};
 
 use super::TerrainGenerator;
 
@@ -24,7 +21,20 @@ impl TerrainGenerator for NoiseTerrainGenerator {
     }
 
     fn generate(&self, chunk_pos: IVec3, data: &mut Array3x1<Voxel>) {
-        let heightmap = NoiseMap::new(chunk_pos, self.seed, 5);
+        let heightmap = ValueMap2D::new(
+            CHUNK_LENGTH,
+            CHUNK_LENGTH,
+            simdnoise::NoiseBuilder::fbm_2d_offset(
+                (chunk_pos.x * CHUNK_LENGTH) as f32,
+                CHUNK_LENGTH as usize,
+                (chunk_pos.z * CHUNK_LENGTH) as f32,
+                CHUNK_LENGTH as usize,
+            )
+            .with_seed(self.seed)
+            .with_octaves(5)
+            .generate()
+            .0,
+        );
 
         let base_height = chunk_pos.y * CHUNK_LENGTH;
 
@@ -75,33 +85,5 @@ impl NoiseTerrainGenerator {
         } else {
             [255; 4]
         }
-    }
-}
-
-pub(crate) struct NoiseMap {
-    noise: Vec<f32>,
-}
-
-impl NoiseMap {
-    pub fn new(chunk_pos: IVec3, seed: i32, octave_nb: u8) -> Self {
-        Self {
-            noise: {
-                simdnoise::NoiseBuilder::fbm_2d_offset(
-                    (chunk_pos.x * CHUNK_LENGTH) as f32,
-                    CHUNK_LENGTH as usize,
-                    (chunk_pos.z * CHUNK_LENGTH) as f32,
-                    CHUNK_LENGTH as usize,
-                )
-                .with_seed(seed)
-                .with_octaves(octave_nb)
-                .generate()
-                .0
-            },
-        }
-    }
-
-    #[inline]
-    pub fn value_at(&self, x: i32, z: i32) -> f32 {
-        unsafe { *self.noise.get_unchecked((z * CHUNK_LENGTH + x) as usize) }
     }
 }
