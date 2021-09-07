@@ -4,7 +4,7 @@ use bevy::{
     tasks::{TaskPool, TaskPoolBuilder},
 };
 use building_blocks::{
-    core::{Extent3i, PointN},
+    core::{Extent3i, Point, Point3i, PointN},
     storage::{ChunkMapBuilder, ChunkMapBuilder3x1},
 };
 use std::{collections::VecDeque, ops::Deref, sync::Arc};
@@ -98,10 +98,7 @@ impl Deref for WorldTaskPool {
 
 #[inline]
 pub fn chunk_extent() -> Extent3i {
-    Extent3i::from_min_and_shape(
-        PointN([0; 3]),
-        PointN([CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH]),
-    )
+    Extent3i::from_min_and_shape(PointN([0; 3]), Point3i::fill(CHUNK_LENGTH))
 }
 
 pub struct WorldSimulationPlugin;
@@ -114,11 +111,8 @@ impl Plugin for WorldSimulationPlugin {
             //todo: move this to a struct or smth else
             .init_resource::<Arc<NoiseTerrainGenerator>>()
             .insert_resource(
-                ChunkMapBuilder3x1::new(
-                    PointN([CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH]),
-                    Voxel::Empty,
-                )
-                .build_with_hash_map_storage(),
+                ChunkMapBuilder3x1::new(PointN::fill(CHUNK_LENGTH), Voxel::Empty)
+                    .build_with_hash_map_storage(),
             )
             // internal events
             .add_event::<ChunkSpawnRequest>()
