@@ -11,17 +11,6 @@ pub fn global2chunk(position: Vec3) -> IVec3 {
         position.z.floor() as i32 / CHUNK_LENGTH,
     )
 }
-
-/// Transform a point in global space to a point in chunk space.
-pub fn global2locali(pos: IVec3) -> IVec3 {
-    IVec3::new(pos.x % CHUNK_LENGTH, pos.y, pos.z % CHUNK_LENGTH)
-}
-
-/// Gets the corresponding chunks coordinates from a point in global space.
-pub fn global2chunki(position: IVec3) -> IVec2 {
-    IVec2::new(position.x / CHUNK_LENGTH, position.z / CHUNK_LENGTH)
-}
-
 /// Gets the origin of a chunk in global space from its chunk coordinates.
 pub fn chunk2global(chunk_coords: IVec3) -> Vec3 {
     Vec3::new(
