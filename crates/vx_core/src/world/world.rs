@@ -1,7 +1,7 @@
 use super::{
-    chunk2global, chunk2point, chunk_extent, global2chunk, ChunkDataBundle, ChunkDespawnRequest,
-    ChunkInfo, ChunkLoadRequest, ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkReadyEvent,
-    ChunkSpawnRequest, WorldTaskPool, CHUNK_DATA_GEN_TIME, MAX_FRAME_CHUNK_GEN_COUNT,
+    chunk_extent, global2chunk, ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest,
+    ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkReadyEvent, ChunkSpawnRequest,
+    WorldChunkIndexer, WorldTaskPool, CHUNK_DATA_GEN_TIME, CHUNK_LENGTH, MAX_FRAME_CHUNK_GEN_COUNT,
 };
 use crate::{
     config::GlobalConfig,
@@ -9,7 +9,10 @@ use crate::{
     Player,
 };
 use bevy::{diagnostic::Diagnostics, ecs::schedule::ShouldRun, prelude::*, utils::Instant};
-use building_blocks::storage::{Array3x1, ChunkKey3};
+use building_blocks::{
+    core::{IntoIntegerPoint, Point3i, PointN},
+    storage::{Array3x1, ChunkKey3},
+};
 use std::{collections::VecDeque, sync::Arc};
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
@@ -19,12 +22,14 @@ pub(crate) fn update_visible_chunks(
     player: Query<&GlobalTransform, (Changed<GlobalTransform>, With<Player>)>,
     chunk_map: ChunkMapReader,
     config: Res<GlobalConfig>,
-    mut load_radius_chunks: bevy::ecs::system::Local<Vec<IVec3>>,
+    indexer: bevy::ecs::system::Local<WorldChunkIndexer>,
+    mut load_radius_chunks: bevy::ecs::system::Local<Vec<Point3i>>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
     mut despawn_requests: EventWriter<ChunkDespawnRequest>,
 ) {
     if let Ok(transform) = player.single() {
-        let pos = global2chunk(transform.translation);
+        let pos = indexer
+            .min_of_chunk_containing_point(PointN(transform.translation.to_array()).into_int());
 
         for dx in -config.render_distance..=config.render_distance {
             for dz in -config.render_distance..=config.render_distance {
@@ -33,15 +38,17 @@ pub(crate) fn update_visible_chunks(
                         continue;
                     };
 
-                    let chunk_pos = pos + (dx, dy, dz).into();
-                    if !chunk_map.chunk_exists(&chunk_pos) {
+                    let chunk_pos =
+                        pos + PointN([dx * CHUNK_LENGTH, dy * CHUNK_LENGTH, dz * CHUNK_LENGTH]);
+
+                    if !chunk_map.chunk_exists(chunk_pos) {
                         load_radius_chunks.push(chunk_pos);
                     }
                 }
             }
         }
 
-        load_radius_chunks.sort_by_key(|a| (a.x.pow(2) + a.z.pow(2)));
+        load_radius_chunks.sort_by_key(|a| (a.x().pow(2) + a.z().pow(2)));
 
         spawn_requests.send_batch(
             load_radius_chunks
@@ -51,9 +58,9 @@ pub(crate) fn update_visible_chunks(
 
         for key in chunk_map.chunk_entities.keys() {
             let delta = *key - pos;
-            let entity = chunk_map.get_entity(key).unwrap();
-            if delta.x.abs().pow(2) + delta.y.abs().pow(2) + delta.z.abs().pow(2)
-                > config.render_distance.pow(2)
+            let entity = chunk_map.get_entity(*key).unwrap();
+            if delta.x().abs().pow(2) + delta.y().abs().pow(2) + delta.z().abs().pow(2)
+                > (config.render_distance * CHUNK_LENGTH).pow(2)
             {
                 despawn_requests.send(ChunkDespawnRequest(entity));
             }
@@ -83,7 +90,11 @@ pub(crate) fn create_chunks(
     for creation_request in spawn_events.iter() {
         let entity = commands
             .spawn_bundle(ChunkDataBundle {
-                transform: Transform::from_translation(chunk2global(creation_request.0)),
+                transform: Transform::from_xyz(
+                    creation_request.0.x() as f32,
+                    creation_request.0.y() as f32,
+                    creation_request.0.z() as f32,
+                ),
                 chunk_info: ChunkInfo {
                     pos: creation_request.0,
                 },
@@ -137,9 +148,7 @@ pub(crate) fn destroy_chunks(
                 .chunk_entities
                 .remove(&chunk.pos)
                 .expect("Expected valid chunk");
-            chunk_map
-                .chunk_data
-                .pop_chunk(ChunkKey3::new(0, chunk2point(chunk.pos)));
+            chunk_map.chunk_data.pop_chunk(ChunkKey3::new(0, chunk.pos));
             commands.entity(entity).despawn_recursive();
         }
         _ => {}
@@ -184,7 +193,7 @@ pub(crate) fn generate_terrain_data(
         if let Ok((info, mut load_state)) = query.get_mut(entity) {
             chunk_map
                 .chunk_data
-                .write_chunk(ChunkKey3::new(0, chunk2point(info.pos)), chunk_data);
+                .write_chunk(ChunkKey3::new(0, info.pos), chunk_data);
             *load_state = ChunkLoadState::Idle;
         }
     }

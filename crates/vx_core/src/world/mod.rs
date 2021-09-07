@@ -5,7 +5,7 @@ use bevy::{
 };
 use building_blocks::{
     core::{Extent3i, Point, Point3i, PointN},
-    storage::{ChunkMapBuilder, ChunkMapBuilder3x1},
+    storage::{ChunkIndexer, ChunkMapBuilder, ChunkMapBuilder3x1},
 };
 use std::{collections::VecDeque, ops::Deref, sync::Arc};
 
@@ -51,7 +51,7 @@ pub enum ChunkLoadState {
     Despawn,
 }
 
-pub(crate) struct ChunkSpawnRequest(IVec3);
+pub(crate) struct ChunkSpawnRequest(Point3i);
 pub(crate) struct ChunkDespawnRequest(Entity);
 
 pub struct ChunkMeshingRequest(pub Entity);
@@ -59,14 +59,14 @@ pub struct ChunkMeshingRequest(pub Entity);
 pub(crate) struct ChunkLoadRequest(Entity);
 
 /// An event signaling that a chunk and its data have finished loading and are ready to be displayed.
-pub struct ChunkReadyEvent(pub IVec3, pub Entity);
+pub struct ChunkReadyEvent(pub Point3i, pub Entity);
 
 /// An event signaling that the data of a chunk has been modified.
 pub struct ChunkUpdateEvent(pub Entity);
 
 /// A component describing a chunk.
 pub struct ChunkInfo {
-    pub pos: IVec3,
+    pub pos: Point3i,
 }
 
 #[derive(Bundle)]
@@ -74,6 +74,22 @@ pub struct ChunkDataBundle {
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub chunk_info: ChunkInfo,
+}
+
+pub struct WorldChunkIndexer(ChunkIndexer<[i32; 3]>);
+
+impl FromWorld for WorldChunkIndexer {
+    fn from_world(_: &mut World) -> Self {
+        Self(ChunkIndexer::new(Point3i::fill(CHUNK_LENGTH)))
+    }
+}
+
+impl Deref for WorldChunkIndexer {
+    type Target = ChunkIndexer<[i32; 3]>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 pub struct WorldTaskPool(TaskPool);

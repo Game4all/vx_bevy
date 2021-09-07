@@ -1,6 +1,5 @@
-use bevy::math::IVec3;
 use building_blocks::{
-    core::{ExtentN, PointN},
+    core::{ExtentN, Point3i, PointN},
     storage::{Array3x1, FillExtent, GetMut},
 };
 
@@ -20,14 +19,14 @@ impl TerrainGenerator for NoiseTerrainGenerator {
         self.seed = seed;
     }
 
-    fn generate(&self, chunk_pos: IVec3, data: &mut Array3x1<Voxel>) {
+    fn generate(&self, chunk_pos: Point3i, data: &mut Array3x1<Voxel>) {
         let heightmap = ValueMap2D::new(
             CHUNK_LENGTH,
             CHUNK_LENGTH,
             simdnoise::NoiseBuilder::fbm_2d_offset(
-                (chunk_pos.x * CHUNK_LENGTH) as f32,
+                chunk_pos.x() as f32,
                 CHUNK_LENGTH as usize,
-                (chunk_pos.z * CHUNK_LENGTH) as f32,
+                chunk_pos.z() as f32,
                 CHUNK_LENGTH as usize,
             )
             .with_seed(self.seed)
@@ -36,7 +35,7 @@ impl TerrainGenerator for NoiseTerrainGenerator {
             .0,
         );
 
-        let base_height = chunk_pos.y * CHUNK_LENGTH;
+        let base_height = chunk_pos.y();
 
         //todo: fix thiss
         // gen water only for first vertical chunk.

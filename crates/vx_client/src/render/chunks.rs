@@ -1,3 +1,4 @@
+use super::Visibility;
 use crate::utils::{ChunkMeshBuilder, ThreadLocalRes};
 use bevy::{
     diagnostic::Diagnostics,
@@ -22,11 +23,9 @@ use vx_core::{
     voxel::Voxel,
     world::{
         chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshingRequest, ChunkReadyEvent,
-        ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, CHUNK_LENGTH, CHUNK_MESHING_TIME,
+        ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, CHUNK_MESHING_TIME,
     },
 };
-
-use super::Visibility;
 
 const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 541458694767869);
@@ -140,14 +139,14 @@ fn attach_animation_components(
                 .entity(ready_event.1)
                 .insert(ChunkTransformAnimation {
                     start_time: time.time_since_startup().as_secs_f32(),
-                    final_y: (chunk_info.pos.y * CHUNK_LENGTH) as f32,
+                    final_y: chunk_info.pos.y() as f32,
                 });
 
             commands
                 .entity(children.first().unwrap().clone())
                 .insert(ChunkTransformAnimation {
                     start_time: time.time_since_startup().as_secs_f32(),
-                    final_y: (chunk_info.pos.y * CHUNK_LENGTH) as f32,
+                    final_y: chunk_info.pos.y() as f32,
                 });
         }
     }
@@ -257,7 +256,7 @@ fn mesh_chunks(
         for meshing_event in ready_entities.iter() {
             match chunks.get_component::<ChunkInfo>(meshing_event.0) {
                 Ok(chunk_info) => {
-                    if let Some(chunk_data) = chunk_map.get_chunk_data(&chunk_info.pos) {
+                    if let Some(chunk_data) = chunk_map.get_chunk_data(chunk_info.pos) {
                         let buffer_handle = local_buffers.get_handle();
                         scope.spawn(async move {
                             let buffer: &mut ReusableMeshBuffer =
