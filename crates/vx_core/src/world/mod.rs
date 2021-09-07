@@ -14,9 +14,6 @@ mod world;
 mod chunk_map;
 pub use chunk_map::*;
 
-mod coords;
-pub use coords::*;
-
 use crate::{voxel::Voxel, worldgen::NoiseTerrainGenerator};
 
 use self::world::update_visible_chunks_run_criteria;
@@ -78,8 +75,8 @@ pub struct ChunkDataBundle {
 
 pub struct WorldChunkIndexer(ChunkIndexer<[i32; 3]>);
 
-impl FromWorld for WorldChunkIndexer {
-    fn from_world(_: &mut World) -> Self {
+impl Default for WorldChunkIndexer {
+    fn default() -> Self {
         Self(ChunkIndexer::new(Point3i::fill(CHUNK_LENGTH)))
     }
 }
@@ -124,6 +121,7 @@ impl Plugin for WorldSimulationPlugin {
         app.init_resource::<ChunkEntityMap>()
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             .init_resource::<WorldTaskPool>()
+            .init_resource::<WorldChunkIndexer>()
             //todo: move this to a struct or smth else
             .init_resource::<Arc<NoiseTerrainGenerator>>()
             .insert_resource(

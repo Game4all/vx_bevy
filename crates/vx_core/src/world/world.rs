@@ -1,5 +1,5 @@
 use super::{
-    chunk_extent, global2chunk, ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest,
+    chunk_extent, ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest,
     ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkReadyEvent, ChunkSpawnRequest,
     WorldChunkIndexer, WorldTaskPool, CHUNK_DATA_GEN_TIME, CHUNK_LENGTH, MAX_FRAME_CHUNK_GEN_COUNT,
 };
@@ -22,7 +22,7 @@ pub(crate) fn update_visible_chunks(
     player: Query<&GlobalTransform, (Changed<GlobalTransform>, With<Player>)>,
     chunk_map: ChunkMapReader,
     config: Res<GlobalConfig>,
-    indexer: bevy::ecs::system::Local<WorldChunkIndexer>,
+    indexer: Res<WorldChunkIndexer>,
     mut load_radius_chunks: bevy::ecs::system::Local<Vec<Point3i>>,
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
     mut despawn_requests: EventWriter<ChunkDespawnRequest>,
@@ -69,11 +69,14 @@ pub(crate) fn update_visible_chunks(
 }
 
 pub(crate) fn update_visible_chunks_run_criteria(
+    indexer: Res<WorldChunkIndexer>,
     player: Query<&GlobalTransform, (Changed<GlobalTransform>, With<Player>)>,
-    mut previous_pos: bevy::ecs::system::Local<IVec3>,
+    mut previous_pos: bevy::ecs::system::Local<Point3i>,
 ) -> ShouldRun {
     for transform in player.iter() {
-        let new_pos = global2chunk(transform.translation);
+        let new_pos = indexer
+            .min_of_chunk_containing_point(PointN(transform.translation.to_array()).into_int());
+
         if *previous_pos != new_pos {
             *previous_pos = new_pos;
             return ShouldRun::Yes;
