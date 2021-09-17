@@ -1,4 +1,4 @@
-use crate::{input::Action, player::PlayerController};
+use crate::{input::Action, player::PlayerController, render::CHUNK_MESHING_TIME};
 use bevy::{
     diagnostic::{DiagnosticId, Diagnostics, FrameTimeDiagnosticsPlugin},
     ecs::system::EntityCommands,
@@ -7,9 +7,7 @@ use bevy::{
 use enum_iterator::IntoEnumIterator;
 use vx_core::{
     config::GlobalConfig,
-    world::{
-        ChunkEntityMap, ChunkMeshingRequest, CHUNK_DATA_GEN_TIME, CHUNK_MESHING_TIME, CHUNK_LENGTH,
-    },
+    world::{ChunkEntityMap, ChunkMeshingRequest, CHUNK_DATA_GEN_TIME, CHUNK_LENGTH},
 };
 
 const DEBUG_DIAGS: &[DiagnosticId] = &[

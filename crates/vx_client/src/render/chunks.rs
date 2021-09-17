@@ -1,7 +1,7 @@
 use super::Visibility;
 use crate::utils::{ChunkMeshBuilder, ThreadLocalRes};
 use bevy::{
-    diagnostic::Diagnostics,
+    diagnostic::{Diagnostic, DiagnosticId, Diagnostics},
     prelude::*,
     reflect::TypeUuid,
     render::{
@@ -23,9 +23,11 @@ use vx_core::{
     voxel::Voxel,
     world::{
         chunk_extent, ChunkInfo, ChunkMapReader, ChunkMeshingRequest, ChunkReadyEvent,
-        ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage, CHUNK_MESHING_TIME,
+        ChunkUpdateEvent, WorldTaskPool, WorldUpdateStage,
     },
 };
+
+pub const CHUNK_MESHING_TIME: DiagnosticId = DiagnosticId::from_u128(489617772449846);
 
 const TERRAIN_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 541458694767869);
@@ -343,10 +345,11 @@ fn mesh_chunks(
     diagnostics.add_measurement(CHUNK_MESHING_TIME, after_chunk_meshing.as_secs_f64());
 }
 
-/// Setups all the required resources for rendering (ie: shader pipelines)
-fn setup_render_resources(
+/// Setups all the required resources for rendering (ie: shader pipelines) and debug diagnostics
+fn setup(
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut diagnostics: ResMut<Diagnostics>,
     asset_server: Res<AssetServer>,
 ) {
     let _ = pipelines.set_untracked(
@@ -365,6 +368,12 @@ fn setup_render_resources(
         }),
     );
 
+    diagnostics.add(Diagnostic::new(
+        CHUNK_MESHING_TIME,
+        "Avg. chunk meshing time (s)",
+        3,
+    ));
+
     materials.set_untracked(SHARED_STANDARD_MATERIAL_HANDLE, Default::default());
 }
 
@@ -373,7 +382,7 @@ pub struct WorldRenderPlugin;
 impl Plugin for WorldRenderPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(ClearColor(Color::hex("87CEEB").unwrap()))
-            .add_startup_system(setup_render_resources.system())
+            .add_startup_system(setup.system())
             .add_stage_after(
                 WorldUpdateStage::PostUpdate,
                 ChunkRenderStage,
