@@ -21,7 +21,6 @@ use self::world::update_visible_chunks_run_criteria;
 pub const CHUNK_LENGTH: i32 = 32;
 
 pub const MAX_FRAME_CHUNK_GEN_COUNT: usize = 16;
-pub const CHUNK_MESHING_TIME: DiagnosticId = DiagnosticId::from_u128(489617772449846);
 pub const CHUNK_DATA_GEN_TIME: DiagnosticId = DiagnosticId::from_u128(975647521301976);
 
 #[derive(StageLabel, Clone, Copy, Hash, Debug, PartialEq, Eq)]
@@ -198,12 +197,6 @@ impl Plugin for WorldSimulationPlugin {
         //registering debug diagnostics
         app.world_mut()
             .resource_scope(|_, mut diagnostics: Mut<Diagnostics>| {
-                diagnostics.add(Diagnostic::new(
-                    CHUNK_MESHING_TIME,
-                    "Avg. chunk meshing time (s)",
-                    3,
-                ));
-
                 diagnostics.add(Diagnostic::new(
                     CHUNK_DATA_GEN_TIME,
                     "Avg. worldgen time (s)",
