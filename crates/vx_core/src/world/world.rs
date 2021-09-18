@@ -3,17 +3,13 @@ use super::{
     ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkReadyEvent, ChunkSpawnRequest,
     WorldChunkIndexer, WorldTaskPool, CHUNK_DATA_GEN_TIME, CHUNK_LENGTH, MAX_FRAME_CHUNK_GEN_COUNT,
 };
-use crate::{
-    config::GlobalConfig,
-    worldgen::{NoiseTerrainGenerator, TerrainGenerator},
-    Player,
-};
+use crate::{config::GlobalConfig, worldgen, Player};
 use bevy::{diagnostic::Diagnostics, ecs::schedule::ShouldRun, prelude::*, utils::Instant};
 use building_blocks::{
     core::{IntoIntegerPoint, Point3i, PointN},
     storage::{Array3x1, ChunkKey3},
 };
-use std::{collections::VecDeque, sync::Arc};
+use std::collections::VecDeque;
 
 /// Handles the visibility checking of the currently loaded chunks around the player.
 /// This will accordingly emit [`ChunkSpawnRequest`] events for chunks that need to be loaded since they entered the player's view distance and [`ChunkDespawnRequest`] for
@@ -172,7 +168,6 @@ pub(crate) fn generate_terrain_data(
     mut query: Query<(&ChunkInfo, &mut ChunkLoadState)>,
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
     mut chunk_map: ChunkMapWriter,
-    gen: Res<Arc<NoiseTerrainGenerator>>,
     task_pool: Res<WorldTaskPool>,
     mut diagnostics: ResMut<Diagnostics>,
 ) {
@@ -182,10 +177,9 @@ pub(crate) fn generate_terrain_data(
         let gen_req_count = gen_requests.len().min(MAX_FRAME_CHUNK_GEN_COUNT);
         for req in gen_requests.drain(..gen_req_count) {
             if let Ok(info) = query.get_component::<ChunkInfo>(req.0) {
-                let generator = gen.clone();
                 scope.spawn(async move {
                     let mut data = Array3x1::fill(chunk_extent(), Default::default());
-                    generator.generate(info.pos, &mut data);
+                    worldgen::gen_terrain_for_chunk(info.pos, &mut data);
                     (req.0, data)
                 });
             }

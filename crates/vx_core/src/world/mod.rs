@@ -7,14 +7,14 @@ use building_blocks::{
     core::{Extent3i, Point, Point3i, PointN},
     storage::{ChunkIndexer, ChunkMapBuilder, ChunkMapBuilder3x1},
 };
-use std::{collections::VecDeque, ops::Deref, sync::Arc};
+use std::{collections::VecDeque, ops::Deref};
 
 mod world;
 
 mod chunk_map;
 pub use chunk_map::*;
 
-use crate::{voxel::Voxel, worldgen::NoiseTerrainGenerator};
+use crate::voxel::Voxel;
 
 use self::world::update_visible_chunks_run_criteria;
 
@@ -123,7 +123,6 @@ impl Plugin for WorldSimulationPlugin {
             .init_resource::<WorldTaskPool>()
             .init_resource::<WorldChunkIndexer>()
             //todo: move this to a struct or smth else
-            .init_resource::<Arc<NoiseTerrainGenerator>>()
             .insert_resource(
                 ChunkMapBuilder3x1::new(PointN::fill(CHUNK_LENGTH), Voxel::Empty)
                     .build_with_hash_map_storage(),
