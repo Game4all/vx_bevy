@@ -1,5 +1,5 @@
 use building_blocks::{
-    core::{ExtentN, Point3i, PointN},
+    core::{ConstZero, ExtentN, Point, Point3i, PointN},
     storage::{Array3x1, FillExtent, GetMut},
 };
 
@@ -23,6 +23,16 @@ pub fn gen_terrain_for_chunk(chunk_pos: Point3i, data: &mut Array3x1<Voxel>) {
     );
 
     let base_height = chunk_pos.y();
+
+    if base_height < 0 {
+        data.fill_extent(
+            &ExtentN::from_min_and_shape(PointN::ZERO, PointN::fill(CHUNK_LENGTH)),
+            Voxel::Solid {
+                attributes: [236, 230, 214, 255],
+            },
+        );
+        return;
+    }
 
     //todo: fix thiss
     // gen water only for first vertical chunk.
