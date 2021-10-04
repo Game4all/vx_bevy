@@ -114,21 +114,17 @@ fn attach_chunk_render_bundle(
 
 struct ChunkTransformAnimation {
     pub start_time: f32,
-    pub final_y: f32,
 }
 
 fn attach_animation_components(
     mut ready_events: EventReader<ChunkReadyEvent>,
-    mut chunks: QuerySet<(
-        Query<(&Children, &ChunkInfo, &ChunkMeshInfo)>,
-        Query<&mut Transform>,
-    )>,
+    mut chunks: QuerySet<(Query<(&Children, &ChunkMeshInfo)>, Query<&mut Transform>)>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,
     mut commands: Commands,
     time: Res<Time>,
 ) {
     for ready_event in ready_events.iter() {
-        if let Ok((children, chunk_info, mesh_info)) = chunks.q0().get(ready_event.1) {
+        if let Ok((children, mesh_info)) = chunks.q0().get(ready_event.1) {
             if mesh_info.is_empty {
                 //don't animate empty chunks.
                 continue;
@@ -141,21 +137,19 @@ fn attach_animation_components(
                 .entity(ready_event.1)
                 .insert(ChunkTransformAnimation {
                     start_time: time.time_since_startup().as_secs_f32(),
-                    final_y: chunk_info.pos.y() as f32,
                 });
 
             commands
                 .entity(children.first().unwrap().clone())
                 .insert(ChunkTransformAnimation {
                     start_time: time.time_since_startup().as_secs_f32(),
-                    final_y: chunk_info.pos.y() as f32,
                 });
         }
     }
 
     for entity in entities.drain(..) {
         if let Ok(mut transform) = chunks.q1_mut().get_mut(entity) {
-            transform.translation.y = -128.0
+            transform.translation.y = -ANIMATION_HEIGHT;
         }
     }
 }
@@ -172,8 +166,7 @@ fn step_chunk_ready_animation(
         let delta = (time.time_since_startup().as_secs_f32() - animation.start_time)
             .min(ANIMATION_DURATION);
         let ytransform = -ANIMATION_HEIGHT
-            + (1. - (1. - (delta / ANIMATION_DURATION)).powi(5))
-                * (ANIMATION_HEIGHT + animation.final_y);
+            + (1. - (1. - (delta / ANIMATION_DURATION)).powi(5)) * ANIMATION_HEIGHT;
 
         transform.translation.y = ytransform;
 
@@ -264,12 +257,19 @@ fn mesh_chunks(
                             let buffer: &mut ReusableMeshBuffer =
                                 &mut buffer_handle.get().borrow_mut();
 
-                            let extent = padded_chunk_extent();
+                            let extent = chunk_data.extent();
+                            let padded_extent = chunk_data.extent().padded(1);
 
-                            copy_extent(&chunk_extent(), chunk_data, &mut buffer.padded_buffer);
+                            buffer.padded_buffer.set_minimum(padded_extent.minimum);
 
-                            buffer.greedy_buffer.reset(extent);
-                            greedy_quads(&buffer.padded_buffer, &extent, &mut buffer.greedy_buffer);
+                            copy_extent(extent, chunk_data, &mut buffer.padded_buffer);
+
+                            buffer.greedy_buffer.reset(padded_extent);
+                            greedy_quads(
+                                &buffer.padded_buffer,
+                                &padded_extent,
+                                &mut buffer.greedy_buffer,
+                            );
 
                             if buffer.greedy_buffer.num_quads() != 0 {
                                 let mut chunk_mesh_builder = ChunkMeshBuilder::default();

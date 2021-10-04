@@ -1,7 +1,7 @@
 use super::{
-    chunk_extent, ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest,
-    ChunkLoadState, ChunkMapReader, ChunkMapWriter, ChunkReadyEvent, ChunkSpawnRequest,
-    WorldChunkIndexer, WorldTaskPool, CHUNK_DATA_GEN_TIME, CHUNK_LENGTH, MAX_FRAME_CHUNK_GEN_COUNT,
+    ChunkDataBundle, ChunkDespawnRequest, ChunkInfo, ChunkLoadRequest, ChunkLoadState,
+    ChunkMapReader, ChunkMapWriter, ChunkReadyEvent, ChunkSpawnRequest, WorldChunkIndexer,
+    WorldTaskPool, CHUNK_DATA_GEN_TIME, CHUNK_LENGTH, MAX_FRAME_CHUNK_GEN_COUNT,
 };
 use crate::{config::GlobalConfig, worldgen, Player};
 use bevy::{diagnostic::Diagnostics, ecs::schedule::ShouldRun, prelude::*, utils::Instant};
@@ -89,11 +89,7 @@ pub(crate) fn create_chunks(
     for creation_request in spawn_events.iter() {
         let entity = commands
             .spawn_bundle(ChunkDataBundle {
-                transform: Transform::from_xyz(
-                    creation_request.0.x() as f32,
-                    creation_request.0.y() as f32,
-                    creation_request.0.z() as f32,
-                ),
+                transform: Transform::default(),
                 chunk_info: ChunkInfo {
                     pos: creation_request.0,
                 },
@@ -177,8 +173,14 @@ pub(crate) fn generate_terrain_data(
         let gen_req_count = gen_requests.len().min(MAX_FRAME_CHUNK_GEN_COUNT);
         for req in gen_requests.drain(..gen_req_count) {
             if let Ok(info) = query.get_component::<ChunkInfo>(req.0) {
+                let mut data = Array3x1::fill(
+                    chunk_map
+                        .chunk_data
+                        .indexer
+                        .extent_for_chunk_with_min(info.pos),
+                    Default::default(),
+                );
                 scope.spawn(async move {
-                    let mut data = Array3x1::fill(chunk_extent(), Default::default());
                     worldgen::gen_terrain_for_chunk(info.pos, &mut data);
                     (req.0, data)
                 });

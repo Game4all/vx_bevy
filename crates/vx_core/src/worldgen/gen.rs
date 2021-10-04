@@ -1,5 +1,5 @@
 use building_blocks::{
-    core::{ConstZero, ExtentN, Point, Point3i, PointN},
+    core::{ExtentN, Point, Point3i, PointN},
     storage::{Array3x1, FillExtent, GetMut},
 };
 
@@ -7,14 +7,14 @@ use crate::{utils::ValueMap2D, voxel::Voxel, world::CHUNK_LENGTH};
 
 const MAX_TERRAIN_HEIGHT: i32 = 256;
 
-pub fn gen_terrain_for_chunk(chunk_pos: Point3i, data: &mut Array3x1<Voxel>) {
+pub fn gen_terrain_for_chunk(chunk_min: Point3i, data: &mut Array3x1<Voxel>) {
     let heightmap = ValueMap2D::new(
         CHUNK_LENGTH,
         CHUNK_LENGTH,
         simdnoise::NoiseBuilder::fbm_2d_offset(
-            chunk_pos.x() as f32,
+            chunk_min.x() as f32,
             CHUNK_LENGTH as usize,
-            chunk_pos.z() as f32,
+            chunk_min.z() as f32,
             CHUNK_LENGTH as usize,
         )
         .with_octaves(5)
@@ -22,11 +22,11 @@ pub fn gen_terrain_for_chunk(chunk_pos: Point3i, data: &mut Array3x1<Voxel>) {
         .0,
     );
 
-    let base_height = chunk_pos.y();
+    let base_height = chunk_min.y();
 
     if base_height < 0 {
         data.fill_extent(
-            &ExtentN::from_min_and_shape(PointN::ZERO, PointN::fill(CHUNK_LENGTH)),
+            &ExtentN::from_min_and_shape(chunk_min, PointN::fill(CHUNK_LENGTH)),
             Voxel::Solid {
                 attributes: [236, 230, 214, 255],
             },
@@ -38,7 +38,10 @@ pub fn gen_terrain_for_chunk(chunk_pos: Point3i, data: &mut Array3x1<Voxel>) {
     // gen water only for first vertical chunk.
     if base_height == 0 {
         data.fill_extent(
-            &ExtentN::from_min_and_max(PointN([0, 1, 0]), PointN([CHUNK_LENGTH, 8, CHUNK_LENGTH])),
+            &ExtentN::from_min_and_max(
+                chunk_min + PointN([0, 1, 0]),
+                PointN([CHUNK_LENGTH, 8, CHUNK_LENGTH]),
+            ),
             Voxel::Fluid {
                 attributes: [102, 133, 254, 255],
             },
@@ -52,7 +55,7 @@ pub fn gen_terrain_for_chunk(chunk_pos: Point3i, data: &mut Array3x1<Voxel>) {
             let local_height = (block_height - base_height).max(0).min(CHUNK_LENGTH);
 
             for y in 0..local_height {
-                *data.get_mut(PointN([x, y, z])) = Voxel::Solid {
+                *data.get_mut(chunk_min + PointN([x, y, z])) = Voxel::Solid {
                     attributes: get_color_for_height(base_height + y),
                 }
             }
