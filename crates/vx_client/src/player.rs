@@ -1,4 +1,10 @@
 use bevy::{input::mouse::MouseMotion, math::const_vec3, prelude::*};
+use building_blocks::{core::PointN, search::GridRayTraversal3};
+use vx_core::{
+    config::GlobalConfig,
+    voxel::Voxel,
+    world::{ChunkMapWriter, CHUNK_LENGTH},
+};
 
 use std::f32::consts::FRAC_PI_2;
 
@@ -99,12 +105,44 @@ pub fn handle_player_input(
     }
 }
 
+pub fn handle_player_interactions(
+    query: Query<&Transform, With<PlayerController>>,
+    config: Res<GlobalConfig>,
+    actions: Res<Input<Action>>,
+    mut map: ChunkMapWriter,
+) {
+    for player in query.single() {
+        if actions.pressed(Action::PaintVoxel) {
+            let pos = PointN(player.translation.to_array());
+            let direction = PointN(player.forward().to_array());
+
+            let mut raycast = GridRayTraversal3::new(pos, direction);
+
+            for _ in 0..(config.render_distance * CHUNK_LENGTH).pow(2) {
+                let voxel = map.chunk_data.clone_point(0, raycast.current_voxel());
+                if !matches!(voxel, Voxel::Empty) {
+                    let origin = raycast.current_voxel();
+                    map.write_voxel(
+                        origin,
+                        Voxel::Solid {
+                            attributes: [255, 255, 0, 255],
+                        },
+                        true,
+                    );
+                    break;
+                }
+                raycast.step();
+            }
+        }
+    }
+}
+
 pub struct PlayerControllerPlugin;
 
 impl Plugin for PlayerControllerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system(handle_player_mouse_move.system())
             .add_system(handle_player_input.system())
-            .add_system(handle_player_mouse_move.system());
+            .add_system(handle_player_interactions.system());
     }
 }

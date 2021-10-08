@@ -1,3 +1,5 @@
+use crate::voxel::Voxel;
+
 use super::ChunkUpdateEvent;
 use bevy::ecs::system::SystemParam;
 use bevy::{prelude::*, utils::HashMap};
@@ -44,8 +46,19 @@ impl<'a> ChunkMapWriter<'a> {
     }
 
     pub fn mark_updated(&mut self, chunk_coords: Point3i) {
-        if let Some(entity) = self.chunk_entities.get(&chunk_coords) {
+        let min = self
+            .chunk_data
+            .indexer
+            .min_of_chunk_containing_point(chunk_coords);
+        if let Some(entity) = self.chunk_entities.get(&min) {
             self.chunk_updates.send(ChunkUpdateEvent(*entity));
+        }
+    }
+
+    pub fn write_voxel(&mut self, chunk_coords: Point3i, voxel: Voxel, update: bool) {
+        *self.chunk_data.get_mut_point(0, chunk_coords) = voxel;
+        if update {
+            self.mark_updated(chunk_coords);
         }
     }
 }

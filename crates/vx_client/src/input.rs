@@ -22,6 +22,9 @@ pub enum Action {
     //debug stuff
     ToggleDebugUi,
     RemeshChunks,
+
+    //action stuff
+    PaintVoxel,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
@@ -64,6 +67,7 @@ impl Default for Keybindings {
         keybinds.insert(KeyButton::Keyboard(KeyCode::Escape), Action::CursorLock);
         keybinds.insert(KeyButton::Keyboard(KeyCode::F3), Action::ToggleDebugUi);
         keybinds.insert(KeyButton::Keyboard(KeyCode::F5), Action::RemeshChunks);
+        keybinds.insert(KeyButton::Mouse(MouseButton::Right), Action::PaintVoxel);
         Keybindings(keybinds)
     }
 }
