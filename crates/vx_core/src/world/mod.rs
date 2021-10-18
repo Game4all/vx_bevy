@@ -7,14 +7,17 @@ use building_blocks::{
     core::{Extent3i, Point, Point3i, PointN},
     storage::{ChunkIndexer, ChunkMapBuilder, ChunkMapBuilder3x1},
 };
-use std::{collections::VecDeque, ops::Deref};
+use std::{collections::VecDeque, ops::Deref, sync::Arc};
+
+use crate::{
+    voxel::Voxel,
+    worldgen::{BoxedTerrainGenerator, NoiseTerrainGenerator},
+};
 
 mod world;
 
 mod chunk_map;
 pub use chunk_map::*;
-
-use crate::voxel::Voxel;
 
 use self::world::update_visible_chunks_run_criteria;
 
@@ -121,6 +124,7 @@ impl Plugin for WorldSimulationPlugin {
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             .init_resource::<WorldTaskPool>()
             .init_resource::<WorldChunkIndexer>()
+            .insert_resource::<BoxedTerrainGenerator>(Arc::new(Box::new(NoiseTerrainGenerator)))
             //todo: move this to a struct or smth else
             .insert_resource(
                 ChunkMapBuilder3x1::new(PointN::fill(CHUNK_LENGTH), Voxel::Empty)
@@ -203,5 +207,9 @@ impl Plugin for WorldSimulationPlugin {
                     3,
                 ));
             });
+    }
+
+    fn name(&self) -> &str {
+        std::any::type_name::<Self>()
     }
 }

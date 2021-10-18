@@ -3,7 +3,7 @@ use super::{
     ChunkMapReader, ChunkMapWriter, ChunkReadyEvent, ChunkSpawnRequest, WorldChunkIndexer,
     WorldTaskPool, CHUNK_DATA_GEN_TIME, CHUNK_LENGTH, MAX_FRAME_CHUNK_GEN_COUNT,
 };
-use crate::{config::GlobalConfig, worldgen, Player};
+use crate::{config::GlobalConfig, worldgen::BoxedTerrainGenerator, Player};
 use bevy::{diagnostic::Diagnostics, ecs::schedule::ShouldRun, prelude::*, utils::Instant};
 use building_blocks::{
     core::{IntoIntegerPoint, Point3i, PointN},
@@ -165,6 +165,7 @@ pub(crate) fn generate_terrain_data(
     mut gen_requests: ResMut<VecDeque<ChunkLoadRequest>>,
     mut chunk_map: ChunkMapWriter,
     task_pool: Res<WorldTaskPool>,
+    terrain_generator: Res<BoxedTerrainGenerator>,
     mut diagnostics: ResMut<Diagnostics>,
 ) {
     let time_before_loading = Instant::now();
@@ -180,8 +181,10 @@ pub(crate) fn generate_terrain_data(
                         .extent_for_chunk_with_min(info.pos),
                     Default::default(),
                 );
+
+                let generator = terrain_generator.clone();
                 scope.spawn(async move {
-                    worldgen::gen_terrain_for_chunk(info.pos, &mut data);
+                    generator.build_terrain_base(info.pos, &mut data);
                     (req.0, data)
                 });
             }
