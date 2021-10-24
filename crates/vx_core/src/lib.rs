@@ -18,6 +18,7 @@ impl PluginGroup for CorePlugins {
         group
             .add(platform::PlatformPlugin)
             .add(ConfigurationPlugin::<config::GlobalConfig>::default())
-            .add(world::WorldSimulationPlugin);
+            .add(world::WorldSimulationPlugin)
+            .add(worldgen::WorldGenerationPlugin);
     }
 }

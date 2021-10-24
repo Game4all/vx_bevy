@@ -9,7 +9,32 @@ use crate::{utils::ValueMap2D, voxel::Voxel, world::CHUNK_LENGTH};
 pub struct NoiseTerrainGenerator;
 
 impl TerrainGenerator for NoiseTerrainGenerator {
-    fn build_terrain_base(&self, chunk_min: Point3i, data: &mut Array3x1<Voxel>) {
+    fn fill(&self, chunk_min: Point3i, data: &mut Array3x1<Voxel>) -> bool {
+        if chunk_min.y() < 0 {
+            data.fill_extent(
+                &ExtentN::from_min_and_shape(chunk_min, PointN::fill(CHUNK_LENGTH)),
+                Voxel::Solid {
+                    attributes: [236, 230, 214, 255],
+                },
+            );
+            return true;
+        } else if chunk_min.y() == 0 {
+            data.fill_extent(
+                &ExtentN::from_min_and_max(
+                    chunk_min + PointN([0, 1, 0]),
+                    PointN([CHUNK_LENGTH, 8, CHUNK_LENGTH]),
+                ),
+                Voxel::Fluid {
+                    attributes: [102, 133, 254, 255],
+                },
+            );
+            return false;
+        } else {
+            return false;
+        }
+    }
+
+    fn shape_terrain(&self, chunk_min: Point3i, data: &mut Array3x1<Voxel>) {
         let heightmap = ValueMap2D::new(
             CHUNK_LENGTH,
             CHUNK_LENGTH,
@@ -25,30 +50,6 @@ impl TerrainGenerator for NoiseTerrainGenerator {
         );
 
         let base_height = chunk_min.y();
-
-        if base_height < 0 {
-            data.fill_extent(
-                &ExtentN::from_min_and_shape(chunk_min, PointN::fill(CHUNK_LENGTH)),
-                Voxel::Solid {
-                    attributes: [236, 230, 214, 255],
-                },
-            );
-            return;
-        }
-
-        //todo: fix thiss
-        // gen water only for first vertical chunk.
-        if base_height == 0 {
-            data.fill_extent(
-                &ExtentN::from_min_and_max(
-                    chunk_min + PointN([0, 1, 0]),
-                    PointN([CHUNK_LENGTH, 8, CHUNK_LENGTH]),
-                ),
-                Voxel::Fluid {
-                    attributes: [102, 133, 254, 255],
-                },
-            );
-        }
 
         for x in 0..CHUNK_LENGTH {
             for z in 0..CHUNK_LENGTH {
