@@ -26,7 +26,7 @@ impl TerrainGenerator for NoiseTerrainGenerator {
             data.fill_extent(
                 &ExtentN::from_min_and_max(
                     chunk_min + PointN([0, 1, 0]),
-                    PointN([CHUNK_LENGTH, 8, CHUNK_LENGTH]),
+                    chunk_min + PointN([CHUNK_LENGTH, 8, CHUNK_LENGTH]),
                 ),
                 Voxel::Fluid {
                     attributes: [102, 133, 254, 255],
