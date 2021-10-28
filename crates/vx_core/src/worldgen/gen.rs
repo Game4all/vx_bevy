@@ -1,10 +1,14 @@
 use building_blocks::{
     core::{ExtentN, Point, Point3i, PointN},
-    storage::{Array3x1, FillExtent, GetMut},
+    storage::{Array3x1, FillExtent, Get, GetMut},
 };
 
 use super::TerrainGenerator;
-use crate::{utils::ValueMap2D, voxel::Voxel, world::CHUNK_LENGTH};
+use crate::{
+    utils::{ValueMap2D, ValueMap3D},
+    voxel::Voxel,
+    world::CHUNK_LENGTH,
+};
 
 pub struct NoiseTerrainGenerator;
 
@@ -62,6 +66,48 @@ impl TerrainGenerator for NoiseTerrainGenerator {
                 for y in 0..local_height {
                     *data.get_mut(chunk_min + PointN([x, y, z])) = Voxel::Solid {
                         attributes: self.get_color_for_height(base_height + y),
+                    }
+                }
+            }
+        }
+    }
+
+    fn carve_terrain(&self, chunk_min: Point3i, data: &mut Array3x1<Voxel>) {
+        // don't generate caves too high in terrain
+        if chunk_min.y() > (NoiseTerrainGenerator::MAX_TERRAIN_HEIGHT / 8) {
+            return;
+        }
+
+        let cave_gen = ValueMap3D::new(
+            CHUNK_LENGTH,
+            CHUNK_LENGTH,
+            CHUNK_LENGTH,
+            simdnoise::NoiseBuilder::gradient_3d_offset(
+                chunk_min.x() as f32,
+                CHUNK_LENGTH as usize,
+                chunk_min.y() as f32,
+                CHUNK_LENGTH as usize,
+                chunk_min.z() as f32,
+                CHUNK_LENGTH as usize,
+            )
+            .generate_scaled(0., 1.0)
+            .iter()
+            .map(|x| x.abs() > 0.70)
+            .collect(),
+        );
+
+        for x in 0..CHUNK_LENGTH {
+            for y in 0..CHUNK_LENGTH {
+                for z in 0..CHUNK_LENGTH {
+                    if cave_gen.value_at(x, y, z) {
+                        let point = chunk_min + PointN([x, y, z]);
+
+                        // for now don't swallow fluids
+                        if matches!(data.get(point), Voxel::Fluid { .. }) {
+                            continue;
+                        }
+
+                        *data.get_mut(chunk_min + PointN([x, y, z])) = Voxel::Empty;
                     }
                 }
             }

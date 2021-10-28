@@ -32,10 +32,11 @@ impl ChunkGenerator {
         if !self.terrain_generator.fill(chunk_min, data) {
             self.terrain_generator.shape_terrain(chunk_min, data);
         }
+        self.terrain_generator.carve_terrain(chunk_min, data);
     }
 }
 
-// Base trait for world generator implementations.
+/// Base trait for world generator implementations.
 pub trait TerrainGenerator: Send + Sync {
     // The initial fill to do in the chunk.
     // Returns whether the terrain shaping should be skipped (ie: in case the chunk is full of air / stone).
@@ -43,6 +44,9 @@ pub trait TerrainGenerator: Send + Sync {
 
     // Builds the base terrain on which the terrain features are lated applied.
     fn shape_terrain(&self, chunk_min: Point3i, data: &mut Array3x1<Voxel>);
+
+    // Carve the terrain.
+    fn carve_terrain(&self, chunk_min: Point3i, data: &mut Array3x1<Voxel>);
 
     // fn apply_terrain_features(
     //     &self,
