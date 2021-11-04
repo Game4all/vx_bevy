@@ -428,5 +428,14 @@ impl Plugin for WorldRenderPlugin {
                     .label("step_chunk_ready_animation")
                     .after("update_meshes_visibility"),
             );
+
+        app.world_mut()
+            .resource_scope(|_, mut diagnostics: Mut<Diagnostics>| {
+                diagnostics.add(Diagnostic::new(
+                    CHUNK_MESHING_TIME,
+                    "Avg. worldgen time (s)",
+                    3,
+                ));
+            });
     }
 }
