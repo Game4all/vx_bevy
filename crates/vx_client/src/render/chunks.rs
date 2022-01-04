@@ -118,7 +118,10 @@ struct ChunkTransformAnimation {
 
 fn attach_animation_components(
     mut ready_events: EventReader<ChunkReadyEvent>,
-    mut chunks: QuerySet<(Query<(&Children, &ChunkMeshInfo)>, Query<&mut Transform>)>,
+    mut chunks: QuerySet<(
+        QueryState<(&Children, &ChunkMeshInfo)>,
+        QueryState<&mut Transform>,
+    )>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,
     mut commands: Commands,
     time: Res<Time>,
@@ -148,7 +151,7 @@ fn attach_animation_components(
     }
 
     for entity in entities.drain(..) {
-        if let Ok(mut transform) = chunks.q1_mut().get_mut(entity) {
+        if let Ok(mut transform) = chunks.q1().get_mut(entity) {
             transform.translation.y = -ANIMATION_HEIGHT;
         }
     }
@@ -178,8 +181,8 @@ fn step_chunk_ready_animation(
 
 fn update_meshes_visibility(
     mut meshes: QuerySet<(
-        Query<(&Children, &ChunkMeshInfo, Entity), Changed<ChunkMeshInfo>>,
-        Query<&mut Visibility>,
+        QueryState<(&Children, &ChunkMeshInfo, Entity), Changed<ChunkMeshInfo>>,
+        QueryState<&mut Visibility>,
     )>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,
 ) {
@@ -190,7 +193,7 @@ fn update_meshes_visibility(
     });
 
     for entity in entities.drain(..) {
-        if let Ok(mut visibility) = meshes.q1_mut().get_mut(entity) {
+        if let Ok(mut visibility) = meshes.q1().get_mut(entity) {
             visibility.visible = true;
         }
     }

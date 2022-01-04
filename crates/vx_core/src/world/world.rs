@@ -23,43 +23,43 @@ pub(crate) fn update_visible_chunks(
     mut spawn_requests: EventWriter<ChunkSpawnRequest>,
     mut despawn_requests: EventWriter<ChunkDespawnRequest>,
 ) {
-    if let Ok(transform) = player.single() {
-        let pos = indexer
-            .min_of_chunk_containing_point(PointN(transform.translation.to_array()).into_int());
+    let transform = player.single();
 
-        for dx in -config.render_distance..=config.render_distance {
-            for dz in -config.render_distance..=config.render_distance {
-                for dy in -config.render_distance..=config.render_distance {
-                    if dx.pow(2) + dy.pow(2) + dz.pow(2) >= config.render_distance.pow(2) {
-                        continue;
-                    };
+    let pos =
+        indexer.min_of_chunk_containing_point(PointN(transform.translation.to_array()).into_int());
 
-                    let chunk_pos =
-                        pos + PointN([dx * CHUNK_LENGTH, dy * CHUNK_LENGTH, dz * CHUNK_LENGTH]);
+    for dx in -config.render_distance..=config.render_distance {
+        for dz in -config.render_distance..=config.render_distance {
+            for dy in -config.render_distance..=config.render_distance {
+                if dx.pow(2) + dy.pow(2) + dz.pow(2) >= config.render_distance.pow(2) {
+                    continue;
+                };
 
-                    if !chunk_map.chunk_exists(chunk_pos) {
-                        load_radius_chunks.push(chunk_pos);
-                    }
+                let chunk_pos =
+                    pos + PointN([dx * CHUNK_LENGTH, dy * CHUNK_LENGTH, dz * CHUNK_LENGTH]);
+
+                if !chunk_map.chunk_exists(chunk_pos) {
+                    load_radius_chunks.push(chunk_pos);
                 }
             }
         }
+    }
 
-        load_radius_chunks.sort_by_key(|a| (a.x().pow(2) + a.z().pow(2)));
+    load_radius_chunks.sort_by_key(|a| (a.x().pow(2) + a.z().pow(2)));
 
-        spawn_requests.send_batch(
-            load_radius_chunks
-                .drain(..)
-                .map(|c| ChunkSpawnRequest(c.clone())),
-        );
+    spawn_requests.send_batch(
+        load_radius_chunks
+            .drain(..)
+            .map(|c| ChunkSpawnRequest(c.clone())),
+    );
 
-        for key in chunk_map.chunk_entities.keys() {
-            let delta = *key - pos;
-            let entity = chunk_map.get_entity(*key).unwrap();
-            if delta.x().abs().pow(2) + delta.y().abs().pow(2) + delta.z().abs().pow(2)
-                > (config.render_distance * CHUNK_LENGTH).pow(2)
-            {
-                despawn_requests.send(ChunkDespawnRequest(entity));
-            }
+    for key in chunk_map.chunk_entities.keys() {
+        let delta = *key - pos;
+        let entity = chunk_map.get_entity(*key).unwrap();
+        if delta.x().abs().pow(2) + delta.y().abs().pow(2) + delta.z().abs().pow(2)
+            > (config.render_distance * CHUNK_LENGTH).pow(2)
+        {
+            despawn_requests.send(ChunkDespawnRequest(entity));
         }
     }
 }

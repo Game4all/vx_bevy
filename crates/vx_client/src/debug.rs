@@ -151,20 +151,19 @@ fn update_debug_values(
     config: Res<GlobalConfig>,
 ) {
     for (mut text, debug_cnt) in counters.iter_mut() {
-        for (_, transform) in player.single() {
-            match &debug_cnt {
-                &DebugValue::Position => {
-                    text.sections[2].value = format!("{}", &transform.translation.round());
-                }
-                &DebugValue::HRenderDistance => {
-                    text.sections[2].value = format!(
-                        "{} chunks ({} blocks)",
-                        &config.render_distance,
-                        CHUNK_LENGTH * config.render_distance
-                    );
-                }
+        let (_, transform) = player.single();
+        match &debug_cnt {
+            &DebugValue::Position => {
+                text.sections[2].value = format!("{}", &transform.translation.round());
             }
-        }
+            &DebugValue::HRenderDistance => {
+                text.sections[2].value = format!(
+                    "{} chunks ({} blocks)",
+                    &config.render_distance,
+                    CHUNK_LENGTH * config.render_distance
+                );
+            }
+        };
     }
 }
 
