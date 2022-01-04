@@ -31,7 +31,7 @@ pub enum WorldUpdateStage {
 }
 
 /// A component tracking the current loading state of a chunk.
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Component)]
 pub enum ChunkLoadState {
     /// Chunk requested load of data from disk.
     LoadRequested,
@@ -61,6 +61,7 @@ pub struct ChunkReadyEvent(pub Point3i, pub Entity);
 pub struct ChunkUpdateEvent(pub Entity);
 
 /// A component describing a chunk.
+#[derive(Component)]
 pub struct ChunkInfo {
     pub pos: Point3i,
 }

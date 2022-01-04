@@ -13,7 +13,7 @@ resolver = "2"
 [dependencies]
 vx_core = { path = "crates/vx_core" }
 vx_client = { path = "crates/vx_client" }
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "1e03a97e" }
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "6caa2622" }
 
 [profile.dev]
 opt-level = 3

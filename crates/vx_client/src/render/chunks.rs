@@ -42,6 +42,7 @@ const SHARED_STANDARD_MATERIAL_HANDLE: HandleUntyped =
 #[derive(StageLabel, Clone, Copy, Hash, Debug, PartialEq, Eq)]
 pub struct ChunkRenderStage;
 
+#[derive(Component)]
 pub struct ChunkMeshInfo {
     pub fluid_mesh: Handle<Mesh>,
     pub chunk_mesh: Handle<Mesh>,
@@ -112,6 +113,7 @@ fn attach_chunk_render_bundle(
     });
 }
 
+#[derive(Component)]
 struct ChunkTransformAnimation {
     pub start_time: f32,
 }

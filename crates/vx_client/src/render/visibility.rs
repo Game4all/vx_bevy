@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Component)]
 pub struct Visibility {
     pub visible: bool,
 }

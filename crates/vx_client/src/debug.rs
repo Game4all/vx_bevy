@@ -16,14 +16,16 @@ const DEBUG_DIAGS: &[DiagnosticId] = &[
     CHUNK_DATA_GEN_TIME,
 ];
 
-#[derive(Debug, IntoEnumIterator, PartialEq, Clone, Copy)]
+#[derive(Debug, IntoEnumIterator, PartialEq, Clone, Copy, Component)]
 enum DebugValue {
     Position,
     HRenderDistance,
 }
 
+#[derive(Component)]
 struct DiagnosticCounter(DiagnosticId);
 
+#[derive(Component)]
 struct DebugUIComponent;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, diagnostics: Res<Diagnostics>) {

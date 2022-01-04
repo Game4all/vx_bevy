@@ -12,7 +12,7 @@ use crate::input::Action;
 
 pub const CAMERA_SENS: f32 = 0.0005;
 
-#[derive(Default)]
+#[derive(Default, Component)]
 pub struct PlayerController {
     yaw: f32,
     pitch: f32,

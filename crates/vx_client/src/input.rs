@@ -34,7 +34,7 @@ pub enum KeyButton {
 }
 
 //todo: this is a super simple action map but it may be cool to move to something like **Kurinji** when it updates to bevy 0.5
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Component)]
 pub struct Keybindings(HashMap<KeyButton, Action>);
 
 impl Deref for Keybindings {

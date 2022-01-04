@@ -1,7 +1,8 @@
 use crate::utils::Configuration;
+use bevy::prelude::Component;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Component)]
 pub struct GlobalConfig {
     pub render_distance: i32,
 }
