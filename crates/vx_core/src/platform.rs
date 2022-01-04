@@ -69,7 +69,7 @@ fn setup_userdata(userdata: ResMut<UserData>) {
 pub struct PlatformPlugin;
 
 impl Plugin for PlatformPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         let mut user_data_dir = std::env::current_dir().unwrap();
         user_data_dir.push("userdata");
 

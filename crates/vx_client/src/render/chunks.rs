@@ -380,7 +380,7 @@ fn setup(
 pub struct WorldRenderPlugin;
 
 impl Plugin for WorldRenderPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::hex("87CEEB").unwrap()))
             .add_startup_system(setup.system())
             .add_stage_after(
@@ -429,7 +429,7 @@ impl Plugin for WorldRenderPlugin {
                     .after("update_meshes_visibility"),
             );
 
-        app.world_mut()
+        app.world
             .resource_scope(|_, mut diagnostics: Mut<Diagnostics>| {
                 diagnostics.add(Diagnostic::new(
                     CHUNK_MESHING_TIME,

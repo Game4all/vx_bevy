@@ -197,7 +197,7 @@ fn remesh_chunks(
 pub struct DebugUIPlugin;
 
 impl Plugin for DebugUIPlugin {
-    fn build(&self, app: &mut bevy::prelude::AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_startup_system(setup.system())
             .add_system(update_diagnostic_counters.system())
             .add_system(update_debug_values.system())

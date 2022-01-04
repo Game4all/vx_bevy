@@ -116,7 +116,7 @@ pub fn chunk_extent() -> Extent3i {
 pub struct WorldSimulationPlugin;
 
 impl Plugin for WorldSimulationPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.init_resource::<ChunkEntityMap>()
             .init_resource::<VecDeque<ChunkLoadRequest>>()
             .init_resource::<WorldTaskPool>()
@@ -194,7 +194,7 @@ impl Plugin for WorldSimulationPlugin {
             );
 
         //registering debug diagnostics
-        app.world_mut()
+        app.world
             .resource_scope(|_, mut diagnostics: Mut<Diagnostics>| {
                 diagnostics.add(Diagnostic::new(
                     CHUNK_DATA_GEN_TIME,

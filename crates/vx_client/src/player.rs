@@ -140,7 +140,7 @@ pub fn handle_player_interactions(
 pub struct PlayerControllerPlugin;
 
 impl Plugin for PlayerControllerPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_system(handle_player_mouse_move.system())
             .add_system(handle_player_input.system())
             .add_system(handle_player_interactions.system());

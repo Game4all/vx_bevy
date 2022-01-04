@@ -28,7 +28,7 @@ fn update_sun_lighting_intensity(mut query: Query<&mut DirectionalLight>, time: 
 pub struct EnvLightingPlugin;
 
 impl Plugin for EnvLightingPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_startup_system(setup_sun_lighting.system());
         //.add_system(update_sun_lighting_intensity.system());
     }

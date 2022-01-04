@@ -3,7 +3,7 @@ mod gen;
 
 use std::sync::Arc;
 
-use bevy::prelude::{AppBuilder, Plugin};
+use bevy::prelude::*;
 use building_blocks::{core::Point3i, storage::Array3x1};
 
 pub use features::*;
@@ -59,7 +59,7 @@ pub trait TerrainGenerator: Send + Sync {
 pub struct WorldGenerationPlugin;
 
 impl Plugin for WorldGenerationPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(Arc::new(ChunkGenerator::with_terrain_generator(Box::new(
             NoiseTerrainGenerator,
         ))));

@@ -109,7 +109,7 @@ fn update_actions(
 pub struct PlayerInputPlugin;
 
 impl Plugin for PlayerInputPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.init_resource::<Input<Action>>()
             .add_system(update_actions.system());
     }
