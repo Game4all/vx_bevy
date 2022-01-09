@@ -9,6 +9,7 @@ pub mod worldgen;
 
 use utils::ConfigurationPlugin;
 
+#[derive(Component)]
 pub struct Player;
 
 pub struct CorePlugins;

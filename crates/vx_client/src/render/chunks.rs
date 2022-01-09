@@ -42,6 +42,7 @@ const SHARED_STANDARD_MATERIAL_HANDLE: HandleUntyped =
 #[derive(StageLabel, Clone, Copy, Hash, Debug, PartialEq, Eq)]
 pub struct ChunkRenderStage;
 
+#[derive(Component)]
 pub struct ChunkMeshInfo {
     pub fluid_mesh: Handle<Mesh>,
     pub chunk_mesh: Handle<Mesh>,
@@ -112,13 +113,17 @@ fn attach_chunk_render_bundle(
     });
 }
 
+#[derive(Component)]
 struct ChunkTransformAnimation {
     pub start_time: f32,
 }
 
 fn attach_animation_components(
     mut ready_events: EventReader<ChunkReadyEvent>,
-    mut chunks: QuerySet<(Query<(&Children, &ChunkMeshInfo)>, Query<&mut Transform>)>,
+    mut chunks: QuerySet<(
+        QueryState<(&Children, &ChunkMeshInfo)>,
+        QueryState<&mut Transform>,
+    )>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,
     mut commands: Commands,
     time: Res<Time>,
@@ -148,7 +153,7 @@ fn attach_animation_components(
     }
 
     for entity in entities.drain(..) {
-        if let Ok(mut transform) = chunks.q1_mut().get_mut(entity) {
+        if let Ok(mut transform) = chunks.q1().get_mut(entity) {
             transform.translation.y = -ANIMATION_HEIGHT;
         }
     }
@@ -178,8 +183,8 @@ fn step_chunk_ready_animation(
 
 fn update_meshes_visibility(
     mut meshes: QuerySet<(
-        Query<(&Children, &ChunkMeshInfo, Entity), Changed<ChunkMeshInfo>>,
-        Query<&mut Visibility>,
+        QueryState<(&Children, &ChunkMeshInfo, Entity), Changed<ChunkMeshInfo>>,
+        QueryState<&mut Visibility>,
     )>,
     mut entities: bevy::ecs::system::Local<Vec<Entity>>,
 ) {
@@ -190,7 +195,7 @@ fn update_meshes_visibility(
     });
 
     for entity in entities.drain(..) {
-        if let Ok(mut visibility) = meshes.q1_mut().get_mut(entity) {
+        if let Ok(mut visibility) = meshes.q1().get_mut(entity) {
             visibility.visible = true;
         }
     }
@@ -380,7 +385,7 @@ fn setup(
 pub struct WorldRenderPlugin;
 
 impl Plugin for WorldRenderPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::hex("87CEEB").unwrap()))
             .add_startup_system(setup.system())
             .add_stage_after(
@@ -429,7 +434,7 @@ impl Plugin for WorldRenderPlugin {
                     .after("update_meshes_visibility"),
             );
 
-        app.world_mut()
+        app.world
             .resource_scope(|_, mut diagnostics: Mut<Diagnostics>| {
                 diagnostics.add(Diagnostic::new(
                     CHUNK_MESHING_TIME,

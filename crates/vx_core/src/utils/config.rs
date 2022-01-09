@@ -97,7 +97,7 @@ fn save_config_file<T: Component + Configuration>(
 pub struct ConfigurationPlugin<T: Component + Configuration + Default>(PhantomData<T>);
 
 impl<T: Component + Configuration + Default> Plugin for ConfigurationPlugin<T> {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.init_resource::<T>()
             .add_startup_system(
                 load_config_file::<T>

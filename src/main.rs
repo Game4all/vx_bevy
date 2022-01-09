@@ -3,7 +3,7 @@ use vx_client::{player::PlayerController, ClientPlugins};
 use vx_core::{CorePlugins, Player};
 
 fn main() {
-    App::build()
+    App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(CorePlugins)
         .add_plugins(ClientPlugins)

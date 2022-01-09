@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Component)]
 pub struct Visibility {
     pub visible: bool,
 }
@@ -16,7 +16,7 @@ fn update_visibility(
 pub struct MeshCullingPlugin;
 
 impl Plugin for MeshCullingPlugin {
-    fn build(&self, app: &mut bevy::prelude::AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_system(
             update_visibility
                 .system()

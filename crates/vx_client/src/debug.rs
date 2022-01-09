@@ -16,14 +16,16 @@ const DEBUG_DIAGS: &[DiagnosticId] = &[
     CHUNK_DATA_GEN_TIME,
 ];
 
-#[derive(Debug, IntoEnumIterator, PartialEq, Clone, Copy)]
+#[derive(Debug, IntoEnumIterator, PartialEq, Clone, Copy, Component)]
 enum DebugValue {
     Position,
     HRenderDistance,
 }
 
+#[derive(Component)]
 struct DiagnosticCounter(DiagnosticId);
 
+#[derive(Component)]
 struct DebugUIComponent;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, diagnostics: Res<Diagnostics>) {
@@ -151,20 +153,19 @@ fn update_debug_values(
     config: Res<GlobalConfig>,
 ) {
     for (mut text, debug_cnt) in counters.iter_mut() {
-        for (_, transform) in player.single() {
-            match &debug_cnt {
-                &DebugValue::Position => {
-                    text.sections[2].value = format!("{}", &transform.translation.round());
-                }
-                &DebugValue::HRenderDistance => {
-                    text.sections[2].value = format!(
-                        "{} chunks ({} blocks)",
-                        &config.render_distance,
-                        CHUNK_LENGTH * config.render_distance
-                    );
-                }
+        let (_, transform) = player.single();
+        match &debug_cnt {
+            &DebugValue::Position => {
+                text.sections[2].value = format!("{}", &transform.translation.round());
             }
-        }
+            &DebugValue::HRenderDistance => {
+                text.sections[2].value = format!(
+                    "{} chunks ({} blocks)",
+                    &config.render_distance,
+                    CHUNK_LENGTH * config.render_distance
+                );
+            }
+        };
     }
 }
 
@@ -197,7 +198,7 @@ fn remesh_chunks(
 pub struct DebugUIPlugin;
 
 impl Plugin for DebugUIPlugin {
-    fn build(&self, app: &mut bevy::prelude::AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_startup_system(setup.system())
             .add_system(update_diagnostic_counters.system())
             .add_system(update_debug_values.system())

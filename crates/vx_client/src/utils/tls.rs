@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use thread_local::ThreadLocal;
 
-
 // A resource with a thread-local storage of its instances.
 pub struct ThreadLocalRes<T: Send + Default> {
     tls: Arc<ThreadLocal<T>>,

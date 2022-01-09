@@ -6,22 +6,26 @@ use bevy::{prelude::*, utils::HashMap};
 use building_blocks::core::Point3i;
 use building_blocks::storage::{Array3x1, ChunkHashMap3x1, ChunkKey3};
 
+use std::marker::PhantomData;
+
 pub type ChunkEntityMap = HashMap<Point3i, Entity>;
 
 #[derive(SystemParam)]
-pub struct ChunkMapReader<'a> {
-    pub chunk_entities: Res<'a, ChunkEntityMap>,
-    pub chunk_data: Res<'a, ChunkHashMap3x1<crate::voxel::Voxel>>,
+pub struct ChunkMapReader<'w, 's> {
+    pub chunk_entities: Res<'w, ChunkEntityMap>,
+    pub chunk_data: Res<'w, ChunkHashMap3x1<crate::voxel::Voxel>>,
+    #[system_param(ignore)]
+    _secret: PhantomData<&'s ()>,
 }
 
 #[derive(SystemParam)]
-pub struct ChunkMapWriter<'a> {
-    pub chunk_entities: ResMut<'a, ChunkEntityMap>,
-    pub chunk_data: ResMut<'a, ChunkHashMap3x1<crate::voxel::Voxel>>,
-    pub chunk_updates: EventWriter<'a, ChunkUpdateEvent>,
+pub struct ChunkMapWriter<'w, 's> {
+    pub chunk_entities: ResMut<'w, ChunkEntityMap>,
+    pub chunk_data: ResMut<'w, ChunkHashMap3x1<crate::voxel::Voxel>>,
+    pub chunk_updates: EventWriter<'w, 's, ChunkUpdateEvent>,
 }
 
-impl<'a> ChunkMapReader<'a> {
+impl<'w, 's> ChunkMapReader<'w, 's> {
     #[inline]
     pub fn chunk_exists(&self, chunk_coords: Point3i) -> bool {
         self.chunk_entities.contains_key(&chunk_coords)
@@ -36,7 +40,7 @@ impl<'a> ChunkMapReader<'a> {
     }
 }
 
-impl<'a> ChunkMapWriter<'a> {
+impl<'w, 's> ChunkMapWriter<'w, 's> {
     pub fn get_chunk_data_mut(
         &mut self,
         chunk_coords: Point3i,
