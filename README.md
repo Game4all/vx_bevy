@@ -1,6 +1,9 @@
 # `vx_bevy`
 
+**NOTE**: `A complete rewrite from scratch is happening on this branch to take advantage of new bevy render features. Things might get split-up later on`
+
 A voxel engine prototype made using the Bevy game engine.
+
 
 ![animated chunk loading](assets/screenshots/chunkloading.gif)
 ![not much to see](assets/screenshots/ss.png)

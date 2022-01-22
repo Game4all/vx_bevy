@@ -1,9 +1,7 @@
-[workspace]
-members = ["crates/*"]
 
 [package]
 name = "vx_bevy"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Lucas A. <game4allyt@gmail.com>"]
 edition = "2021"
 resolver = "2"
@@ -11,9 +9,7 @@ resolver = "2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vx_core = { path = "crates/vx_core" }
-vx_client = { path = "crates/vx_client" }
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "6caa2622" }
+bevy = "0.6.0"
 
 [profile.dev]
 opt-level = 3
