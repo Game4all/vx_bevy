@@ -10,6 +10,9 @@ resolver = "2"
 
 [dependencies]
 bevy = "0.6.0"
+ndshape = "0.2.0"
+block-mesh = "0.1.0"
+ndcopy = "0.2.0"
 
 [profile.dev]
 opt-level = 3

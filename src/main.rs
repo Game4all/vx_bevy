@@ -3,8 +3,9 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 mod input;
+mod voxel;
 
-use input::{PlayerController, PlayerControllerPlugin};
+use input::PlayerController;
 
 fn main() {
     App::default()
