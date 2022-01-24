@@ -6,7 +6,7 @@ use ndshape::Shape;
 use super::buffer::VoxelBuffer;
 
 /// A strongly typed key pointing to the origin of a voxel buffer in a [`VoxelMap<V, S>`]
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct VoxelMapKey<V: Clone + Copy + Eq + Hash>(IVec3, PhantomData<V>);
 
 impl<V: Clone + Copy + PartialEq + Eq + Hash> VoxelMapKey<V> {

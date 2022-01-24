@@ -1,6 +1,9 @@
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    prelude::*,
+};
 
 mod input;
 mod voxel;
@@ -11,6 +14,11 @@ fn main() {
     App::default()
         .add_plugins(DefaultPlugins)
         .add_plugin(input::PlayerControllerPlugin)
+        .add_plugin(voxel::VoxelWorldPlugin)
+        .add_plugin(FrameTimeDiagnosticsPlugin)
+        .add_plugin(LogDiagnosticsPlugin::filtered(vec![
+            FrameTimeDiagnosticsPlugin::FPS,
+        ]))
         .add_startup_system(setup)
         .run();
 }
@@ -24,11 +32,6 @@ fn setup(mut cmds: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         transform: Transform::from_xyz(2.0, 2.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     })
-    .insert(PlayerController::default());
-
-    cmds.spawn_bundle(PbrBundle {
-        mesh: meshes.add(shape::Box::new(0.5, 0.5, 0.5).into()),
-        transform: Transform::default(),
-        ..Default::default()
-    });
+    .insert(PlayerController::default())
+    .insert(voxel::Player);
 }
