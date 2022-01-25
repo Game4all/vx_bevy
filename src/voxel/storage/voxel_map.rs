@@ -28,10 +28,11 @@ where
     V: Clone + Copy + PartialEq + Eq + Hash,
     S: Shape<u32, 3> + Clone,
 {
-    map: HashMap<VoxelMapKey<V>, VoxelBuffer<V, S>>,
+    pub chunks: HashMap<VoxelMapKey<V>, VoxelBuffer<V, S>>,
     shape: S,
 }
 
+#[allow(dead_code)]
 impl<V, S> VoxelMap<V, S>
 where
     V: Clone + Copy + PartialEq + Eq + Hash,
@@ -39,7 +40,7 @@ where
 {
     pub fn new(chunk_shape: S) -> Self {
         Self {
-            map: Default::default(),
+            chunks: Default::default(),
             shape: chunk_shape,
         }
     }
@@ -47,30 +48,30 @@ where
     /// Checks whether there's a buffer at the specified origin.
     #[inline]
     pub fn exists(&self, origin: VoxelMapKey<V>) -> bool {
-        self.map.contains_key(&origin)
+        self.chunks.contains_key(&origin)
     }
 
     /// Returns a reference to the [`VoxelBuffer<V, S>`] at the specified origin if there's one.
     #[inline]
     pub fn buffer_at(&self, origin: VoxelMapKey<V>) -> Option<&VoxelBuffer<V, S>> {
-        self.map.get(&origin)
+        self.chunks.get(&origin)
     }
 
     /// Returns a mutable reference to the [`VoxelBuffer<V, S>`] at the specified origin if there's one.
     #[inline]
     pub fn buffer_at_mut(&mut self, origin: VoxelMapKey<V>) -> Option<&mut VoxelBuffer<V, S>> {
-        self.map.get_mut(&origin)
+        self.chunks.get_mut(&origin)
     }
 
     /// Inserts a new buffer at the specified origin.
     pub fn insert(&mut self, origin: VoxelMapKey<V>, buffer: VoxelBuffer<V, S>) {
         assert!(buffer.shape().as_array() == self.shape.as_array());
-        self.map.insert(origin, buffer);
+        self.chunks.insert(origin, buffer);
     }
 
     /// Removes the buffer at the specified origin and returns it if it exists.
     pub fn remove(&mut self, pos: VoxelMapKey<V>) -> Option<VoxelBuffer<V, S>> {
-        self.map.remove(&pos)
+        self.chunks.remove(&pos)
     }
 }
 
@@ -82,7 +83,7 @@ where
 {
     /// Inserts a new buffer inititalized with the default value of [`V`] at the specified origin.
     pub fn insert_default(&mut self, origin: VoxelMapKey<V>) {
-        self.map
+        self.chunks
             .insert(origin, VoxelBuffer::<V, S>::new_empty(self.shape.clone()));
     }
 }

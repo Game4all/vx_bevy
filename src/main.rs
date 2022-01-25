@@ -1,9 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 mod input;
 mod voxel;
@@ -15,15 +12,11 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(input::PlayerControllerPlugin)
         .add_plugin(voxel::VoxelWorldPlugin)
-        .add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(LogDiagnosticsPlugin::filtered(vec![
-            FrameTimeDiagnosticsPlugin::FPS,
-        ]))
         .add_startup_system(setup)
         .run();
 }
 
-fn setup(mut cmds: Commands, mut meshes: ResMut<Assets<Mesh>>) {
+fn setup(mut cmds: Commands) {
     cmds.spawn_bundle(PerspectiveCameraBundle {
         perspective_projection: PerspectiveProjection {
             fov: PI / 2.0,
