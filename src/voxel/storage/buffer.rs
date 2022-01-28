@@ -1,7 +1,6 @@
 use bevy::math::UVec3;
 use ndshape::Shape;
 
-
 /// A buffer of typed voxel data stored as a contiguous array in memory.
 #[allow(dead_code)]
 pub struct VoxelBuffer<V: Copy + Clone, S: Shape<u32, 3>> {

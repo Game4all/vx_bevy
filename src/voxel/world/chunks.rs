@@ -1,14 +1,13 @@
 use bevy::{
     math::IVec3,
-    pbr::PbrBundle,
     prelude::{
-        shape, Assets, Changed, Commands, Entity, EventReader, EventWriter, GlobalTransform, Mesh,
-        ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, SystemLabel, Transform, With,
+        Changed, Commands, Entity, EventReader, EventWriter, GlobalTransform,
+        ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, SystemLabel, With,
     },
     utils::HashMap,
 };
 
-use super::{ChunkKey, ChunkShape, Player, Voxel, CHUNK_LENGTH};
+use super::{Chunk, ChunkKey, ChunkShape, Player, Voxel, CHUNK_LENGTH};
 use crate::voxel::storage::VoxelMap;
 
 // Stores the Entity <-> Chunk voxel data buffer mapping
@@ -86,22 +85,13 @@ fn create_chunks(
     mut requests: EventReader<ChunkCreateKey>,
     mut chunks: ResMut<VoxelMap<Voxel, ChunkShape>>,
     mut chunk_entities: ResMut<ChunkEntities>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut cmds: Commands,
 ) {
     //perf: the spawning should be split between multiple frames so it doesn't freeze when spawning all the chunk entities.
     for request in requests.iter() {
         //todo: at some point we may want to split the buffer and entity creation into two separate systems for handling procgen and stuff like loading data from disk.
         chunks.insert_default(request.0);
-        chunk_entities.attach_entity(
-            request.0,
-            cmds.spawn_bundle(PbrBundle {
-                mesh: meshes.add(shape::Box::new(16.0, 16.0, 16.0).into()),
-                transform: Transform::from_translation(request.0.location().as_vec3()),
-                ..Default::default()
-            })
-            .id(),
-        );
+        chunk_entities.attach_entity(request.0, cmds.spawn().insert(Chunk(request.0)).id());
     }
 }
 
@@ -111,6 +101,7 @@ fn destroy_chunks(
     mut chunk_entities: ResMut<ChunkEntities>,
     mut cmds: Commands,
 ) {
+    //perf: the despawning should be split between multiple frames so it doesn't freeze when despawning all the chunk entities.
     for request in requests.iter() {
         //todo: at some point we may want to split the buffer and entity creation into two separate systems for handling procgen and stuff like loading data from disk.
         cmds.entity(chunk_entities.detach_entity(request.0).unwrap())
