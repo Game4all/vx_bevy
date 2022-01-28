@@ -8,9 +8,8 @@ use bevy::{
     utils::HashMap,
 };
 
-use crate::voxel::storage::VoxelMap;
-
 use super::{ChunkKey, ChunkShape, Player, Voxel, CHUNK_LENGTH};
+use crate::voxel::storage::VoxelMap;
 
 // Stores the Entity <-> Chunk voxel data buffer mapping
 #[derive(Default)]
@@ -38,6 +37,7 @@ impl ChunkEntities {
 fn update_view_chunks(
     player: Query<&GlobalTransform, (With<Player>, Changed<GlobalTransform>)>,
     chunks: Res<VoxelMap<Voxel, ChunkShape>>,
+    view_radius: Res<ChunkLoadingRadius>,
     mut loads: EventWriter<ChunkCreateKey>,
     mut unloads: EventWriter<ChunkDestroyKey>,
 ) {
@@ -51,9 +51,10 @@ fn update_view_chunks(
         );
 
         // quick n dirty circular chunk loading.
-        for x in -8i32..8i32 {
-            for z in -8i32..8i32 {
-                if x.pow(2) + z.pow(2) >= 8i32.pow(2) {
+        //perf: optimize this.
+        for x in -view_radius.0..view_radius.0 {
+            for z in -view_radius.0..view_radius.0 {
+                if x.pow(2) + z.pow(2) >= view_radius.0.pow(2) {
                     continue;
                 }
 
@@ -71,7 +72,9 @@ fn update_view_chunks(
         // quick n dirty circular chunk !loading.
         for loaded_chunk in chunks.chunks.keys() {
             let delta = loaded_chunk.location() - nearest_chunk_origin;
-            if delta.x.pow(2) + delta.y.pow(2) + delta.z.pow(2) > 512i32.pow(2) {
+            if delta.x.pow(2) + delta.y.pow(2) + delta.z.pow(2)
+                > view_radius.0.pow(2) * (CHUNK_LENGTH as i32).pow(2)
+            {
                 unloads.send(ChunkDestroyKey(*loaded_chunk));
             }
         }
@@ -86,6 +89,7 @@ fn create_chunks(
     mut meshes: ResMut<Assets<Mesh>>,
     mut cmds: Commands,
 ) {
+    //perf: the spawning should be split between multiple frames so it doesn't freeze when spawning all the chunk entities.
     for request in requests.iter() {
         //todo: at some point we may want to split the buffer and entity creation into two separate systems for handling procgen and stuff like loading data from disk.
         chunks.insert_default(request.0);
@@ -116,6 +120,7 @@ fn destroy_chunks(
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
+/// Labels for the systems added by [`VoxelWorldChunkingPlugin`]
 pub enum ChunkLoadingSystem {
     /// Runs chunk view distance calculations and queue events for chunk creations and deletions.
     UpdateViewChunks,
@@ -128,6 +133,9 @@ pub enum ChunkLoadingSystem {
 /// Handles dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 pub struct VoxelWorldChunkingPlugin;
 
+// Resource holding the view distance.
+pub struct ChunkLoadingRadius(pub i32);
+
 struct ChunkCreateKey(ChunkKey);
 struct ChunkDestroyKey(ChunkKey);
 
@@ -136,6 +144,7 @@ impl Plugin for VoxelWorldChunkingPlugin {
         app.insert_resource(ChunkEntities::default())
             .add_event::<ChunkCreateKey>()
             .add_event::<ChunkDestroyKey>()
+            .insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
             .add_system(update_view_chunks.label(ChunkLoadingSystem::UpdateViewChunks))
             .add_system(
                 create_chunks
