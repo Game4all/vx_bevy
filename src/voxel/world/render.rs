@@ -1,4 +1,4 @@
-use super::{chunks::ChunkLoadingSystem, Chunk};
+use super::{chunks::ChunkLoadingStage, Chunk};
 use bevy::prelude::*;
 
 /// Attaches to the newly inserted chunk entities components required for rendering.
@@ -16,6 +16,10 @@ pub fn prepare_chunks(
     }
 }
 
+/// Label for the stage housing the chunk rendering systems.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
+pub struct ChunkRenderingStage;
+
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
 pub enum ChunkRenderingSystem {
     /// Attaches to the newly inserted chunk entities components required for rendering.
@@ -27,10 +31,12 @@ pub struct VoxelWorldRenderingPlugin;
 
 impl Plugin for VoxelWorldRenderingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_system(
-            prepare_chunks
-                .label(ChunkRenderingSystem::Prepare)
-                .after(ChunkLoadingSystem::CreateChunks),
+        app.add_system(prepare_chunks.label(ChunkRenderingSystem::Prepare));
+        app.add_stage_after(
+            ChunkLoadingStage,
+            ChunkRenderingStage,
+            SystemStage::parallel()
+                .with_system(prepare_chunks.label(ChunkRenderingSystem::Prepare)),
         );
     }
 }
