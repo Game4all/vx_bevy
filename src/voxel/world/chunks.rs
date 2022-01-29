@@ -127,14 +127,15 @@ pub struct VoxelWorldChunkingPlugin;
 // Resource holding the view distance.
 pub struct ChunkLoadingRadius(pub i32);
 
-struct ChunkCreateKey(ChunkKey);
-struct ChunkDestroyKey(ChunkKey);
+/// An event indicating a chunk received an update.
+pub struct ChunkUpdateEvent(ChunkKey);
 
 impl Plugin for VoxelWorldChunkingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(ChunkEntities::default())
             .add_event::<ChunkCreateKey>()
             .add_event::<ChunkDestroyKey>()
+            .add_event::<ChunkUpdateEvent>()
             .insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
             .add_system(update_view_chunks.label(ChunkLoadingSystem::UpdateViewChunks))
             .add_system(
@@ -149,3 +150,9 @@ impl Plugin for VoxelWorldChunkingPlugin {
             );
     }
 }
+
+/// An internal event requesting the creation of a chunk at the specified origin
+struct ChunkCreateKey(ChunkKey);
+
+/// An internal requesting the deletion of a chunk at the specified origin
+struct ChunkDestroyKey(ChunkKey);
