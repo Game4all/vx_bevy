@@ -2,30 +2,20 @@
 
 **NOTE**: `A complete rewrite from scratch is happening on this branch to take advantage of new bevy render features. Things might get split-up later on`
 
-A voxel engine prototype made using the Bevy game engine.
+A voxel engine prototype made using the Bevy game engine, here's the todo list for this iteration.
 
+## Feature todolist
+- [ ] Dynamic unloading / loading of chunks
+- [ ] Animated chunk loading
+- [ ] Add ability to interact with the world (placing & breaking voxels)
+- [ ] Nice surface worldgen 
 
-![animated chunk loading](assets/screenshots/chunkloading.gif)
-![not much to see](assets/screenshots/ss.png)
-
-## Goals and features
-- [x] Very basic worldgen
-- [x] Animated chunk loading (ala cube world)
+_Interactivity_:
+- [ ] Falling-sand like physics and properties for voxels
+- [ ] Physics for player
 
 _Optimizations_:
 
-- [ ] Frustum culling
-- [ ] Change view distance calculation
+- [ ] Merge chunk meshes into 'mega meshes' to allow for rendering on far bigger distances
+- [ ] Optimize enough stuff to go from 1m^3 voxels to an eighth of that.
 
-_Interactivity_:
-
-- [ ] Add ability to interact with the world (placing & breaking blocks)
-
-
-_World_:
-- [ ] Revamp worldgen
-- [ ] Add generation of flora (trees)
-- [ ] Get a better shader for voxels.
-
-_Other_:
-- [ ] Rewrite this from scratch as this has turned into a mess.
