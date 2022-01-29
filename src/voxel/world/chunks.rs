@@ -2,7 +2,8 @@ use bevy::{
     math::IVec3,
     prelude::{
         Changed, Commands, Entity, EventReader, EventWriter, GlobalTransform,
-        ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, SystemLabel, With,
+        ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, StageLabel, SystemLabel,
+        SystemStage, With,
     },
     utils::HashMap,
 };
@@ -110,6 +111,10 @@ fn destroy_chunks(
     }
 }
 
+/// Label for the stage housing the chunk loading systems.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
+pub struct ChunkLoadingStage;
+
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
 /// Labels for the systems added by [`VoxelWorldChunkingPlugin`]
 pub enum ChunkLoadingSystem {
@@ -137,16 +142,20 @@ impl Plugin for VoxelWorldChunkingPlugin {
             .add_event::<ChunkDestroyKey>()
             .add_event::<ChunkUpdateEvent>()
             .insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
-            .add_system(update_view_chunks.label(ChunkLoadingSystem::UpdateViewChunks))
-            .add_system(
-                create_chunks
-                    .label(ChunkLoadingSystem::CreateChunks)
-                    .after(ChunkLoadingSystem::UpdateViewChunks),
-            )
-            .add_system(
-                destroy_chunks
-                    .label(ChunkLoadingSystem::DestroyChunks)
-                    .after(ChunkLoadingSystem::CreateChunks),
+            .add_stage(
+                ChunkLoadingStage,
+                SystemStage::parallel()
+                    .with_system(update_view_chunks.label(ChunkLoadingSystem::UpdateViewChunks))
+                    .with_system(
+                        create_chunks
+                            .label(ChunkLoadingSystem::CreateChunks)
+                            .after(ChunkLoadingSystem::UpdateViewChunks),
+                    )
+                    .with_system(
+                        destroy_chunks
+                            .label(ChunkLoadingSystem::DestroyChunks)
+                            .after(ChunkLoadingSystem::CreateChunks),
+                    ),
             );
     }
 }
