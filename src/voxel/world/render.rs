@@ -31,7 +31,6 @@ pub struct VoxelWorldRenderingPlugin;
 
 impl Plugin for VoxelWorldRenderingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_system(prepare_chunks.label(ChunkRenderingSystem::Prepare));
         app.add_stage_after(
             ChunkLoadingStage,
             ChunkRenderingStage,
