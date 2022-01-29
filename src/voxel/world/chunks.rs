@@ -133,7 +133,7 @@ pub struct VoxelWorldChunkingPlugin;
 pub struct ChunkLoadingRadius(pub i32);
 
 /// An event indicating a chunk received an update.
-pub struct ChunkUpdateEvent(ChunkKey);
+pub struct ChunkUpdateEvent(pub ChunkKey);
 
 impl Plugin for VoxelWorldChunkingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
