@@ -1,41 +1,88 @@
+use std::marker::PhantomData;
+
+use crate::voxel::storage::VoxelBuffer;
 use bevy::{
     prelude::Mesh,
     render::mesh::{Indices, VertexAttributeValues},
 };
 use block_mesh::{greedy_quads, GreedyQuadsBuffer, MergeVoxel, Voxel, RIGHT_HANDED_Y_UP_CONFIG};
-use ndshape::Shape;
+use ndcopy::copy3;
+use ndshape::{Shape, Shape3u32};
 
-use crate::voxel::storage::VoxelBuffer;
+/// Intermediate buffers for greedy meshing of voxel data which are reusable between frames to not allocate.
+pub struct MeshBuffers<T, S: Shape<u32, 3>>
+where
+    T: Copy + Default + Voxel + MergeVoxel,
+{
+    // A padded buffer to run greedy meshing algorithm on
+    scratch_buffer: VoxelBuffer<T, Shape3u32>,
+    greedy_buffer: GreedyQuadsBuffer,
+    _phantom: PhantomData<S>,
+}
+
+impl<T, S: Shape<u32, 3>> MeshBuffers<T, S>
+where
+    T: Copy + Default + Voxel + MergeVoxel,
+{
+    pub fn new(shape: S) -> Self {
+        let padded_shape = Shape3u32::new(shape.as_array().map(|x| x + 2));
+
+        Self {
+            greedy_buffer: GreedyQuadsBuffer::new(padded_shape.size() as usize),
+            scratch_buffer: VoxelBuffer::<T, Shape3u32>::new_empty(padded_shape),
+            _phantom: Default::default(),
+        }
+    }
+}
 
 // Processes the voxel data buffer specified as a parameter and generate.
 //todo: don't populate mesh directly, introduce a meshbuilding system.
 pub fn mesh_buffer<T, S>(
     buffer: &VoxelBuffer<T, S>,
-    mesh_buffers: &mut GreedyQuadsBuffer,
+    mesh_buffers: &mut MeshBuffers<T, S>,
     render_mesh: &mut Mesh,
     scale: f32,
 ) where
     T: Copy + Default + Voxel + MergeVoxel,
     S: Shape<u32, 3>,
 {
-    mesh_buffers.reset(buffer.shape().size() as usize);
+    mesh_buffers
+        .greedy_buffer
+        .reset(buffer.shape().size() as usize);
 
-    greedy_quads(
+    let dst_shape = mesh_buffers.scratch_buffer.shape().clone();
+
+    copy3(
+        buffer.shape().as_array(),
         buffer.slice(),
         buffer.shape(),
         [0; 3],
-        buffer.shape().as_array().map(|x| x - 1),
-        &RIGHT_HANDED_Y_UP_CONFIG.faces,
-        mesh_buffers,
+        mesh_buffers.scratch_buffer.slice_mut(),
+        &dst_shape,
+        [1; 3],
     );
 
-    let num_indices = mesh_buffers.quads.num_quads() * 6;
-    let num_vertices = mesh_buffers.quads.num_quads() * 4;
+    greedy_quads(
+        mesh_buffers.scratch_buffer.slice(),
+        mesh_buffers.scratch_buffer.shape(),
+        [0; 3],
+        mesh_buffers
+            .scratch_buffer
+            .shape()
+            .as_array()
+            .map(|axis| axis - 1),
+        &RIGHT_HANDED_Y_UP_CONFIG.faces,
+        &mut mesh_buffers.greedy_buffer,
+    );
+
+    let num_indices = mesh_buffers.greedy_buffer.quads.num_quads() * 6;
+    let num_vertices = mesh_buffers.greedy_buffer.quads.num_quads() * 4;
     let mut indices = Vec::with_capacity(num_indices);
     let mut positions = Vec::with_capacity(num_vertices);
     let mut normals = Vec::with_capacity(num_vertices);
 
     for (group, face) in mesh_buffers
+        .greedy_buffer
         .quads
         .groups
         .as_ref()

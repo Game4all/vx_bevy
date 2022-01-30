@@ -1,7 +1,7 @@
-use block_mesh::Voxel as MeshableVoxel;
+use block_mesh::{MergeVoxel, Voxel as MeshableVoxel};
 
 #[derive(Copy, Clone, Hash, Debug, PartialEq, Eq)]
-pub struct Voxel(u8);
+pub struct Voxel(pub u8);
 
 pub const EMPTY_VOXEL: Voxel = Voxel(0);
 
@@ -20,5 +20,14 @@ impl MeshableVoxel for Voxel {
     #[inline]
     fn is_opaque(&self) -> bool {
         true
+    }
+}
+
+impl MergeVoxel for Voxel {
+    type MergeValue = u8;
+
+    #[inline]
+    fn merge_value(&self) -> Self::MergeValue {
+        self.0
     }
 }
