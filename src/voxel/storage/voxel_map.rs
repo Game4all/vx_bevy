@@ -7,9 +7,9 @@ use super::buffer::VoxelBuffer;
 
 /// A strongly typed key pointing to the origin of a voxel buffer in a [`VoxelMap<V, S>`]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-pub struct VoxelMapKey<V: Clone + Copy + Eq + Hash>(IVec3, PhantomData<V>);
+pub struct VoxelMapKey<V: Clone + Copy + Default + Eq + Hash>(IVec3, PhantomData<V>);
 
-impl<V: Clone + Copy + PartialEq + Eq + Hash> VoxelMapKey<V> {
+impl<V: Clone + Copy + Default + Eq + Hash> VoxelMapKey<V> {
     /// Constructs a key from the given coordinates
     pub fn from_ivec3(pos: IVec3) -> Self {
         Self(pos, Default::default())
@@ -25,7 +25,7 @@ impl<V: Clone + Copy + PartialEq + Eq + Hash> VoxelMapKey<V> {
 /// Provides an interface to query or modify voxel data for worlds or scenes split into multiple voxel data buffers of a same shape with no level of detail.
 pub struct VoxelMap<V, S>
 where
-    V: Clone + Copy + PartialEq + Eq + Hash,
+    V: Clone + Copy + Default + PartialEq + Eq + Hash,
     S: Shape<u32, 3> + Clone,
 {
     pub chunks: HashMap<VoxelMapKey<V>, VoxelBuffer<V, S>>,
@@ -35,7 +35,7 @@ where
 #[allow(dead_code)]
 impl<V, S> VoxelMap<V, S>
 where
-    V: Clone + Copy + PartialEq + Eq + Hash,
+    V: Clone + Copy + Default + PartialEq + Eq + Hash,
     S: Shape<u32, 3> + Clone,
 {
     pub fn new(chunk_shape: S) -> Self {
@@ -69,21 +69,14 @@ where
         self.chunks.insert(origin, buffer);
     }
 
+    /// Inserts a new buffer inititalized with the default value of [`V`] at the specified origin.
+    pub fn insert_empty(&mut self, origin: VoxelMapKey<V>) {
+        self.chunks
+            .insert(origin, VoxelBuffer::<V, S>::new_empty(self.shape.clone()));
+    }
+
     /// Removes the buffer at the specified origin and returns it if it exists.
     pub fn remove(&mut self, pos: VoxelMapKey<V>) -> Option<VoxelBuffer<V, S>> {
         self.chunks.remove(&pos)
-    }
-}
-
-// bonus impl for default types.
-impl<V, S> VoxelMap<V, S>
-where
-    V: Clone + Copy + PartialEq + Eq + Hash + Default,
-    S: Shape<u32, 3> + Clone,
-{
-    /// Inserts a new buffer inititalized with the default value of [`V`] at the specified origin.
-    pub fn insert_default(&mut self, origin: VoxelMapKey<V>) {
-        self.chunks
-            .insert(origin, VoxelBuffer::<V, S>::new_empty(self.shape.clone()));
     }
 }

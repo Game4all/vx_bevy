@@ -91,7 +91,7 @@ fn create_chunks(
     //perf: the spawning should be split between multiple frames so it doesn't freeze when spawning all the chunk entities.
     for request in requests.iter() {
         //todo: at some point we may want to split the buffer and entity creation into two separate systems for handling procgen and stuff like loading data from disk.
-        chunks.insert_default(request.0);
+        chunks.insert_empty(request.0);
         chunk_entities.attach_entity(request.0, cmds.spawn().insert(Chunk(request.0)).id());
     }
 }

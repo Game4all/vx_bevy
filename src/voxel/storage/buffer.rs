@@ -3,17 +3,31 @@ use ndshape::Shape;
 
 /// A buffer of typed voxel data stored as a contiguous array in memory.
 #[allow(dead_code)]
-pub struct VoxelBuffer<V: Copy + Clone, S: Shape<u32, 3>> {
+pub struct VoxelBuffer<V, S: Shape<u32, 3>>
+where
+    V: Copy + Clone + Default,
+{
     data: Box<[V]>,
     shape: S,
 }
 
 #[allow(dead_code)]
-impl<V: Copy + Clone, S: Shape<u32, 3>> VoxelBuffer<V, S> {
+impl<V, S: Shape<u32, 3>> VoxelBuffer<V, S>
+where
+    V: Copy + Clone + Default,
+{
     #[inline]
     pub fn new(shape: S, initial_val: V) -> Self {
         Self {
             data: vec![initial_val.clone(); shape.size() as usize].into_boxed_slice(),
+            shape,
+        }
+    }
+
+    #[inline]
+    pub fn new_empty(shape: S) -> Self {
+        Self {
+            data: vec![Default::default(); shape.size() as usize].into_boxed_slice(),
             shape,
         }
     }
@@ -43,12 +57,5 @@ impl<V: Copy + Clone, S: Shape<u32, 3>> VoxelBuffer<V, S> {
     #[inline]
     pub fn shape(&self) -> &S {
         &self.shape
-    }
-}
-
-// kinda of a helper with voxel types with default implemented.
-impl<V: Copy + Clone + Default, S: Shape<u32, 3>> VoxelBuffer<V, S> {
-    pub fn new_empty(shape: S) -> Self {
-        Self::new(shape, Default::default())
     }
 }
