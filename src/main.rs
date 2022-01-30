@@ -3,8 +3,8 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 mod input;
-mod voxel;
 mod utils;
+mod voxel;
 
 use input::PlayerController;
 

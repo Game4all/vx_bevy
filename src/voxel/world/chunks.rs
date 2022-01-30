@@ -9,7 +9,7 @@ use bevy::{
 };
 
 use super::{Chunk, ChunkKey, ChunkShape, Player, Voxel, CHUNK_LENGTH};
-use crate::voxel::storage::VoxelMap;
+use crate::voxel::storage::{VoxelBuffer, VoxelMap};
 
 // Stores the Entity <-> Chunk voxel data buffer mapping
 #[derive(Default)]
@@ -46,7 +46,7 @@ fn update_view_chunks(
 
         let nearest_chunk_origin = IVec3::new(
             (player_coords.x as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
-            (player_coords.y as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
+            0,
             (player_coords.z as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
         );
 
@@ -91,7 +91,10 @@ fn create_chunks(
     //perf: the spawning should be split between multiple frames so it doesn't freeze when spawning all the chunk entities.
     for request in requests.iter() {
         //todo: at some point we may want to split the buffer and entity creation into two separate systems for handling procgen and stuff like loading data from disk.
-        chunks.insert_empty(request.0);
+        chunks.insert(
+            request.0,
+            VoxelBuffer::<Voxel, ChunkShape>::new(ChunkShape {}, Voxel(1)),
+        );
         chunk_entities.attach_entity(request.0, cmds.spawn().insert(Chunk(request.0)).id());
     }
 }

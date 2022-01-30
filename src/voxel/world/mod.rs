@@ -19,7 +19,6 @@ impl Plugin for VoxelWorldPlugin {
         app.insert_resource(VoxelMap::<Voxel, ChunkShape>::new(ChunkShape {}))
             .add_plugin(chunks::VoxelWorldChunkingPlugin)
             .add_plugin(render::VoxelWorldRenderingPlugin);
-        //insert chunk loading systems
         //insert voxel pipeline
     }
 }
