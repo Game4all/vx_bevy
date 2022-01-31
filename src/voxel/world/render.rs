@@ -1,10 +1,15 @@
+use std::cell::RefCell;
+
 use super::{
     chunks::{ChunkEntities, ChunkLoadingStage, ChunkUpdateEvent},
     Chunk, ChunkShape, Voxel,
 };
-use crate::voxel::{
-    render::{mesh_buffer, MeshBuffers},
-    storage::VoxelMap,
+use crate::{
+    utils::ThreadLocalRes,
+    voxel::{
+        render::{mesh_buffer, MeshBuffers},
+        storage::VoxelMap,
+    },
 };
 use bevy::{prelude::*, render::render_resource::PrimitiveTopology, tasks::ComputeTaskPool};
 
@@ -47,6 +52,7 @@ fn mesh_chunks(
         QueryState<(&Chunk, Entity), With<NeedsMeshing>>,
         QueryState<&Handle<Mesh>, With<NeedsMeshing>>,
     )>,
+    mesh_buffers: Local<ThreadLocalRes<RefCell<MeshBuffers<Voxel, ChunkShape>>>>,
     chunks: Res<VoxelMap<Voxel, ChunkShape>>,
     frame_budget: Res<WorldChunksMeshingFrameBudget>,
     task_pool: Res<ComputeTaskPool>,
@@ -58,10 +64,15 @@ fn mesh_chunks(
             .take(frame_budget.meshes_per_frame)
             .map(|(chunk, entity)| (entity, chunks.buffer_at(chunk.0).unwrap())) //safe to unwrap since chunk data is guaranted to exist.
             .map(|(entity, buffer)| {
-                //because resources aren't static futures must be spawned locally.
+                //because resources aren't static, futures must be spawned locally.
+                let mesh_buffers_handle = mesh_buffers.get_handle();
                 scope.spawn_local(async move {
                     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-                    let mut mesh_buffers = MeshBuffers::<Voxel, ChunkShape>::new(ChunkShape {});
+                    let mut mesh_buffers = &mut mesh_buffers_handle
+                        .get_or(|| {
+                            RefCell::new(MeshBuffers::<Voxel, ChunkShape>::new(ChunkShape {}))
+                        })
+                        .borrow_mut();
 
                     mesh_buffer(buffer, &mut mesh_buffers, &mut mesh, 1.0);
 
