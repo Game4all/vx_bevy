@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use super::{
     chunks::{ChunkEntities, ChunkLoadingStage, ChunkUpdateEvent},
-    Chunk, ChunkShape, Voxel,
+    Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::{
     utils::ThreadLocalRes,
@@ -11,7 +11,11 @@ use crate::{
         storage::VoxelMap,
     },
 };
-use bevy::{prelude::*, render::render_resource::PrimitiveTopology, tasks::ComputeTaskPool};
+use bevy::{
+    prelude::*,
+    render::{primitives::Aabb, render_resource::PrimitiveTopology},
+    tasks::ComputeTaskPool,
+};
 
 /// Attaches to the newly inserted chunk entities components required for rendering.
 pub fn prepare_chunks(
@@ -26,6 +30,14 @@ pub fn prepare_chunks(
                 transform: Transform::from_translation(chunk_key.0.location().as_vec3()),
                 ..Default::default()
             })
+            .insert(Aabb::from_min_max(
+                Vec3::ZERO,
+                Vec3::new(
+                    CHUNK_LENGTH as f32,
+                    CHUNK_LENGTH as f32,
+                    CHUNK_LENGTH as f32,
+                ),
+            ))
             .insert(NeedsMeshing);
     }
 }
