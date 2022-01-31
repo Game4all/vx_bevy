@@ -11,28 +11,6 @@ use bevy::{
 use super::{Chunk, ChunkKey, ChunkShape, Player, Voxel, CHUNK_LENGTH};
 use crate::voxel::storage::{VoxelBuffer, VoxelMap};
 
-// Stores the Entity <-> Chunk voxel data buffer mapping
-#[derive(Default)]
-pub struct ChunkEntities(HashMap<ChunkKey, Entity>);
-
-#[allow(dead_code)]
-impl ChunkEntities {
-    /// Returns the entity attached to the chunk.
-    pub fn entity(&self, pos: ChunkKey) -> Option<Entity> {
-        self.0.get(&pos).map(|x| x.clone())
-    }
-
-    /// Attaches the specified entity to the chunk data.
-    pub fn attach_entity(&mut self, pos: ChunkKey, entity: Entity) {
-        self.0.insert(pos, entity);
-    }
-
-    /// Detaches the specified entity to the chunk data.
-    pub fn detach_entity(&mut self, pos: ChunkKey) -> Option<Entity> {
-        self.0.remove(&pos)
-    }
-}
-
 /// Updates the current chunk position for the current player.
 fn update_player_pos(
     player: Query<&GlobalTransform, (With<Player>, Changed<GlobalTransform>)>,
@@ -141,6 +119,28 @@ pub enum ChunkLoadingSystem {
 
 /// Handles dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 pub struct VoxelWorldChunkingPlugin;
+
+// Stores the Entity <-> Chunk voxel data buffer mapping
+#[derive(Default)]
+pub struct ChunkEntities(HashMap<ChunkKey, Entity>);
+
+#[allow(dead_code)]
+impl ChunkEntities {
+    /// Returns the entity attached to the chunk.
+    pub fn entity(&self, pos: ChunkKey) -> Option<Entity> {
+        self.0.get(&pos).map(|x| x.clone())
+    }
+
+    /// Attaches the specified entity to the chunk data.
+    pub fn attach_entity(&mut self, pos: ChunkKey, entity: Entity) {
+        self.0.insert(pos, entity);
+    }
+
+    /// Detaches the specified entity to the chunk data.
+    pub fn detach_entity(&mut self, pos: ChunkKey) -> Option<Entity> {
+        self.0.remove(&pos)
+    }
+}
 
 /// Resource storing the current chunk the player is in.
 pub struct CurrentLocalPlayerChunk(pub ChunkKey);
