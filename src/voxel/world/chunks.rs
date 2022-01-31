@@ -33,50 +33,57 @@ impl ChunkEntities {
     }
 }
 
-/// Checks for the loaded chunks around the player and schedules loading of new chunks in sight
-fn update_view_chunks(
+/// Updates the current chunk position for the current player.
+fn update_player_pos(
     player: Query<&GlobalTransform, (With<Player>, Changed<GlobalTransform>)>,
-    chunks: Res<VoxelMap<Voxel, ChunkShape>>,
-    view_radius: Res<ChunkLoadingRadius>,
-    mut loads: EventWriter<ChunkCreateKey>,
-    mut unloads: EventWriter<ChunkDestroyKey>,
+    mut chunk_pos: ResMut<CurrentLocalPlayerChunk>,
 ) {
     if let Ok(ply) = player.get_single() {
         let player_coords = ply.translation.floor();
-
         let nearest_chunk_origin = IVec3::new(
             (player_coords.x as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
             0,
             (player_coords.z as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
         );
 
-        // quick n dirty circular chunk loading.
-        //perf: optimize this.
-        for x in -view_radius.0..view_radius.0 {
-            for z in -view_radius.0..view_radius.0 {
-                if x.pow(2) + z.pow(2) >= view_radius.0.pow(2) {
-                    continue;
-                }
+        chunk_pos.0 = ChunkKey::from_ivec3(nearest_chunk_origin);
+    }
+}
 
-                let chunk_key = ChunkKey::from_ivec3(
-                    nearest_chunk_origin
-                        + IVec3::new(x * CHUNK_LENGTH as i32, 0, z * CHUNK_LENGTH as i32),
-                );
+/// Checks for the loaded chunks around the player and schedules loading of new chunks in sight
+fn update_view_chunks(
+    player_pos: Res<CurrentLocalPlayerChunk>,
+    chunks: Res<VoxelMap<Voxel, ChunkShape>>,
+    view_radius: Res<ChunkLoadingRadius>,
+    mut loads: EventWriter<ChunkCreateKey>,
+    mut unloads: EventWriter<ChunkDestroyKey>,
+) {
+    // quick n dirty circular chunk loading.
+    //perf: optimize this.
+    for x in -view_radius.0..view_radius.0 {
+        for z in -view_radius.0..view_radius.0 {
+            if x.pow(2) + z.pow(2) >= view_radius.0.pow(2) {
+                continue;
+            }
 
-                if !chunks.exists(chunk_key) {
-                    loads.send(ChunkCreateKey(chunk_key));
-                }
+            let chunk_key = ChunkKey::from_ivec3(
+                player_pos.0.location()
+                    + IVec3::new(x * CHUNK_LENGTH as i32, 0, z * CHUNK_LENGTH as i32),
+            );
+
+            if !chunks.exists(chunk_key) {
+                loads.send(ChunkCreateKey(chunk_key));
             }
         }
+    }
 
-        // quick n dirty circular chunk !loading.
-        for loaded_chunk in chunks.chunks.keys() {
-            let delta = loaded_chunk.location() - nearest_chunk_origin;
-            if delta.x.pow(2) + delta.y.pow(2) + delta.z.pow(2)
-                > view_radius.0.pow(2) * (CHUNK_LENGTH as i32).pow(2)
-            {
-                unloads.send(ChunkDestroyKey(*loaded_chunk));
-            }
+    // quick n dirty circular chunk !loading.
+    for loaded_chunk in chunks.chunks.keys() {
+        let delta = loaded_chunk.location() - player_pos.0.location();
+        if delta.x.pow(2) + delta.y.pow(2) + delta.z.pow(2)
+            > view_radius.0.pow(2) * (CHUNK_LENGTH as i32).pow(2)
+        {
+            unloads.send(ChunkDestroyKey(*loaded_chunk));
         }
     }
 }
@@ -121,6 +128,9 @@ pub struct ChunkLoadingStage;
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
 /// Labels for the systems added by [`VoxelWorldChunkingPlugin`]
 pub enum ChunkLoadingSystem {
+    /// Updates the player current chunk.
+    /// The computed position is used for loading / meshing priority systems.
+    UpdatePlayerPos,
     /// Runs chunk view distance calculations and queue events for chunk creations and deletions.
     UpdateViewChunks,
     /// Creates the voxel buffers to hold chunk data and attach them a chunk entity in the ECS world.
@@ -131,6 +141,9 @@ pub enum ChunkLoadingSystem {
 
 /// Handles dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 pub struct VoxelWorldChunkingPlugin;
+
+/// Resource storing the current chunk the player is in.
+pub struct CurrentLocalPlayerChunk(pub ChunkKey);
 
 // Resource holding the view distance.
 pub struct ChunkLoadingRadius(pub i32);
@@ -145,10 +158,16 @@ impl Plugin for VoxelWorldChunkingPlugin {
             .add_event::<ChunkDestroyKey>()
             .add_event::<ChunkUpdateEvent>()
             .insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
+            .insert_resource(CurrentLocalPlayerChunk(ChunkKey::from_ivec3(IVec3::ZERO)))
             .add_stage(
                 ChunkLoadingStage,
                 SystemStage::parallel()
-                    .with_system(update_view_chunks.label(ChunkLoadingSystem::UpdateViewChunks))
+                    .with_system(update_player_pos.label(ChunkLoadingSystem::UpdatePlayerPos))
+                    .with_system(
+                        update_view_chunks
+                            .label(ChunkLoadingSystem::UpdateViewChunks)
+                            .after(ChunkLoadingSystem::UpdatePlayerPos),
+                    )
                     .with_system(
                         create_chunks
                             .label(ChunkLoadingSystem::CreateChunks)
