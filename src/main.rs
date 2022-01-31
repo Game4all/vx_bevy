@@ -23,7 +23,7 @@ fn setup(mut cmds: Commands) {
             fov: PI / 2.0,
             ..Default::default()
         },
-        transform: Transform::from_xyz(2.0, 2.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(2.0, 40.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     })
     .insert(PlayerController::default())

@@ -38,6 +38,8 @@ fn queue_meshing(
     }
 }
 
+//todo: filter meshing order so that chunks which are closer to the camera get meshed first.
+//perf: reuse buffers between frames.
 fn mesh_chunks(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -46,14 +48,17 @@ fn mesh_chunks(
         QueryState<&Handle<Mesh>, With<NeedsMeshing>>,
     )>,
     chunks: Res<VoxelMap<Voxel, ChunkShape>>,
+    frame_budget: Res<WorldChunksMeshingFrameBudget>,
     task_pool: Res<ComputeTaskPool>,
 ) {
     let generated_meshes = task_pool.scope(|scope| {
         chunk_query
             .q0()
             .iter()
+            .take(frame_budget.meshes_per_frame)
             .map(|(chunk, entity)| (entity, chunks.buffer_at(chunk.0).unwrap())) //safe to unwrap since chunk data is guaranted to exist.
             .map(|(entity, buffer)| {
+                //because resources aren't static futures must be spawned locally.
                 scope.spawn_local(async move {
                     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
                     let mut mesh_buffers = MeshBuffers::<Voxel, ChunkShape>::new(ChunkShape {});
@@ -94,9 +99,9 @@ pub enum ChunkRenderingSystem {
 /// Handles the rendering of the chunks.
 pub struct VoxelWorldRenderingPlugin;
 
-/// A component marking that a chunk needs meshing.
-#[derive(Component)]
-struct NeedsMeshing;
+pub struct WorldChunksMeshingFrameBudget {
+    pub meshes_per_frame: usize,
+}
 
 impl Plugin for VoxelWorldRenderingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
@@ -115,6 +120,13 @@ impl Plugin for VoxelWorldRenderingPlugin {
                         .label(ChunkRenderingSystem::MeshChunks)
                         .after(ChunkRenderingSystem::QueueMeshing),
                 ),
-        );
+        )
+        .insert_resource(WorldChunksMeshingFrameBudget {
+            meshes_per_frame: 8,
+        });
     }
 }
+
+/// A component marking that a chunk needs meshing.
+#[derive(Component)]
+struct NeedsMeshing;
