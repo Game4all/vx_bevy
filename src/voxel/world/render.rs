@@ -122,7 +122,7 @@ impl Plugin for VoxelWorldRenderingPlugin {
                 ),
         )
         .insert_resource(WorldChunksMeshingFrameBudget {
-            meshes_per_frame: 8,
+            meshes_per_frame: 16,
         });
     }
 }
