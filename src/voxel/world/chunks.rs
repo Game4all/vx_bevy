@@ -1,7 +1,7 @@
 use bevy::{
     math::IVec3,
     prelude::{
-        Changed, Commands, Entity, EventReader, EventWriter, GlobalTransform,
+        Changed, Commands, CoreStage, Entity, EventReader, EventWriter, GlobalTransform,
         ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, StageLabel, SystemLabel,
         SystemStage, With,
     },
@@ -92,7 +92,6 @@ fn destroy_chunks(
 ) {
     //perf: the despawning should be split between multiple frames so it doesn't freeze when despawning all the chunk entities.
     for request in requests.iter() {
-        //todo: at some point we may want to split the buffer and entity creation into two separate systems for handling procgen and stuff like loading data from disk.
         cmds.entity(chunk_entities.detach_entity(request.0).unwrap())
             .despawn();
         chunks.remove(request.0);
@@ -113,8 +112,6 @@ pub enum ChunkLoadingSystem {
     UpdateViewChunks,
     /// Creates the voxel buffers to hold chunk data and attach them a chunk entity in the ECS world.
     CreateChunks,
-    /// Destroy the ECS entities and their buffer data.
-    DestroyChunks,
 }
 
 /// Handles dynamically loading / unloading regions (aka chunks) of the world according to camera position.
@@ -159,7 +156,8 @@ impl Plugin for VoxelWorldChunkingPlugin {
             .add_event::<ChunkUpdateEvent>()
             .insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
             .insert_resource(CurrentLocalPlayerChunk(ChunkKey::from_ivec3(IVec3::ZERO)))
-            .add_stage(
+            .add_stage_after(
+                CoreStage::Update,
                 ChunkLoadingStage,
                 SystemStage::parallel()
                     .with_system(update_player_pos.label(ChunkLoadingSystem::UpdatePlayerPos))
@@ -172,13 +170,9 @@ impl Plugin for VoxelWorldChunkingPlugin {
                         create_chunks
                             .label(ChunkLoadingSystem::CreateChunks)
                             .after(ChunkLoadingSystem::UpdateViewChunks),
-                    )
-                    .with_system(
-                        destroy_chunks
-                            .label(ChunkLoadingSystem::DestroyChunks)
-                            .after(ChunkLoadingSystem::CreateChunks),
                     ),
-            );
+            )
+            .add_system_to_stage(CoreStage::Last, destroy_chunks);
     }
 }
 
