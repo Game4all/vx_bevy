@@ -37,8 +37,7 @@ pub fn prepare_chunks(
                     CHUNK_LENGTH as f32,
                     CHUNK_LENGTH as f32,
                 ),
-            ))
-            .insert(NeedsMeshing);
+            ));
     }
 }
 

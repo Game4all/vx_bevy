@@ -6,6 +6,9 @@ use super::storage::{VoxelMap, VoxelMapKey};
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
 
+/// Stuff and utilities for generating terrain.
+mod terrain;
+
 mod voxel;
 pub use voxel::*;
 
@@ -18,7 +21,9 @@ impl Plugin for VoxelWorldPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(VoxelMap::<Voxel, ChunkShape>::new(ChunkShape {}))
             .add_plugin(chunks::VoxelWorldChunkingPlugin)
-            .add_plugin(render::VoxelWorldRenderingPlugin);
+            .add_plugin(render::VoxelWorldRenderingPlugin)
+            // ordering of plugin insertion matters here.
+            .add_plugin(terrain::VoxelWorldTerrainGenPlugin);
         //insert voxel pipeline
     }
 }

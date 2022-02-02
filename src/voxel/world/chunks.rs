@@ -9,7 +9,7 @@ use bevy::{
 };
 
 use super::{Chunk, ChunkKey, ChunkShape, Player, Voxel, CHUNK_LENGTH};
-use crate::voxel::storage::{VoxelBuffer, VoxelMap};
+use crate::voxel::storage::VoxelMap;
 
 /// Updates the current chunk position for the current player.
 fn update_player_pos(
@@ -75,11 +75,7 @@ fn create_chunks(
 ) {
     //perf: the spawning should be split between multiple frames so it doesn't freeze when spawning all the chunk entities.
     for request in requests.iter() {
-        //todo: at some point we may want to split the buffer and entity creation into two separate systems for handling procgen and stuff like loading data from disk.
-        chunks.insert(
-            request.0,
-            VoxelBuffer::<Voxel, ChunkShape>::new(ChunkShape {}, Voxel(1)),
-        );
+        chunks.insert_empty(request.0);
         chunk_entities.attach_entity(request.0, cmds.spawn().insert(Chunk(request.0)).id());
     }
 }
