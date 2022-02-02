@@ -26,7 +26,7 @@ pub fn prepare_chunks(
     for (chunk, chunk_key) in chunks.iter() {
         cmds.entity(chunk)
             .insert_bundle(PbrBundle {
-                mesh: meshes.add(shape::Box::new(16.0, 16.0, 16.0).into()),
+                mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
                 transform: Transform::from_translation(chunk_key.0.location().as_vec3()),
                 ..Default::default()
             })
