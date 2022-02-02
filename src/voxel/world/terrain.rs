@@ -38,19 +38,12 @@ fn gen_terrain(
             .map(|chunk_pos| (chunk_pos, chunk_data.remove(chunk_pos).unwrap()))
             .map(|(chunk_pos, mut buffer)| {
                 scope.spawn_local(async move {
-                    for x in 0..CHUNK_LENGTH {
-                        for y in 0..CHUNK_LENGTH {
-                            for z in 0..CHUNK_LENGTH {
-                                *buffer.voxel_at_mut([x, y, z].into()) =
-                                    if (x.pow(2) + y.pow(2) + z.pow(2)) > 16u32.pow(2) {
-                                        Voxel(0)
-                                    } else {
-                                        Voxel(1)
-                                    }
-                            }
+                    for x in (0..CHUNK_LENGTH).step_by(31) {
+                        for z in 0..CHUNK_LENGTH {
+                            *buffer.voxel_at_mut([x, 0, z].into()) = Voxel(1);
+                            *buffer.voxel_at_mut([z, 0, x].into()) = Voxel(1);
                         }
                     }
-
                     (chunk_pos, buffer)
                 })
             })
