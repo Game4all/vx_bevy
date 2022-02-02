@@ -14,6 +14,7 @@ ndshape = "0.2.0"
 block-mesh = "0.1.0"
 ndcopy = "0.2.0"
 thread_local = "1.1.4"
+bevy_egui = "0.10.2"
 
 [profile.dev]
 opt-level = 3

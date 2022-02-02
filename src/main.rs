@@ -2,6 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 
+mod debug;
 mod input;
 mod utils;
 mod voxel;
@@ -13,6 +14,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(input::PlayerControllerPlugin)
         .add_plugin(voxel::VoxelWorldPlugin)
+        .add_plugin(debug::DebugUIPlugins)
         .add_startup_system(setup)
         .run();
 }
