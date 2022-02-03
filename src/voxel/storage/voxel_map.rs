@@ -1,15 +1,20 @@
-use std::{hash::Hash, marker::PhantomData};
+use std::{cmp::Ordering, collections::BTreeMap, hash::Hash, marker::PhantomData};
 
-use bevy::{math::IVec3, utils::HashMap};
+use bevy::math::IVec3;
 use ndshape::Shape;
 
 use super::buffer::VoxelBuffer;
 
 /// A strongly typed key pointing to the origin of a voxel buffer in a [`VoxelMap<V, S>`]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-pub struct VoxelMapKey<V: Clone + Copy + Default + Eq + Hash>(IVec3, PhantomData<V>);
+pub struct VoxelMapKey<V>(IVec3, PhantomData<V>)
+where
+    V: Clone + Copy + Default + Eq + Hash;
 
-impl<V: Clone + Copy + Default + Eq + Hash> VoxelMapKey<V> {
+impl<V> VoxelMapKey<V>
+where
+    V: Clone + Copy + Default + Eq + Hash,
+{
     /// Constructs a key from the given coordinates
     pub fn from_ivec3(pos: IVec3) -> Self {
         Self(pos, Default::default())
@@ -22,13 +27,31 @@ impl<V: Clone + Copy + Default + Eq + Hash> VoxelMapKey<V> {
     }
 }
 
+impl<V> PartialOrd for VoxelMapKey<V>
+where
+    V: Clone + Copy + Default + Eq + Hash,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        (self.0.x, self.0.y, self.0.z).partial_cmp(&(other.0.x, other.0.y, other.0.z))
+    }
+}
+
+impl<V> Ord for VoxelMapKey<V>
+where
+    V: Clone + Copy + Default + Eq + Hash,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap_or(Ordering::Equal)
+    }
+}
+
 /// Provides an interface to query or modify voxel data for worlds or scenes split into multiple voxel data buffers of a same shape with no level of detail.
 pub struct VoxelMap<V, S>
 where
     V: Clone + Copy + Default + PartialEq + Eq + Hash,
     S: Shape<u32, 3> + Clone,
 {
-    pub chunks: HashMap<VoxelMapKey<V>, VoxelBuffer<V, S>>,
+    pub chunks: BTreeMap<VoxelMapKey<V>, VoxelBuffer<V, S>>,
     shape: S,
 }
 
