@@ -1,14 +1,14 @@
 use bevy::{
     prelude::{
-        Added, EventWriter, ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut,
-        StageLabel, SystemStage,
+        Added, ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, StageLabel,
+        SystemStage,
     },
     tasks::ComputeTaskPool,
 };
 use std::collections::VecDeque;
 
 use super::{
-    chunks::{ChunkLoadingStage, ChunkUpdateEvent},
+    chunks::{ChunkLoadingStage, DirtyChunks},
     Chunk, ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::voxel::storage::VoxelMap;
@@ -21,7 +21,7 @@ fn queue_terrain_gen(chunks: Query<&Chunk, Added<Chunk>>, mut gen_queue: ResMut<
 fn gen_terrain(
     mut chunk_data: ResMut<VoxelMap<Voxel, ChunkShape>>,
     mut gen_queue: ResMut<TerrainGenQueue>,
-    mut updates: EventWriter<ChunkUpdateEvent>,
+    mut dirty_chunks: ResMut<DirtyChunks>,
     task_pool: Res<ComputeTaskPool>,
     gen_budget: Res<WorldTerrainGenFrameBudget>,
 ) {
@@ -52,7 +52,7 @@ fn gen_terrain(
 
     for (chunk_pos, buffer) in generated_terrain {
         chunk_data.insert(chunk_pos, buffer);
-        updates.send(ChunkUpdateEvent(chunk_pos));
+        dirty_chunks.mark_dirty(chunk_pos);
     }
 }
 

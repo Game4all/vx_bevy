@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 
 use super::{
-    chunks::{ChunkEntities, ChunkLoadingStage, ChunkUpdateEvent},
+    chunks::{ChunkEntities, ChunkLoadingStage, DirtyChunks},
     Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::{
@@ -43,18 +43,17 @@ pub fn prepare_chunks(
 
 /// Marks chunk entities that need meshing by attaching them a [`NeedsMeshing`] marker component.
 fn queue_meshing(
-    mut updates: EventReader<ChunkUpdateEvent>,
+    dirty_chunks: Res<DirtyChunks>,
     mut cmds: Commands,
     chunk_entities: Res<ChunkEntities>,
 ) {
-    for update in updates.iter() {
-        if let Some(entity) = chunk_entities.entity(update.0) {
+    for update in dirty_chunks.iter_dirty() {
+        if let Some(entity) = chunk_entities.entity(*update) {
             cmds.entity(entity).insert(NeedsMeshing);
         }
     }
 }
 
-//todo: filter meshing order so that chunks which are closer to the camera get meshed first.
 //perf: reuse buffers between frames.
 fn mesh_chunks(
     mut commands: Commands,

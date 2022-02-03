@@ -5,7 +5,7 @@ use bevy::{
         ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, StageLabel, SystemLabel,
         SystemStage, With,
     },
-    utils::HashMap,
+    utils::{HashMap, HashSet},
 };
 
 use super::{Chunk, ChunkKey, ChunkShape, Player, Voxel, CHUNK_LENGTH};
@@ -94,6 +94,10 @@ fn destroy_chunks(
     }
 }
 
+fn clear_dirty_chunks(mut dirty_chunks: ResMut<DirtyChunks>) {
+    dirty_chunks.0.clear();
+}
+
 /// Label for the stage housing the chunk loading systems.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
 pub struct ChunkLoadingStage;
@@ -108,16 +112,17 @@ pub enum ChunkLoadingSystem {
     UpdateViewChunks,
     /// Creates the voxel buffers to hold chunk data and attach them a chunk entity in the ECS world.
     CreateChunks,
+    /// Clears the dirty chunks list.
+    ClearDirtyChunks,
 }
 
 /// Handles dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 pub struct VoxelWorldChunkingPlugin;
 
-// Stores the Entity <-> Chunk voxel data buffer mapping
+/// Stores the Entity <-> Chunk voxel data buffer mapping
 #[derive(Default)]
 pub struct ChunkEntities(HashMap<ChunkKey, Entity>);
 
-#[allow(dead_code)]
 impl ChunkEntities {
     /// Returns the entity attached to the chunk.
     pub fn entity(&self, pos: ChunkKey) -> Option<Entity> {
@@ -135,23 +140,35 @@ impl ChunkEntities {
     }
 }
 
+/// Holds the dirty chunk for the current frame.
+#[derive(Default)]
+pub struct DirtyChunks(HashSet<ChunkKey>);
+
+#[allow(dead_code)]
+impl DirtyChunks {
+    pub fn mark_dirty(&mut self, chunk: ChunkKey) {
+        self.0.insert(chunk);
+    }
+
+    pub fn iter_dirty(&self) -> impl Iterator<Item = &ChunkKey> {
+        self.0.iter()
+    }
+}
+
 /// Resource storing the current chunk the player is in.
 pub struct CurrentLocalPlayerChunk(pub ChunkKey);
 
 // Resource holding the view distance.
 pub struct ChunkLoadingRadius(pub i32);
 
-/// An event indicating a chunk received an update.
-pub struct ChunkUpdateEvent(pub ChunkKey);
-
 impl Plugin for VoxelWorldChunkingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(ChunkEntities::default())
             .add_event::<ChunkCreateKey>()
             .add_event::<ChunkDestroyKey>()
-            .add_event::<ChunkUpdateEvent>()
             .insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
             .insert_resource(CurrentLocalPlayerChunk(ChunkKey::from_ivec3(IVec3::ZERO)))
+            .init_resource::<DirtyChunks>()
             .add_stage_after(
                 CoreStage::Update,
                 ChunkLoadingStage,
@@ -168,7 +185,11 @@ impl Plugin for VoxelWorldChunkingPlugin {
                             .after(ChunkLoadingSystem::UpdateViewChunks),
                     ),
             )
-            .add_system_to_stage(CoreStage::Last, destroy_chunks);
+            .add_system_to_stage(CoreStage::Last, destroy_chunks)
+            .add_system_to_stage(
+                CoreStage::Last,
+                clear_dirty_chunks.label(ChunkLoadingSystem::ClearDirtyChunks),
+            );
     }
 }
 
