@@ -16,6 +16,7 @@ where
     V: Clone + Copy + Default + Eq + Hash,
 {
     /// Constructs a key from the given coordinates
+    #[inline]
     pub fn from_ivec3(pos: IVec3) -> Self {
         Self(pos, Default::default())
     }
@@ -24,6 +25,13 @@ where
     #[inline]
     pub fn location(&self) -> IVec3 {
         self.0
+    }
+
+    #[inline]
+    /// Computes the distance between two chunk keys.
+    pub fn distance(&self, other: &Self) -> u32 {
+        let delta = self.location() - other.location();
+        (delta.x.pow(2) + delta.y.pow(2) + delta.z.pow(2)) as u32
     }
 }
 
