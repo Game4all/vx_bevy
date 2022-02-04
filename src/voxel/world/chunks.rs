@@ -153,6 +153,10 @@ impl DirtyChunks {
     pub fn iter_dirty(&self) -> impl Iterator<Item = &ChunkKey> {
         self.0.iter()
     }
+
+    pub fn num_dirty(&self) -> usize {
+        self.0.len()
+    }
 }
 
 /// Resource storing the current chunk the player is in.
