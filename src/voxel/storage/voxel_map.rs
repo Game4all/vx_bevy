@@ -106,6 +106,14 @@ where
             .insert(origin, VoxelBuffer::<V, S>::new_empty(self.shape.clone()));
     }
 
+    /// Inserts buffers from an iterator passed as a parameter
+    pub fn insert_batch<T: IntoIterator<Item = (VoxelMapKey<V>, VoxelBuffer<V, S>)>>(
+        &mut self,
+        iter: T,
+    ) {
+        self.chunks.extend(iter);
+    }
+
     /// Removes the buffer at the specified origin and returns it if it exists.
     pub fn remove(&mut self, pos: VoxelMapKey<V>) -> Option<VoxelBuffer<V, S>> {
         self.chunks.remove(&pos)
