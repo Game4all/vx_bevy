@@ -2,7 +2,7 @@ use bevy::{
     ecs::schedule::ShouldRun,
     math::IVec3,
     prelude::{
-        Changed, Commands, CoreStage, Entity, EventReader, EventWriter, GlobalTransform, Local,
+        Changed, Commands, CoreStage, Entity, EventReader, EventWriter, GlobalTransform,
         ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, StageLabel, SystemLabel,
         SystemStage, With,
     },
@@ -48,9 +48,8 @@ fn update_view_chunks(
     player_pos: Res<CurrentLocalPlayerChunk>,
     chunks: Res<VoxelMap<Voxel, ChunkShape>>,
     view_radius: Res<ChunkLoadingRadius>,
-    mut loads: EventWriter<ChunkCreateKey>,
     mut unloads: EventWriter<ChunkDestroyKey>,
-    mut load_queue: Local<Vec<ChunkCreateKey>>,
+    mut load_queue: ResMut<ChunkCreateQueue>,
 ) {
     // quick n dirty circular chunk loading.
     //perf: optimize this.
@@ -66,7 +65,7 @@ fn update_view_chunks(
             );
 
             if !chunks.exists(chunk_key) {
-                load_queue.push(ChunkCreateKey(chunk_key));
+                load_queue.0.push(chunk_key);
             }
         }
     }
@@ -82,22 +81,21 @@ fn update_view_chunks(
     }
 
     // load chunks starting from the player position
-    load_queue.sort_unstable_by_key(|x| x.0.distance(&player_pos.0));
-
-    loads.send_batch(load_queue.drain(..));
+    load_queue
+        .0
+        .sort_unstable_by_key(|key| key.distance(&player_pos.0));
 }
 
 /// Creates the requested chunks and attach them an ECS entity.
 fn create_chunks(
-    mut requests: EventReader<ChunkCreateKey>,
+    mut creation_queue: ResMut<ChunkCreateQueue>,
     mut chunks: ResMut<VoxelMap<Voxel, ChunkShape>>,
     mut chunk_entities: ResMut<ChunkEntities>,
     mut cmds: Commands,
 ) {
-    //perf: the spawning should be split between multiple frames so it doesn't freeze when spawning all the chunk entities.
-    for request in requests.iter() {
-        chunks.insert_empty(request.0);
-        chunk_entities.attach_entity(request.0, cmds.spawn().insert(Chunk(request.0)).id());
+    for request in creation_queue.0.drain(..) {
+        chunks.insert_empty(request);
+        chunk_entities.attach_entity(request, cmds.spawn().insert(Chunk(request)).id());
     }
 }
 
@@ -189,10 +187,10 @@ pub struct ChunkLoadingRadius(pub i32);
 impl Plugin for VoxelWorldChunkingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(ChunkEntities::default())
-            .add_event::<ChunkCreateKey>()
             .add_event::<ChunkDestroyKey>()
             .insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
             .insert_resource(CurrentLocalPlayerChunk(ChunkKey::from_ivec3(IVec3::ZERO)))
+            .init_resource::<ChunkCreateQueue>()
             .init_resource::<DirtyChunks>()
             .add_stage_after(
                 CoreStage::Update,
@@ -219,8 +217,9 @@ impl Plugin for VoxelWorldChunkingPlugin {
     }
 }
 
-/// An internal event requesting the creation of a chunk at the specified origin
-struct ChunkCreateKey(ChunkKey);
+/// An internal queue for the creation of the chunk entities.
+#[derive(Default)]
+struct ChunkCreateQueue(Vec<ChunkKey>);
 
 /// An internal requesting the deletion of a chunk at the specified origin
 struct ChunkDestroyKey(ChunkKey);
