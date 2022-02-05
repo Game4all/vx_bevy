@@ -1,7 +1,8 @@
 use bevy::{
+    ecs::schedule::ShouldRun,
     math::IVec3,
     prelude::{
-        Changed, Commands, CoreStage, Entity, EventReader, EventWriter, GlobalTransform,
+        Changed, Commands, CoreStage, Entity, EventReader, EventWriter, GlobalTransform, Local,
         ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, StageLabel, SystemLabel,
         SystemStage, With,
     },
@@ -24,7 +25,21 @@ fn update_player_pos(
             (player_coords.z as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
         );
 
-        chunk_pos.0 = ChunkKey::from_ivec3(nearest_chunk_origin);
+        if chunk_pos.0.location() != nearest_chunk_origin {
+            chunk_pos.0 = ChunkKey::from_ivec3(nearest_chunk_origin);
+        }
+    }
+}
+
+/// Run criteria for the [`update_view_chunks`] system
+fn update_view_chunks_criteria(
+    chunk_pos: Res<CurrentLocalPlayerChunk>,
+    view_distance: Res<ChunkLoadingRadius>,
+) -> ShouldRun {
+    if chunk_pos.is_changed() || view_distance.is_changed() {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
     }
 }
 
@@ -35,6 +50,7 @@ fn update_view_chunks(
     view_radius: Res<ChunkLoadingRadius>,
     mut loads: EventWriter<ChunkCreateKey>,
     mut unloads: EventWriter<ChunkDestroyKey>,
+    mut load_queue: Local<Vec<ChunkCreateKey>>,
 ) {
     // quick n dirty circular chunk loading.
     //perf: optimize this.
@@ -50,7 +66,7 @@ fn update_view_chunks(
             );
 
             if !chunks.exists(chunk_key) {
-                loads.send(ChunkCreateKey(chunk_key));
+                load_queue.push(ChunkCreateKey(chunk_key));
             }
         }
     }
@@ -64,6 +80,11 @@ fn update_view_chunks(
             unloads.send(ChunkDestroyKey(*loaded_chunk));
         }
     }
+
+    // load chunks starting from the player position
+    load_queue.sort_unstable_by_key(|x| x.0.distance(&player_pos.0));
+
+    loads.send_batch(load_queue.drain(..));
 }
 
 /// Creates the requested chunks and attach them an ECS entity.
@@ -181,7 +202,8 @@ impl Plugin for VoxelWorldChunkingPlugin {
                     .with_system(
                         update_view_chunks
                             .label(ChunkLoadingSystem::UpdateViewChunks)
-                            .after(ChunkLoadingSystem::UpdatePlayerPos),
+                            .after(ChunkLoadingSystem::UpdatePlayerPos)
+                            .with_run_criteria(update_view_chunks_criteria),
                     )
                     .with_system(
                         create_chunks
