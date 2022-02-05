@@ -2,9 +2,8 @@ use bevy::{
     ecs::schedule::ShouldRun,
     math::IVec3,
     prelude::{
-        Changed, Commands, CoreStage, Entity, EventReader, EventWriter, GlobalTransform,
-        ParallelSystemDescriptorCoercion, Plugin, Query, Res, ResMut, StageLabel, SystemLabel,
-        SystemStage, With,
+        Changed, Commands, CoreStage, Entity, GlobalTransform, ParallelSystemDescriptorCoercion,
+        Plugin, Query, Res, ResMut, StageLabel, SystemLabel, SystemStage, With,
     },
     utils::{HashMap, HashSet},
 };
@@ -48,8 +47,7 @@ fn update_view_chunks(
     player_pos: Res<CurrentLocalPlayerChunk>,
     chunks: Res<VoxelMap<Voxel, ChunkShape>>,
     view_radius: Res<ChunkLoadingRadius>,
-    mut unloads: EventWriter<ChunkDestroyKey>,
-    mut load_queue: ResMut<ChunkCreateQueue>,
+    mut chunk_command_queue: ResMut<ChunkCommandQueue>,
 ) {
     // quick n dirty circular chunk loading.
     //perf: optimize this.
@@ -65,7 +63,7 @@ fn update_view_chunks(
             );
 
             if !chunks.exists(chunk_key) {
-                load_queue.0.push(chunk_key);
+                chunk_command_queue.create.push(chunk_key);
             }
         }
     }
@@ -76,40 +74,40 @@ fn update_view_chunks(
         if delta.x.pow(2) + delta.y.pow(2) + delta.z.pow(2)
             > view_radius.0.pow(2) * (CHUNK_LENGTH as i32).pow(2)
         {
-            unloads.send(ChunkDestroyKey(*loaded_chunk));
+            chunk_command_queue.destroy.push(*loaded_chunk);
         }
     }
 
     // load chunks starting from the player position
-    load_queue
-        .0
+    chunk_command_queue
+        .create
         .sort_unstable_by_key(|key| key.distance(&player_pos.0));
 }
 
 /// Creates the requested chunks and attach them an ECS entity.
 fn create_chunks(
-    mut creation_queue: ResMut<ChunkCreateQueue>,
+    mut chunks_command_queue: ResMut<ChunkCommandQueue>,
     mut chunks: ResMut<VoxelMap<Voxel, ChunkShape>>,
     mut chunk_entities: ResMut<ChunkEntities>,
     mut cmds: Commands,
 ) {
-    for request in creation_queue.0.drain(..) {
+    for request in chunks_command_queue.create.drain(..) {
         chunks.insert_empty(request);
         chunk_entities.attach_entity(request, cmds.spawn().insert(Chunk(request)).id());
     }
 }
 
 fn destroy_chunks(
-    mut requests: EventReader<ChunkDestroyKey>,
+    mut chunks_command_queue: ResMut<ChunkCommandQueue>,
     mut chunks: ResMut<VoxelMap<Voxel, ChunkShape>>,
     mut chunk_entities: ResMut<ChunkEntities>,
     mut cmds: Commands,
 ) {
     //perf: the despawning should be split between multiple frames so it doesn't freeze when despawning all the chunk entities.
-    for request in requests.iter() {
-        cmds.entity(chunk_entities.detach_entity(request.0).unwrap())
+    for command in chunks_command_queue.destroy.drain(..) {
+        cmds.entity(chunk_entities.detach_entity(command).unwrap())
             .despawn();
-        chunks.remove(request.0);
+        chunks.remove(&command);
     }
 }
 
@@ -186,11 +184,10 @@ pub struct ChunkLoadingRadius(pub i32);
 
 impl Plugin for VoxelWorldChunkingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.insert_resource(ChunkEntities::default())
-            .add_event::<ChunkDestroyKey>()
-            .insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
+        app.insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
+            .init_resource::<ChunkEntities>()
             .insert_resource(CurrentLocalPlayerChunk(ChunkKey::from_ivec3(IVec3::ZERO)))
-            .init_resource::<ChunkCreateQueue>()
+            .init_resource::<ChunkCommandQueue>()
             .init_resource::<DirtyChunks>()
             .add_stage_after(
                 CoreStage::Update,
@@ -217,9 +214,9 @@ impl Plugin for VoxelWorldChunkingPlugin {
     }
 }
 
-/// An internal queue for the creation of the chunk entities.
+/// An internal queue tracking the creation / destroy commands for chunks.
 #[derive(Default)]
-struct ChunkCreateQueue(Vec<ChunkKey>);
-
-/// An internal requesting the deletion of a chunk at the specified origin
-struct ChunkDestroyKey(ChunkKey);
+struct ChunkCommandQueue {
+    create: Vec<ChunkKey>,
+    destroy: Vec<ChunkKey>,
+}

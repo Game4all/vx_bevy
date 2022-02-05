@@ -115,7 +115,7 @@ where
     }
 
     /// Removes the buffer at the specified origin and returns it if it exists.
-    pub fn remove(&mut self, pos: VoxelMapKey<V>) -> Option<VoxelBuffer<V, S>> {
+    pub fn remove(&mut self, pos: &VoxelMapKey<V>) -> Option<VoxelBuffer<V, S>> {
         self.chunks.remove(&pos)
     }
 }
