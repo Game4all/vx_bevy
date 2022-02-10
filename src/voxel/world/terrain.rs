@@ -29,7 +29,11 @@ fn gen_terrain(
     let generated_terrain = task_pool.scope(|scope| {
         gen_queue
             .drain(..drain_size)
-            .map(|chunk_pos| (chunk_pos, chunk_data.remove(&chunk_pos).unwrap()))
+            .filter_map(|key| {
+                chunk_data
+                    .remove(&key)
+                    .and_then(|chunk_data| Some((key, chunk_data)))
+            })
             .map(|(chunk_pos, mut buffer)| {
                 scope.spawn_local(async move {
                     for x in (0..CHUNK_LENGTH).step_by(31) {
