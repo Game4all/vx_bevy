@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use super::{
     chunks::{ChunkEntities, ChunkLoadingStage, DirtyChunks},
-    Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
+    Chunk, ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::{
     utils::ThreadLocalRes,
@@ -42,39 +42,37 @@ pub fn prepare_chunks(
 }
 
 /// Marks chunk entities that need meshing by attaching them a [`NeedsMeshing`] marker component.
-fn queue_meshing(
-    dirty_chunks: Res<DirtyChunks>,
-    mut cmds: Commands,
-    chunk_entities: Res<ChunkEntities>,
-) {
-    for update in dirty_chunks.iter_dirty() {
-        if let Some(entity) = chunk_entities.entity(*update) {
-            cmds.entity(entity).insert(NeedsMeshing);
-        }
-    }
+fn queue_meshing(dirty_chunks: Res<DirtyChunks>, mut queue_mesh: ResMut<ChunkMeshQueue>) {
+    queue_mesh.0.extend(dirty_chunks.iter_dirty());
 }
 
-//perf: reuse buffers between frames.
+/// Meshes the specified chunks.
 fn mesh_chunks(
-    mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut chunk_query: QuerySet<(
-        QueryState<(&Chunk, Entity), With<NeedsMeshing>>,
-        QueryState<&Handle<Mesh>, With<NeedsMeshing>>,
-    )>,
+    mut mesh_queue: ResMut<ChunkMeshQueue>,
+    chunk_query: Query<&Handle<Mesh>, With<Chunk>>,
+    chunk_entities: Res<ChunkEntities>,
     mesh_buffers: Local<ThreadLocalRes<RefCell<MeshBuffers<Voxel, ChunkShape>>>>,
     chunks: Res<VoxelMap<Voxel, ChunkShape>>,
-    frame_budget: Res<WorldChunksMeshingFrameBudget>,
+    mesh_budget: Res<WorldChunksMeshingFrameBudget>,
     task_pool: Res<ComputeTaskPool>,
 ) {
+    let drain_size = if mesh_queue.0.len() < mesh_budget.meshes_per_frame {
+        mesh_queue.0.len()
+    } else {
+        mesh_budget.meshes_per_frame
+    };
+
     let generated_meshes = task_pool.scope(|scope| {
-        chunk_query
-            .q0()
-            .iter()
-            .take(frame_budget.meshes_per_frame)
-            .map(|(chunk, entity)| (entity, chunks.buffer_at(chunk.0).unwrap())) //safe to unwrap since chunk data is guaranted to exist.
+        mesh_queue
+            .0
+            .drain(..drain_size)
+            .filter_map(|key| {
+                chunk_entities
+                    .entity(key)
+                    .and_then(|entity| Some((entity, chunks.buffer_at(key).unwrap())))
+            })
             .map(|(entity, buffer)| {
-                //because resources aren't static, futures must be spawned locally.
                 let mesh_buffers_handle = mesh_buffers.get_handle();
                 scope.spawn_local(async move {
                     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
@@ -92,14 +90,16 @@ fn mesh_chunks(
             .collect()
     });
 
-    for (entity, mesh) in generated_meshes {
-        *meshes
-            .get_mut(chunk_query.q1().get(entity).unwrap())
-            .unwrap() = mesh;
+    // meshes
 
-        commands.entity(entity).remove::<NeedsMeshing>();
+    for (entity, mesh) in generated_meshes {
+        *meshes.get_mut(chunk_query.get(entity).unwrap()).unwrap() = mesh;
     }
 }
+
+/// A stage existing solely for enabling the use of change detection.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
+pub struct ChunkRenderingPrepareStage;
 
 /// Label for the stage housing the chunk rendering systems.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
@@ -107,9 +107,6 @@ pub struct ChunkRenderingStage;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
 pub enum ChunkRenderingSystem {
-    /// Attaches to the newly inserted chunk entities components required for rendering.
-    Prepare,
-
     /// Marks chunk entities that need meshing.
     QueueMeshing,
 
@@ -126,28 +123,28 @@ pub struct WorldChunksMeshingFrameBudget {
 
 impl Plugin for VoxelWorldRenderingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_stage_after(
-            ChunkLoadingStage,
-            ChunkRenderingStage,
-            SystemStage::parallel()
-                .with_system(prepare_chunks.label(ChunkRenderingSystem::Prepare))
-                .with_system(
-                    queue_meshing
-                        .label(ChunkRenderingSystem::QueueMeshing)
-                        .after(ChunkRenderingSystem::Prepare),
-                )
-                .with_system(
-                    mesh_chunks
-                        .label(ChunkRenderingSystem::MeshChunks)
-                        .after(ChunkRenderingSystem::QueueMeshing),
-                ),
-        )
-        .insert_resource(WorldChunksMeshingFrameBudget {
-            meshes_per_frame: 16,
-        });
+        app.init_resource::<ChunkMeshQueue>()
+            .add_stage_after(
+                ChunkLoadingStage,
+                ChunkRenderingPrepareStage,
+                SystemStage::single(prepare_chunks),
+            )
+            .add_stage_after(
+                ChunkRenderingPrepareStage,
+                ChunkRenderingStage,
+                SystemStage::parallel()
+                    .with_system(queue_meshing.label(ChunkRenderingSystem::QueueMeshing))
+                    .with_system(
+                        mesh_chunks
+                            .label(ChunkRenderingSystem::MeshChunks)
+                            .after(ChunkRenderingSystem::QueueMeshing),
+                    ),
+            )
+            .insert_resource(WorldChunksMeshingFrameBudget {
+                meshes_per_frame: 16,
+            });
     }
 }
 
-/// A component marking that a chunk needs meshing.
-#[derive(Component)]
-struct NeedsMeshing;
+#[derive(Default)]
+struct ChunkMeshQueue(Vec<ChunkKey>);
