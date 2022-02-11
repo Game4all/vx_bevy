@@ -28,6 +28,7 @@ pub fn prepare_chunks(
             .insert_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
                 transform: Transform::from_translation(chunk_key.0.location().as_vec3()),
+                visibility: Visibility { is_visible: false },
                 ..Default::default()
             })
             .insert(Aabb::from_min_max(
@@ -50,7 +51,7 @@ fn queue_meshing(dirty_chunks: Res<DirtyChunks>, mut queue_mesh: ResMut<ChunkMes
 fn mesh_chunks(
     mut meshes: ResMut<Assets<Mesh>>,
     mut mesh_queue: ResMut<ChunkMeshQueue>,
-    chunk_query: Query<&Handle<Mesh>, With<Chunk>>,
+    mut chunk_query: Query<(&Handle<Mesh>, &mut Visibility), With<Chunk>>,
     chunk_entities: Res<ChunkEntities>,
     mesh_buffers: Local<ThreadLocalRes<RefCell<MeshBuffers<Voxel, ChunkShape>>>>,
     chunks: Res<VoxelMap<Voxel, ChunkShape>>,
@@ -90,11 +91,12 @@ fn mesh_chunks(
             .collect()
     });
 
-    // meshes
-
-    for (entity, mesh) in generated_meshes {
-        *meshes.get_mut(chunk_query.get(entity).unwrap()).unwrap() = mesh;
-    }
+    generated_meshes.into_iter().for_each(|(entity, mesh)| {
+        if let Ok((handle, mut visibility)) = chunk_query.get_mut(entity) {
+            *meshes.get_mut(handle).unwrap() = mesh;
+            visibility.is_visible = true;
+        }
+    });
 }
 
 /// A stage existing solely for enabling the use of change detection.
