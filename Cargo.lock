@@ -3135,6 +3135,7 @@ dependencies = [
  "bevy",
  "bevy_egui",
  "block-mesh",
+ "futures-lite",
  "ndcopy",
  "ndshape",
  "thread_local",

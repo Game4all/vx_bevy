@@ -1,64 +1,77 @@
 use bevy::{
-    prelude::{Added, Local, Plugin, Query, Res, ResMut, StageLabel, SystemStage},
-    tasks::ComputeTaskPool,
+    prelude::{
+        Added, Commands, Component, Entity, ParallelSystemDescriptorCoercion, Plugin, Query, Res,
+        ResMut, StageLabel, SystemLabel, SystemStage,
+    },
+    tasks::{AsyncComputeTaskPool, Task},
 };
+use futures_lite::future;
 
 use super::{
     chunks::{ChunkLoadingStage, DirtyChunks},
-    Chunk, ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
+    Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
-use crate::voxel::storage::VoxelMap;
+use crate::voxel::storage::{VoxelBuffer, VoxelMap};
 
-fn gen_terrain(
+/// Queues the terrain gen async tasks for the newly created chunks.
+fn queue_terrain_gen(
     mut chunk_data: ResMut<VoxelMap<Voxel, ChunkShape>>,
-    mut gen_queue: Local<Vec<ChunkKey>>,
-    mut dirty_chunks: ResMut<DirtyChunks>,
-    task_pool: Res<ComputeTaskPool>,
-    gen_budget: Res<WorldTerrainGenFrameBudget>,
-    chunks: Query<&Chunk, Added<Chunk>>,
+    mut commands: Commands,
+    new_chunks: Query<(Entity, &Chunk), Added<Chunk>>,
+    task_pool: Res<AsyncComputeTaskPool>,
 ) {
-    gen_queue.extend(chunks.iter().map(|chunk| chunk.0));
-
-    let drain_size = if gen_queue.len() < gen_budget.gen_per_frame {
-        gen_queue.len()
-    } else {
-        gen_budget.gen_per_frame
-    };
-
-    //do the terrain gen here
-    let generated_terrain = task_pool.scope(|scope| {
-        gen_queue
-            .drain(..drain_size)
-            .filter_map(|key| {
-                chunk_data
-                    .remove(&key)
-                    .and_then(|chunk_data| Some((key, chunk_data)))
-            })
-            .map(|(chunk_pos, mut buffer)| {
-                scope.spawn_local(async move {
+    new_chunks
+        .iter()
+        .filter_map(|(entity, key)| {
+            chunk_data
+                .remove(&key.0)
+                .and_then(|chunk_data| Some((entity, key, chunk_data)))
+        })
+        .map(|(entity, _key, mut chunk_data)| {
+            (
+                entity,
+                (TerrainGenTask(task_pool.spawn(async move {
                     for x in (0..CHUNK_LENGTH).step_by(31) {
                         for z in 0..CHUNK_LENGTH {
-                            *buffer.voxel_at_mut([x, 0, z].into()) = Voxel(1);
-                            *buffer.voxel_at_mut([z, 0, x].into()) = Voxel(1);
+                            *chunk_data.voxel_at_mut([x, 0, z].into()) = Voxel(1);
+                            *chunk_data.voxel_at_mut([z, 0, x].into()) = Voxel(1);
                         }
                     }
-                    (chunk_pos, buffer)
-                })
-            })
-            .collect()
-    });
+                    chunk_data
+                }))),
+            )
+        })
+        .for_each(|(entity, gen_task)| {
+            commands.entity(entity).insert(gen_task);
+        });
+}
 
-    for (chunk_pos, buffer) in generated_terrain {
-        chunk_data.insert(chunk_pos, buffer);
-        dirty_chunks.mark_dirty(chunk_pos);
-    }
+/// Polls for finished gen tasks and put back the generated terrain into the voxel map
+fn process_terrain_gen(
+    mut chunk_data: ResMut<VoxelMap<Voxel, ChunkShape>>,
+    mut commands: Commands,
+    mut dirty_chunks: ResMut<DirtyChunks>,
+    mut gen_chunks: Query<(Entity, &Chunk, &mut TerrainGenTask)>,
+) {
+    gen_chunks.for_each_mut(|(entity, chunk, mut gen_task)| {
+        if let Some(data) = future::block_on(future::poll_once(&mut gen_task.0)) {
+            chunk_data.insert(chunk.0, data);
+            dirty_chunks.mark_dirty(chunk.0);
+            commands.entity(entity).remove::<TerrainGenTask>();
+        }
+    });
 }
 
 /// Handles terrain generation.
 pub struct VoxelWorldTerrainGenPlugin;
 
-pub struct WorldTerrainGenFrameBudget {
-    pub gen_per_frame: usize,
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
+/// Labels for the systems added by [`VoxelWorldTerrainGenPlugin`]
+pub enum TerrainGenSystem {
+    /// Queues the terrain gen async tasks for the newly created chunks.
+    QueueTerrainGen,
+    /// Polls for finished gen tasks and put back the generated terrain into the voxel map
+    ProcessTerrainGen,
 }
 
 // we need to use a whole system stage for this in order to enable the usage of added component querries.
@@ -70,8 +83,16 @@ impl Plugin for VoxelWorldTerrainGenPlugin {
         app.add_stage_after(
             ChunkLoadingStage,
             TerrainGenStage,
-            SystemStage::single(gen_terrain),
-        )
-        .insert_resource(WorldTerrainGenFrameBudget { gen_per_frame: 16 });
+            SystemStage::parallel()
+                .with_system(queue_terrain_gen.label(TerrainGenSystem::QueueTerrainGen))
+                .with_system(
+                    process_terrain_gen
+                        .label(TerrainGenSystem::ProcessTerrainGen)
+                        .after(TerrainGenSystem::QueueTerrainGen),
+                ),
+        );
     }
 }
+
+#[derive(Component)]
+struct TerrainGenTask(Task<VoxelBuffer<Voxel, ChunkShape>>);

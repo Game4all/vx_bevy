@@ -46,6 +46,7 @@ fn update_view_chunks_criteria(
 fn update_view_chunks(
     player_pos: Res<CurrentLocalPlayerChunk>,
     chunks: Res<VoxelMap<Voxel, ChunkShape>>,
+    chunk_entities: Res<ChunkEntities>,
     view_radius: Res<ChunkLoadingRadius>,
     mut chunk_command_queue: ResMut<ChunkCommandQueue>,
 ) {
@@ -62,7 +63,7 @@ fn update_view_chunks(
                     + IVec3::new(x * CHUNK_LENGTH as i32, 0, z * CHUNK_LENGTH as i32),
             );
 
-            if !chunks.exists(chunk_key) {
+            if chunk_entities.entity(chunk_key).is_none() {
                 chunk_command_queue.create.push(chunk_key);
             }
         }
