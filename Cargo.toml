@@ -9,16 +9,19 @@ resolver = "2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.6.0"
+bevy = { git = "https://github.com/bevyengine/bevy" }
 ndshape = "0.2.0"
 block-mesh = "0.1.0"
 ndcopy = "0.2.0"
 thread_local = "1.1.4"
-bevy_egui = "0.10.2"
+bevy_egui = "0.11.1"
 futures-lite = "1.12.0"
 
 [profile.dev]
 opt-level = 3
+
+[patch.crates-io]
+bevy = { git = "https://github.com/bevyengine/bevy" }
 
 [profile.release]
 lto = true

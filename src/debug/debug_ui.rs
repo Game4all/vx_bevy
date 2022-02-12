@@ -11,8 +11,8 @@ use bevy_egui::{
 
 use crate::voxel::{storage::VoxelMap, ChunkLoadingRadius, ChunkShape, DirtyChunks, Voxel};
 
-fn display_debug_stats(egui: ResMut<EguiContext>, diagnostics: Res<Diagnostics>) {
-    egui::Window::new("performance stuff").show(egui.ctx(), |ui| {
+fn display_debug_stats(mut egui: ResMut<EguiContext>, diagnostics: Res<Diagnostics>) {
+    egui::Window::new("performance stuff").show(egui.ctx_mut(), |ui| {
         ui.label(format!(
             "Avg. FPS: {:.02}",
             diagnostics
@@ -33,15 +33,18 @@ fn display_debug_stats(egui: ResMut<EguiContext>, diagnostics: Res<Diagnostics>)
 }
 
 fn display_chunk_stats(
-    egui: ResMut<EguiContext>,
+    mut egui: ResMut<EguiContext>,
     chunk_map: Res<VoxelMap<Voxel, ChunkShape>>,
     dirty_chunks: Res<DirtyChunks>,
     mut chunk_loading_radius: ResMut<ChunkLoadingRadius>,
 ) {
-    egui::Window::new("voxel world stuff").show(egui.ctx(), |ui| {
+    egui::Window::new("voxel world stuff").show(egui.ctx_mut(), |ui| {
         ui.heading("Chunks");
         ui.label(format!("Loaded chunk count:  {}", chunk_map.chunks.len()));
-        ui.label(format!("Chunks invalidations (per frame):  {}", dirty_chunks.num_dirty()));
+        ui.label(format!(
+            "Chunks invalidations (per frame):  {}",
+            dirty_chunks.num_dirty()
+        ));
         ui.separator();
         ui.label("Chunk loading radius");
         ui.add(Slider::new(&mut chunk_loading_radius.0, 16..=32));

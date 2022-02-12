@@ -101,7 +101,7 @@ pub struct PlayerControllerPlugin;
 
 impl Plugin for PlayerControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(handle_player_mouse_move.system())
-            .add_system(handle_player_input.system());
+        app.add_system(handle_player_mouse_move)
+            .add_system(handle_player_input);
     }
 }
