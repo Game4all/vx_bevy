@@ -1,21 +1,17 @@
-use std::cell::RefCell;
-
 use super::{
     chunks::{ChunkEntities, ChunkLoadingStage, DirtyChunks},
-    Chunk, ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
+    Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
-use crate::{
-    utils::ThreadLocalRes,
-    voxel::{
-        render::{mesh_buffer, MeshBuffers},
-        storage::VoxelMap,
-    },
+use crate::voxel::{
+    render::{mesh_buffer, MeshBuffers},
+    storage::VoxelMap,
 };
 use bevy::{
     prelude::*,
     render::{primitives::Aabb, render_resource::PrimitiveTopology},
-    tasks::ComputeTaskPool,
+    tasks::{AsyncComputeTaskPool, Task},
 };
+use futures_lite::future;
 
 /// Attaches to the newly inserted chunk entities components required for rendering.
 pub fn prepare_chunks(
@@ -42,59 +38,58 @@ pub fn prepare_chunks(
     }
 }
 
-/// Marks chunk entities that need meshing by attaching them a [`NeedsMeshing`] marker component.
-fn queue_meshing(dirty_chunks: Res<DirtyChunks>, mut queue_mesh: ResMut<ChunkMeshQueue>) {
-    queue_mesh.0.extend(dirty_chunks.iter_dirty());
+//perf: reuse mesh buffers
+/// Queues meshing tasks for the chunks in need of a remesh.
+fn queue_mesh_tasks(
+    mut commands: Commands,
+    dirty_chunks: Res<DirtyChunks>,
+    chunk_entities: Res<ChunkEntities>,
+    chunks: Res<VoxelMap<Voxel, ChunkShape>>,
+    task_pool: Res<AsyncComputeTaskPool>,
+) {
+    dirty_chunks
+        .iter_dirty()
+        .filter_map(|key| {
+            chunk_entities
+                .entity(*key)
+                .and_then(|entity| Some((key, entity)))
+        })
+        .filter_map(|(key, entity)| {
+            chunks
+                .buffer_at(*key)
+                .and_then(|buffer| Some((buffer.clone(), entity)))
+        })
+        .map(|(buffer, entity)| {
+            (
+                entity,
+                ChunkMeshTask(task_pool.spawn(async move {
+                    let mut mesh_buffers = MeshBuffers::<Voxel, ChunkShape>::new(ChunkShape {});
+                    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+                    mesh_buffer(&buffer, &mut mesh_buffers, &mut mesh, 1.0);
+
+                    mesh
+                })),
+            )
+        })
+        .for_each(|(entity, task)| {
+            commands.entity(entity).insert(task);
+        });
 }
 
-/// Meshes the specified chunks.
-fn mesh_chunks(
+/// Polls and process the generated chunk meshes
+fn process_mesh_tasks(
     mut meshes: ResMut<Assets<Mesh>>,
-    mut mesh_queue: ResMut<ChunkMeshQueue>,
-    mut chunk_query: Query<(&Handle<Mesh>, &mut Visibility), With<Chunk>>,
-    chunk_entities: Res<ChunkEntities>,
-    mesh_buffers: Local<ThreadLocalRes<RefCell<MeshBuffers<Voxel, ChunkShape>>>>,
-    chunks: Res<VoxelMap<Voxel, ChunkShape>>,
-    mesh_budget: Res<WorldChunksMeshingFrameBudget>,
-    task_pool: Res<ComputeTaskPool>,
+    mut chunk_query: Query<
+        (Entity, &Handle<Mesh>, &mut ChunkMeshTask, &mut Visibility),
+        With<Chunk>,
+    >,
+    mut commands: Commands,
 ) {
-    let drain_size = if mesh_queue.0.len() < mesh_budget.meshes_per_frame {
-        mesh_queue.0.len()
-    } else {
-        mesh_budget.meshes_per_frame
-    };
-
-    let generated_meshes = task_pool.scope(|scope| {
-        mesh_queue
-            .0
-            .drain(..drain_size)
-            .filter_map(|key| {
-                chunk_entities
-                    .entity(key)
-                    .and_then(|entity| Some((entity, chunks.buffer_at(key).unwrap())))
-            })
-            .map(|(entity, buffer)| {
-                let mesh_buffers_handle = mesh_buffers.get_handle();
-                scope.spawn_local(async move {
-                    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-                    let mut mesh_buffers = &mut mesh_buffers_handle
-                        .get_or(|| {
-                            RefCell::new(MeshBuffers::<Voxel, ChunkShape>::new(ChunkShape {}))
-                        })
-                        .borrow_mut();
-
-                    mesh_buffer(buffer, &mut mesh_buffers, &mut mesh, 1.0);
-
-                    (entity, mesh)
-                })
-            })
-            .collect()
-    });
-
-    generated_meshes.into_iter().for_each(|(entity, mesh)| {
-        if let Ok((handle, mut visibility)) = chunk_query.get_mut(entity) {
+    chunk_query.for_each_mut(|(entity, handle, mut mesh_task, mut visibility)| {
+        if let Some(mesh) = future::block_on(future::poll_once(&mut mesh_task.0)) {
             *meshes.get_mut(handle).unwrap() = mesh;
             visibility.is_visible = true;
+            commands.entity(entity).remove::<ChunkMeshTask>();
         }
     });
 }
@@ -109,44 +104,36 @@ pub struct ChunkRenderingStage;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
 pub enum ChunkRenderingSystem {
-    /// Marks chunk entities that need meshing.
-    QueueMeshing,
+    /// Queues meshing tasks for the chunks in need of a remesh.
+    QueueMeshTasks,
 
-    /// Mesh actual chunks
-    MeshChunks,
+    /// Polls and process the generated chunk meshes.
+    ProcessMeshTasks,
 }
 
 /// Handles the rendering of the chunks.
 pub struct VoxelWorldRenderingPlugin;
 
-pub struct WorldChunksMeshingFrameBudget {
-    pub meshes_per_frame: usize,
-}
-
 impl Plugin for VoxelWorldRenderingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.init_resource::<ChunkMeshQueue>()
-            .add_stage_after(
-                ChunkLoadingStage,
-                ChunkRenderingPrepareStage,
-                SystemStage::single(prepare_chunks),
-            )
-            .add_stage_after(
-                ChunkRenderingPrepareStage,
-                ChunkRenderingStage,
-                SystemStage::parallel()
-                    .with_system(queue_meshing.label(ChunkRenderingSystem::QueueMeshing))
-                    .with_system(
-                        mesh_chunks
-                            .label(ChunkRenderingSystem::MeshChunks)
-                            .after(ChunkRenderingSystem::QueueMeshing),
-                    ),
-            )
-            .insert_resource(WorldChunksMeshingFrameBudget {
-                meshes_per_frame: 16,
-            });
+        app.add_stage_after(
+            ChunkLoadingStage,
+            ChunkRenderingPrepareStage,
+            SystemStage::single(prepare_chunks),
+        )
+        .add_stage_after(
+            ChunkRenderingPrepareStage,
+            ChunkRenderingStage,
+            SystemStage::parallel()
+                .with_system(queue_mesh_tasks.label(ChunkRenderingSystem::QueueMeshTasks))
+                .with_system(
+                    process_mesh_tasks
+                        .label(ChunkRenderingSystem::ProcessMeshTasks)
+                        .after(ChunkRenderingSystem::QueueMeshTasks),
+                ),
+        );
     }
 }
 
-#[derive(Default)]
-struct ChunkMeshQueue(Vec<ChunkKey>);
+#[derive(Component)]
+struct ChunkMeshTask(Task<Mesh>);
