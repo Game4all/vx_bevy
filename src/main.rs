@@ -4,7 +4,6 @@ use bevy::prelude::*;
 
 mod debug;
 mod input;
-mod utils;
 mod voxel;
 
 use input::PlayerController;

@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use super::{
     chunks::{ChunkEntities, ChunkLoadingStage, DirtyChunks},
     Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
@@ -12,6 +14,8 @@ use bevy::{
     tasks::{AsyncComputeTaskPool, Task},
 };
 use futures_lite::future;
+use lazy_static::lazy_static;
+use thread_local::ThreadLocal;
 
 /// Attaches to the newly inserted chunk entities components required for rendering.
 pub fn prepare_chunks(
@@ -30,7 +34,12 @@ pub fn prepare_chunks(
     }
 }
 
-//perf: reuse mesh buffers
+lazy_static! {
+    // a pool of mesh buffers shared between meshing tasks.
+    static ref SHARED_MESH_BUFFERS: ThreadLocal<RefCell<MeshBuffers<Voxel, ChunkShape>>> =
+        ThreadLocal::default();
+}
+
 /// Queues meshing tasks for the chunks in need of a remesh.
 fn queue_mesh_tasks(
     mut commands: Commands,
@@ -55,7 +64,12 @@ fn queue_mesh_tasks(
             (
                 entity,
                 ChunkMeshTask(task_pool.spawn(async move {
-                    let mut mesh_buffers = MeshBuffers::<Voxel, ChunkShape>::new(ChunkShape {});
+                    let mut mesh_buffers = SHARED_MESH_BUFFERS
+                        .get_or(|| {
+                            RefCell::new(MeshBuffers::<Voxel, ChunkShape>::new(ChunkShape {}))
+                        })
+                        .borrow_mut();
+
                     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
                     mesh_buffer(&buffer, &mut mesh_buffers, &mut mesh, 1.0);
 
