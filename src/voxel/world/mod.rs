@@ -24,8 +24,8 @@ impl Plugin for VoxelWorldPlugin {
             .add_plugin(chunks::VoxelWorldChunkingPlugin)
             .add_plugin(render::VoxelWorldRenderingPlugin)
             // ordering of plugin insertion matters here.
-            .add_plugin(terrain::VoxelWorldTerrainGenPlugin);
-        //insert voxel pipeline
+            .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
+            .add_plugin(super::render::VoxelMeshRenderPipelinePlugin);
     }
 }
 

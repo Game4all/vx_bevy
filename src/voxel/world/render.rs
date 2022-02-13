@@ -3,7 +3,7 @@ use super::{
     Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::voxel::{
-    render::{mesh_buffer, MeshBuffers},
+    render::{mesh_buffer, MeshBuffers, VoxelMeshBundle},
     storage::VoxelMap,
 };
 use bevy::{
@@ -20,21 +20,13 @@ pub fn prepare_chunks(
     mut cmds: Commands,
 ) {
     for (chunk, chunk_key) in chunks.iter() {
-        cmds.entity(chunk)
-            .insert_bundle(PbrBundle {
-                mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
-                transform: Transform::from_translation(chunk_key.0.location().as_vec3()),
-                visibility: Visibility { is_visible: false },
-                ..Default::default()
-            })
-            .insert(Aabb::from_min_max(
-                Vec3::ZERO,
-                Vec3::new(
-                    CHUNK_LENGTH as f32,
-                    CHUNK_LENGTH as f32,
-                    CHUNK_LENGTH as f32,
-                ),
-            ));
+        cmds.entity(chunk).insert_bundle(VoxelMeshBundle {
+            mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
+            transform: Transform::from_translation(chunk_key.0.location().as_vec3()),
+            visibility: Visibility { is_visible: false },
+            aabb: Aabb::from_min_max(Vec3::ZERO, Vec3::splat(CHUNK_LENGTH as f32)),
+            ..Default::default()
+        });
     }
 }
 
