@@ -15,6 +15,8 @@ pub use voxel::*;
 
 mod render;
 
+mod chunks_anim;
+
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
 pub struct VoxelWorldPlugin;
 
@@ -25,7 +27,8 @@ impl Plugin for VoxelWorldPlugin {
             .add_plugin(render::VoxelWorldRenderingPlugin)
             // ordering of plugin insertion matters here.
             .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
-            .add_plugin(super::render::VoxelMeshRenderPipelinePlugin);
+            .add_plugin(super::render::VoxelMeshRenderPipelinePlugin)
+            .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin);
     }
 }
 
