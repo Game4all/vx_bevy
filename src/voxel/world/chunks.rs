@@ -88,14 +88,12 @@ fn update_view_chunks(
 /// Creates the requested chunks and attach them an ECS entity.
 fn create_chunks(
     mut chunks_command_queue: ResMut<ChunkCommandQueue>,
-    mut chunks: ResMut<VoxelMap<Voxel, ChunkShape>>,
     mut chunk_entities: ResMut<ChunkEntities>,
     mut cmds: Commands,
 ) {
-    for request in chunks_command_queue.create.drain(..) {
-        chunks.insert_empty(request);
-        chunk_entities.attach_entity(request, cmds.spawn().insert(Chunk(request)).id());
-    }
+    chunks_command_queue.create.drain(..).for_each(|request| {
+        chunk_entities.attach_entity(request, cmds.spawn().insert(Chunk(request)).id())
+    });
 }
 
 fn destroy_chunks(
@@ -104,7 +102,6 @@ fn destroy_chunks(
     mut chunk_entities: ResMut<ChunkEntities>,
     mut cmds: Commands,
 ) {
-    //perf: the despawning should be split between multiple frames so it doesn't freeze when despawning all the chunk entities.
     for command in chunks_command_queue.destroy.drain(..) {
         cmds.entity(chunk_entities.detach_entity(command).unwrap())
             .despawn();

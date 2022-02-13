@@ -15,26 +15,21 @@ use crate::voxel::storage::{VoxelBuffer, VoxelMap};
 
 /// Queues the terrain gen async tasks for the newly created chunks.
 fn queue_terrain_gen(
-    mut chunk_data: ResMut<VoxelMap<Voxel, ChunkShape>>,
     mut commands: Commands,
     new_chunks: Query<(Entity, &Chunk), Added<Chunk>>,
     task_pool: Res<AsyncComputeTaskPool>,
 ) {
     new_chunks
         .iter()
-        .filter_map(|(entity, key)| {
-            chunk_data
-                .remove(&key.0)
-                .and_then(|chunk_data| Some((entity, key, chunk_data)))
-        })
-        .map(|(entity, _key, mut chunk_data)| {
+        .map(|(entity, _key)| {
             (
                 entity,
                 (TerrainGenTask(task_pool.spawn(async move {
-                    for x in (0..CHUNK_LENGTH).step_by(31) {
+                    let mut chunk_data = VoxelBuffer::<Voxel, ChunkShape>::new_empty(ChunkShape {});
+
+                    for x in 0..CHUNK_LENGTH {
                         for z in 0..CHUNK_LENGTH {
                             *chunk_data.voxel_at_mut([x, 0, z].into()) = Voxel(1);
-                            *chunk_data.voxel_at_mut([z, 0, x].into()) = Voxel(1);
                         }
                     }
                     chunk_data
