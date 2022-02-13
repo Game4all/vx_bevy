@@ -32,11 +32,11 @@ fn attach_chunk_animation(
 
 /// Steps the chunk animation by one frame.
 fn step_chunk_animation(
-    mut chunks: Query<(Entity, &mut Transform, &Chunk, &mut ChunkSpawnAnimation)>,
+    mut chunks: Query<(Entity, &mut Transform, &Chunk, &ChunkSpawnAnimation)>,
     time: Res<Time>,
     mut commands: Commands,
 ) {
-    chunks.for_each_mut(|(entity, mut transform, chunk, mut animation)| {
+    chunks.for_each_mut(|(entity, mut transform, _chunk, animation)| {
         let delta = (time.time_since_startup().as_secs_f32() - animation.start_time)
             .min(ANIMATION_DURATION);
 
