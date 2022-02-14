@@ -5,7 +5,7 @@ use super::storage::{VoxelMap, VoxelMapKey};
 
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
-pub use chunks::{ChunkLoadingRadius, DirtyChunks, CurrentLocalPlayerChunk};
+pub use chunks::{ChunkLoadRadius, DirtyChunks, CurrentLocalPlayerChunk};
 
 /// Stuff and utilities for generating terrain.
 mod terrain;

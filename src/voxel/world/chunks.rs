@@ -33,7 +33,7 @@ fn update_player_pos(
 /// Run criteria for the [`update_view_chunks`] system
 fn update_view_chunks_criteria(
     chunk_pos: Res<CurrentLocalPlayerChunk>,
-    view_distance: Res<ChunkLoadingRadius>,
+    view_distance: Res<ChunkLoadRadius>,
 ) -> ShouldRun {
     if chunk_pos.is_changed() || view_distance.is_changed() {
         ShouldRun::Yes
@@ -47,14 +47,14 @@ fn update_view_chunks(
     player_pos: Res<CurrentLocalPlayerChunk>,
     chunks: Res<VoxelMap<Voxel, ChunkShape>>,
     chunk_entities: Res<ChunkEntities>,
-    view_radius: Res<ChunkLoadingRadius>,
+    view_radius: Res<ChunkLoadRadius>,
     mut chunk_command_queue: ResMut<ChunkCommandQueue>,
 ) {
     // quick n dirty circular chunk loading.
     //perf: optimize this.
-    for x in -view_radius.0..view_radius.0 {
-        for z in -view_radius.0..view_radius.0 {
-            if x.pow(2) + z.pow(2) >= view_radius.0.pow(2) {
+    for x in -view_radius.horizontal..view_radius.horizontal {
+        for z in -view_radius.horizontal..view_radius.horizontal {
+            if x.pow(2) + z.pow(2) >= view_radius.horizontal.pow(2) {
                 continue;
             }
 
@@ -73,7 +73,7 @@ fn update_view_chunks(
     for loaded_chunk in chunks.chunks.keys() {
         let delta = loaded_chunk.location() - player_pos.0.location();
         if delta.x.pow(2) + delta.y.pow(2) + delta.z.pow(2)
-            > view_radius.0.pow(2) * (CHUNK_LENGTH as i32).pow(2)
+            > view_radius.horizontal.pow(2) * (CHUNK_LENGTH as i32).pow(2)
         {
             chunk_command_queue.destroy.push(*loaded_chunk);
         }
@@ -178,37 +178,43 @@ impl DirtyChunks {
 pub struct CurrentLocalPlayerChunk(pub ChunkKey);
 
 // Resource holding the view distance.
-pub struct ChunkLoadingRadius(pub i32);
+pub struct ChunkLoadRadius {
+    pub horizontal: i32,
+    pub vertical: i32,
+}
 
 impl Plugin for VoxelWorldChunkingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.insert_resource::<ChunkLoadingRadius>(ChunkLoadingRadius(16))
-            .init_resource::<ChunkEntities>()
-            .insert_resource(CurrentLocalPlayerChunk(ChunkKey::from_ivec3(IVec3::ZERO)))
-            .init_resource::<ChunkCommandQueue>()
-            .init_resource::<DirtyChunks>()
-            .add_stage_after(
-                CoreStage::Update,
-                ChunkLoadingStage,
-                SystemStage::parallel()
-                    .with_system(update_player_pos.label(ChunkLoadingSystem::UpdatePlayerPos))
-                    .with_system(
-                        update_view_chunks
-                            .label(ChunkLoadingSystem::UpdateViewChunks)
-                            .after(ChunkLoadingSystem::UpdatePlayerPos)
-                            .with_run_criteria(update_view_chunks_criteria),
-                    )
-                    .with_system(
-                        create_chunks
-                            .label(ChunkLoadingSystem::CreateChunks)
-                            .after(ChunkLoadingSystem::UpdateViewChunks),
-                    ),
-            )
-            .add_system_to_stage(CoreStage::Last, destroy_chunks)
-            .add_system_to_stage(
-                CoreStage::Last,
-                clear_dirty_chunks.label(ChunkLoadingSystem::ClearDirtyChunks),
-            );
+        app.insert_resource::<ChunkLoadRadius>(ChunkLoadRadius {
+            horizontal: 16,
+            vertical: 4,
+        })
+        .init_resource::<ChunkEntities>()
+        .insert_resource(CurrentLocalPlayerChunk(ChunkKey::from_ivec3(IVec3::ZERO)))
+        .init_resource::<ChunkCommandQueue>()
+        .init_resource::<DirtyChunks>()
+        .add_stage_after(
+            CoreStage::Update,
+            ChunkLoadingStage,
+            SystemStage::parallel()
+                .with_system(update_player_pos.label(ChunkLoadingSystem::UpdatePlayerPos))
+                .with_system(
+                    update_view_chunks
+                        .label(ChunkLoadingSystem::UpdateViewChunks)
+                        .after(ChunkLoadingSystem::UpdatePlayerPos)
+                        .with_run_criteria(update_view_chunks_criteria),
+                )
+                .with_system(
+                    create_chunks
+                        .label(ChunkLoadingSystem::CreateChunks)
+                        .after(ChunkLoadingSystem::UpdateViewChunks),
+                ),
+        )
+        .add_system_to_stage(CoreStage::Last, destroy_chunks)
+        .add_system_to_stage(
+            CoreStage::Last,
+            clear_dirty_chunks.label(ChunkLoadingSystem::ClearDirtyChunks),
+        );
     }
 }
 
