@@ -80,6 +80,7 @@ fn update_view_chunks(
         let delta = loaded_chunk.location() - player_pos.0.location();
         if delta.x.pow(2) + delta.z.pow(2)
             > view_radius.horizontal.pow(2) * (CHUNK_LENGTH as i32).pow(2)
+            || delta.y.pow(2) > view_radius.vertical.pow(2) * (CHUNK_LENGTH as i32).pow(2)
         {
             chunk_command_queue.destroy.push(*loaded_chunk);
         }
