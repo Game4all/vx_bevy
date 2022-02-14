@@ -9,7 +9,9 @@ use bevy_egui::{
     EguiContext, EguiPlugin,
 };
 
-use crate::voxel::{storage::VoxelMap, ChunkLoadingRadius, ChunkShape, DirtyChunks, Voxel};
+use crate::voxel::{
+    storage::VoxelMap, ChunkLoadingRadius, ChunkShape, CurrentLocalPlayerChunk, DirtyChunks, Voxel,
+};
 
 fn display_debug_stats(mut egui: ResMut<EguiContext>, diagnostics: Res<Diagnostics>) {
     egui::Window::new("performance stuff").show(egui.ctx_mut(), |ui| {
@@ -36,6 +38,7 @@ fn display_chunk_stats(
     mut egui: ResMut<EguiContext>,
     chunk_map: Res<VoxelMap<Voxel, ChunkShape>>,
     dirty_chunks: Res<DirtyChunks>,
+    player_pos: Res<CurrentLocalPlayerChunk>,
     mut chunk_loading_radius: ResMut<ChunkLoadingRadius>,
 ) {
     egui::Window::new("voxel world stuff").show(egui.ctx_mut(), |ui| {
@@ -49,6 +52,8 @@ fn display_chunk_stats(
         ui.label("Chunk loading radius");
         ui.add(Slider::new(&mut chunk_loading_radius.0, 16..=32));
         ui.separator();
+        ui.heading("Current chunk");
+        ui.label(format!("{:?}", player_pos.0.location()));
     });
 }
 
