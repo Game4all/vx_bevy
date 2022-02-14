@@ -7,12 +7,14 @@ pub fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>
         key.location().z as f32,
         CHUNK_LENGTH as usize,
     )
-    .with_octaves(4)
+    .with_octaves(5)
     .generate()
     .0
     .iter()
-    .map(|x| x * 128.0)
-    .map(|x| (10. + x).min(31.) as u32)
+    .map(|x| (x * 256.0).round() as i32)
+    .map(|x| x - key.location().y)
+    .map(|x| x.max(0).min((CHUNK_LENGTH - 1) as i32))
+    .map(|x| x as u32)
     .collect();
 
     for x in 0..CHUNK_LENGTH {

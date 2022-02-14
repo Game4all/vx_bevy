@@ -49,7 +49,7 @@ fn display_chunk_stats(
             dirty_chunks.num_dirty()
         ));
         ui.separator();
-        ui.label("Chunk loading radius");
+        ui.label(" Horizontal chunk loading radius");
         ui.add(Slider::new(&mut chunk_loading_radius.horizontal, 16..=32));
         ui.separator();
         ui.heading("Current chunk");

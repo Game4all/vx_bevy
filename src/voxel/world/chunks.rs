@@ -20,7 +20,7 @@ fn update_player_pos(
         let player_coords = ply.translation.floor();
         let nearest_chunk_origin = IVec3::new(
             (player_coords.x as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
-            0,
+            (player_coords.y as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
             (player_coords.z as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
         );
 
@@ -54,17 +54,23 @@ fn update_view_chunks(
     //perf: optimize this.
     for x in -view_radius.horizontal..view_radius.horizontal {
         for z in -view_radius.horizontal..view_radius.horizontal {
-            if x.pow(2) + z.pow(2) >= view_radius.horizontal.pow(2) {
-                continue;
-            }
+            for y in -view_radius.vertical..view_radius.vertical {
+                if x.pow(2) + z.pow(2) >= view_radius.horizontal.pow(2) {
+                    continue;
+                }
 
-            let chunk_key = ChunkKey::from_ivec3(
-                player_pos.0.location()
-                    + IVec3::new(x * CHUNK_LENGTH as i32, 0, z * CHUNK_LENGTH as i32),
-            );
+                let chunk_key = ChunkKey::from_ivec3(
+                    player_pos.0.location()
+                        + IVec3::new(
+                            x * CHUNK_LENGTH as i32,
+                            y * CHUNK_LENGTH as i32,
+                            z * CHUNK_LENGTH as i32,
+                        ),
+                );
 
-            if chunk_entities.entity(chunk_key).is_none() {
-                chunk_command_queue.create.push(chunk_key);
+                if chunk_entities.entity(chunk_key).is_none() {
+                    chunk_command_queue.create.push(chunk_key);
+                }
             }
         }
     }
@@ -72,7 +78,7 @@ fn update_view_chunks(
     // quick n dirty circular chunk !loading.
     for loaded_chunk in chunks.chunks.keys() {
         let delta = loaded_chunk.location() - player_pos.0.location();
-        if delta.x.pow(2) + delta.y.pow(2) + delta.z.pow(2)
+        if delta.x.pow(2) + delta.z.pow(2)
             > view_radius.horizontal.pow(2) * (CHUNK_LENGTH as i32).pow(2)
         {
             chunk_command_queue.destroy.push(*loaded_chunk);
