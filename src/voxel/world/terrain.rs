@@ -9,9 +9,12 @@ use futures_lite::future;
 
 use super::{
     chunks::{ChunkLoadingStage, DirtyChunks},
-    Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
+    Chunk, ChunkShape, Voxel,
 };
-use crate::voxel::storage::{VoxelBuffer, VoxelMap};
+use crate::voxel::{
+    storage::{VoxelBuffer, VoxelMap},
+    terrain,
+};
 
 /// Queues the terrain gen async tasks for the newly created chunks.
 fn queue_terrain_gen(
@@ -21,17 +24,13 @@ fn queue_terrain_gen(
 ) {
     new_chunks
         .iter()
-        .map(|(entity, _key)| {
+        .map(|(entity, key)| (entity, key.0.clone()))
+        .map(|(entity, key)| {
             (
                 entity,
                 (TerrainGenTask(task_pool.spawn(async move {
                     let mut chunk_data = VoxelBuffer::<Voxel, ChunkShape>::new_empty(ChunkShape {});
-
-                    for x in 0..CHUNK_LENGTH {
-                        for z in 0..CHUNK_LENGTH {
-                            *chunk_data.voxel_at_mut([x, 0, z].into()) = Voxel(1);
-                        }
-                    }
+                    terrain::generate_terrain(key, &mut chunk_data);
                     chunk_data
                 }))),
             )

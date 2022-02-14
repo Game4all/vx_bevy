@@ -7,3 +7,6 @@ pub use world::*;
 
 ///! Systems and utilities for rendering voxels.
 pub mod render;
+
+///! Systems for generating terrain.
+pub mod terrain;
