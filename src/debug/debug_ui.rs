@@ -52,8 +52,12 @@ fn display_chunk_stats(
         ui.label(" Horizontal chunk loading radius");
         ui.add(Slider::new(&mut chunk_loading_radius.horizontal, 16..=32));
         ui.separator();
-        ui.heading("Current chunk");
-        ui.label(format!("{:?}", player_pos.0.location()));
+        ui.heading("Current player position");
+        ui.label(format!("Current position : {}", player_pos.world_pos));
+        ui.label(format!(
+            "Current chunk : {}",
+            player_pos.chunk_pos.location()
+        ));
     });
 }
 

@@ -24,8 +24,10 @@ fn update_player_pos(
             (player_coords.z as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
         );
 
-        if chunk_pos.0.location() != nearest_chunk_origin {
-            chunk_pos.0 = ChunkKey::from_ivec3(nearest_chunk_origin);
+        chunk_pos.world_pos = player_coords.as_ivec3();
+
+        if chunk_pos.chunk_pos.location() != nearest_chunk_origin {
+            chunk_pos.chunk_pos = ChunkKey::from_ivec3(nearest_chunk_origin);
         }
     }
 }
@@ -60,7 +62,7 @@ fn update_view_chunks(
                 }
 
                 let chunk_key = ChunkKey::from_ivec3(
-                    player_pos.0.location()
+                    player_pos.chunk_pos.location()
                         + IVec3::new(
                             x * CHUNK_LENGTH as i32,
                             y * CHUNK_LENGTH as i32,
@@ -77,7 +79,7 @@ fn update_view_chunks(
 
     // quick n dirty circular chunk !loading.
     for loaded_chunk in chunks.chunks.keys() {
-        let delta = loaded_chunk.location() - player_pos.0.location();
+        let delta = loaded_chunk.location() - player_pos.chunk_pos.location();
         if delta.x.pow(2) + delta.z.pow(2)
             > view_radius.horizontal.pow(2) * (CHUNK_LENGTH as i32).pow(2)
             || delta.y.pow(2) > view_radius.vertical.pow(2) * (CHUNK_LENGTH as i32).pow(2)
@@ -89,7 +91,7 @@ fn update_view_chunks(
     // load chunks starting from the player position
     chunk_command_queue
         .create
-        .sort_unstable_by_key(|key| key.distance(&player_pos.0));
+        .sort_unstable_by_key(|key| key.distance(&player_pos.chunk_pos));
 }
 
 /// Creates the requested chunks and attach them an ECS entity.
@@ -181,8 +183,11 @@ impl DirtyChunks {
     }
 }
 
-/// Resource storing the current chunk the player is in.
-pub struct CurrentLocalPlayerChunk(pub ChunkKey);
+/// Resource storing the current chunk the player is in as well as its current coords.
+pub struct CurrentLocalPlayerChunk {
+    pub chunk_pos: ChunkKey,
+    pub world_pos: IVec3,
+}
 
 // Resource holding the view distance.
 pub struct ChunkLoadRadius {
@@ -197,7 +202,10 @@ impl Plugin for VoxelWorldChunkingPlugin {
             vertical: 4,
         })
         .init_resource::<ChunkEntities>()
-        .insert_resource(CurrentLocalPlayerChunk(ChunkKey::from_ivec3(IVec3::ZERO)))
+        .insert_resource(CurrentLocalPlayerChunk {
+            chunk_pos: ChunkKey::from_ivec3(IVec3::ZERO),
+            world_pos: IVec3::ZERO,
+        })
         .init_resource::<ChunkCommandQueue>()
         .init_resource::<DirtyChunks>()
         .add_stage_after(
