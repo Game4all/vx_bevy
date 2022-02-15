@@ -9,6 +9,8 @@ use block_mesh::{greedy_quads, GreedyQuadsBuffer, MergeVoxel, Voxel, RIGHT_HANDE
 use ndcopy::copy3;
 use ndshape::{Shape, Shape3u32};
 
+use super::VoxelMesh;
+
 /// Intermediate buffers for greedy meshing of voxel data which are reusable between frames to not allocate.
 pub struct MeshBuffers<T, S: Shape<u32, 3>>
 where
@@ -105,9 +107,11 @@ pub fn mesh_buffer<T, S>(
         Mesh::ATTRIBUTE_NORMAL,
         VertexAttributeValues::Float32x3(normals),
     );
+
+    //todo: encode mesh normal and material index into this.
     render_mesh.set_attribute(
-        Mesh::ATTRIBUTE_UV_0,
-        VertexAttributeValues::Float32x2(vec![[0.0; 2]; num_vertices]),
+        VoxelMesh::ATTRIBUTE_DATA,
+        VertexAttributeValues::Sint32(vec![0x001i32; num_vertices]),
     );
 
     render_mesh.set_indices(Some(Indices::U32(indices.clone())));

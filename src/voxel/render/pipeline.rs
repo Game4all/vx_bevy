@@ -1,16 +1,18 @@
+use std::mem::size_of;
+
 use bevy::core_pipeline::Transparent3d;
-use bevy::pbr::{
-    DrawMesh, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup,
-};
+use bevy::pbr::{DrawMesh, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup};
 use bevy::prelude::{
     Bundle, ComputedVisibility, Entity, GlobalTransform, Mesh, Msaa, Query, Res, ResMut, Transform,
     Visibility, With,
 };
+
 use bevy::render::primitives::Aabb;
 use bevy::render::render_asset::RenderAssets;
 use bevy::render::render_phase::{AddRenderCommand, DrawFunctions, RenderPhase, SetItemPipeline};
 use bevy::render::render_resource::{
-    RenderPipelineCache, SpecializedPipeline, SpecializedPipelines,
+    RenderPipelineCache, SpecializedPipeline, SpecializedPipelines, VertexAttribute,
+    VertexBufferLayout, VertexFormat,
 };
 use bevy::render::view::ExtractedView;
 use bevy::render::RenderStage;
@@ -26,6 +28,10 @@ use bevy::{
 #[derive(Component, Clone, Default)]
 /// A marker component for voxel meshes.
 pub struct VoxelMesh;
+
+impl VoxelMesh {
+    pub const ATTRIBUTE_DATA: &'static str = "Vertex_Data";
+}
 
 impl ExtractComponent for VoxelMesh {
     type Query = &'static VoxelMesh;
@@ -65,6 +71,27 @@ impl SpecializedPipeline for VoxelMeshRenderPipeline {
         let mut descriptor = self.mesh_pipeline.specialize(key);
         descriptor.vertex.shader = self.shader.clone();
         descriptor.fragment.as_mut().unwrap().shader = self.shader.clone();
+        descriptor.vertex.buffers = vec![VertexBufferLayout {
+            array_stride: 28,
+            step_mode: bevy::render::render_resource::VertexStepMode::Vertex,
+            attributes: vec![
+                VertexAttribute {
+                    format: VertexFormat::Float32x3, //Vertex_Position
+                    offset: (size_of::<[i32; 3]>() + size_of::<i32>()) as u64,
+                    shader_location: 0,
+                },
+                VertexAttribute {
+                    format: VertexFormat::Float32x3, //Vertex_Normal
+                    offset: size_of::<i32>() as u64,
+                    shader_location: 1,
+                },
+                VertexAttribute {
+                    format: VertexFormat::Sint32, //Vertex_Color
+                    offset: 0,
+                    shader_location: 2,
+                },
+            ],
+        }];
         descriptor
     }
 }
@@ -85,8 +112,7 @@ fn queue_voxel_meshes(
     for (view, mut transparent_phase) in views.iter_mut() {
         let view_matrix = view.transform.compute_matrix();
         let view_row_2 = view_matrix.row(2);
-
-        let add_render_phase =
+        material_meshes.for_each(
             |(entity, mesh_handle, mesh_uniform): (Entity, &Handle<Mesh>, &MeshUniform)| {
                 if let Some(mesh) = render_meshes.get(mesh_handle) {
                     transparent_phase.add(Transparent3d {
@@ -100,8 +126,8 @@ fn queue_voxel_meshes(
                         distance: view_row_2.dot(mesh_uniform.transform.col(3)),
                     });
                 }
-            };
-        material_meshes.for_each(add_render_phase);
+            },
+        )
     }
 }
 
@@ -120,7 +146,7 @@ pub struct VoxelMeshBundle {
     pub global_transform: GlobalTransform,
     pub visibility: Visibility,
     pub computed_visibility: ComputedVisibility,
-    pub aabb: Aabb
+    pub aabb: Aabb,
 }
 
 pub struct VoxelMeshRenderPipelinePlugin;
