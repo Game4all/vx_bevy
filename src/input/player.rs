@@ -93,8 +93,7 @@ pub fn handle_player_input(
     }
 
     // hardcoding 0.10 as a factor for now to not go zoomin across the world.
-    transform.translation +=
-        direction.x * right * 0.10 + direction.z * forward * 0.10 + direction.y * Vec3::Y * 0.10;
+    transform.translation += direction.x * right + direction.z * forward + direction.y * Vec3::Y;
 }
 
 pub struct PlayerControllerPlugin;
