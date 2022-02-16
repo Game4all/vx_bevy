@@ -1,9 +1,10 @@
 #import bevy_pbr::mesh_view_bind_group
 #import bevy_pbr::mesh_struct
+#import "shaders/voxel.wgsl"
 
 struct Vertex {
     [[location(0)]] position: vec3<f32>;
-    [[location(1)]] normal: vec3<f32>;
+    [[location(1)]] data: u32;
 };
 
 [[group(1), binding(0)]]
@@ -20,7 +21,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 
     var out: VertexOutput;
     out.clip_position = view.view_proj * world_position;
-    out.normal_pt = vertex.normal;
+    out.normal_pt = voxel_data_extract_normal(vertex.data);
 
     return out;
 }

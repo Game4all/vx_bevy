@@ -72,23 +72,18 @@ impl SpecializedPipeline for VoxelMeshRenderPipeline {
         descriptor.vertex.shader = self.shader.clone();
         descriptor.fragment.as_mut().unwrap().shader = self.shader.clone();
         descriptor.vertex.buffers = vec![VertexBufferLayout {
-            array_stride: 28,
+            array_stride: 16,
             step_mode: bevy::render::render_resource::VertexStepMode::Vertex,
             attributes: vec![
                 VertexAttribute {
                     format: VertexFormat::Float32x3, //Vertex_Position
-                    offset: (size_of::<[i32; 3]>() + size_of::<i32>()) as u64,
+                    offset: size_of::<u32>() as u64,
                     shader_location: 0,
                 },
                 VertexAttribute {
-                    format: VertexFormat::Float32x3, //Vertex_Normal
-                    offset: size_of::<i32>() as u64,
-                    shader_location: 1,
-                },
-                VertexAttribute {
-                    format: VertexFormat::Sint32, //Vertex_Color
+                    format: VertexFormat::Uint32, //Vertex_Data
                     offset: 0,
-                    shader_location: 2,
+                    shader_location: 1,
                 },
             ],
         }];

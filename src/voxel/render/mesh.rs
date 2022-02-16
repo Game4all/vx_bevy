@@ -81,20 +81,22 @@ pub fn mesh_buffer<T, S>(
     let num_vertices = mesh_buffers.greedy_buffer.quads.num_quads() * 4;
     let mut indices = Vec::with_capacity(num_indices);
     let mut positions = Vec::with_capacity(num_vertices);
-    let mut normals = Vec::with_capacity(num_vertices);
+    let mut data = Vec::with_capacity(num_vertices);
 
-    for (group, face) in mesh_buffers
+    //normal face index depends on the quad orientation config
+    for (block_face_normal_index, (group, face)) in mesh_buffers
         .greedy_buffer
         .quads
         .groups
         .as_ref()
         .into_iter()
         .zip(RIGHT_HANDED_Y_UP_CONFIG.faces.into_iter())
+        .enumerate()
     {
         for quad in group.into_iter() {
             indices.extend_from_slice(&face.quad_mesh_indices(positions.len() as u32));
             positions.extend_from_slice(&face.quad_mesh_positions(&quad, scale));
-            normals.extend_from_slice(&face.quad_mesh_normals());
+            data.extend_from_slice(&[(block_face_normal_index as u32) << 8u32; 4]);
         }
     }
 
@@ -103,15 +105,10 @@ pub fn mesh_buffer<T, S>(
         VertexAttributeValues::Float32x3(positions),
     );
 
-    render_mesh.set_attribute(
-        Mesh::ATTRIBUTE_NORMAL,
-        VertexAttributeValues::Float32x3(normals),
-    );
-
-    //todo: encode mesh normal and material index into this.
+    //todo: in the future we might want to encode all the information onto a single uint32
     render_mesh.set_attribute(
         VoxelMesh::ATTRIBUTE_DATA,
-        VertexAttributeValues::Sint32(vec![0x001i32; num_vertices]),
+        VertexAttributeValues::Uint32(data),
     );
 
     render_mesh.set_indices(Some(Indices::U32(indices.clone())));
