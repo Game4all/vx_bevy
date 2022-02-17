@@ -61,14 +61,18 @@ fn update_view_chunks(
                     continue;
                 }
 
-                let chunk_key = ChunkKey::from_ivec3(
-                    player_pos.chunk_pos.location()
+                let chunk_key = {
+                    let mut pos = player_pos.chunk_pos.location()
                         + IVec3::new(
                             x * CHUNK_LENGTH as i32,
                             y * CHUNK_LENGTH as i32,
                             z * CHUNK_LENGTH as i32,
-                        ),
-                );
+                        );
+
+                    pos.y = pos.y.max(0);
+
+                    ChunkKey::from_ivec3(pos)
+                };
 
                 if chunk_entities.entity(chunk_key).is_none() {
                     chunk_command_queue.create.push(chunk_key);
