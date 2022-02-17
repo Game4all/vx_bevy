@@ -63,7 +63,7 @@ fn queue_mesh_tasks(
         .map(|(buffer, entity)| {
             (
                 entity,
-                ChunkMeshTask(task_pool.spawn(async move {
+                ChunkMeshingTask(task_pool.spawn(async move {
                     let mut mesh_buffers = SHARED_MESH_BUFFERS
                         .get_or(|| {
                             RefCell::new(MeshBuffers::<Voxel, ChunkShape>::new(ChunkShape {}))
@@ -86,7 +86,12 @@ fn queue_mesh_tasks(
 fn process_mesh_tasks(
     mut meshes: ResMut<Assets<Mesh>>,
     mut chunk_query: Query<
-        (Entity, &Handle<Mesh>, &mut ChunkMeshTask, &mut Visibility),
+        (
+            Entity,
+            &Handle<Mesh>,
+            &mut ChunkMeshingTask,
+            &mut Visibility,
+        ),
         With<Chunk>,
     >,
     mut commands: Commands,
@@ -95,18 +100,18 @@ fn process_mesh_tasks(
         if let Some(mesh) = future::block_on(future::poll_once(&mut mesh_task.0)) {
             *meshes.get_mut(handle).unwrap() = mesh;
             visibility.is_visible = true;
-            commands.entity(entity).remove::<ChunkMeshTask>();
+            commands.entity(entity).remove::<ChunkMeshingTask>();
         }
     });
 }
 
 /// A stage existing solely for enabling the use of change detection.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
-pub struct ChunkRenderingPrepareStage;
+pub struct ChunkMeshingPrepareStage;
 
-/// Label for the stage housing the chunk rendering systems.
+/// Label for the stage housing the chunk meshing systems.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
-pub struct ChunkRenderingStage;
+pub struct ChunkMeshingStage;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
 pub enum ChunkRenderingSystem {
@@ -117,19 +122,19 @@ pub enum ChunkRenderingSystem {
     ProcessMeshTasks,
 }
 
-/// Handles the rendering of the chunks.
-pub struct VoxelWorldRenderingPlugin;
+/// Handles the meshing of the chunks.
+pub struct VoxelWorldMeshingPlugin;
 
-impl Plugin for VoxelWorldRenderingPlugin {
+impl Plugin for VoxelWorldMeshingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_stage_after(
             ChunkLoadingStage,
-            ChunkRenderingPrepareStage,
+            ChunkMeshingPrepareStage,
             SystemStage::single(prepare_chunks),
         )
         .add_stage_after(
-            ChunkRenderingPrepareStage,
-            ChunkRenderingStage,
+            ChunkMeshingPrepareStage,
+            ChunkMeshingStage,
             SystemStage::parallel()
                 .with_system(queue_mesh_tasks.label(ChunkRenderingSystem::QueueMeshTasks))
                 .with_system(
@@ -142,4 +147,4 @@ impl Plugin for VoxelWorldRenderingPlugin {
 }
 
 #[derive(Component)]
-struct ChunkMeshTask(Task<Mesh>);
+pub struct ChunkMeshingTask(Task<Mesh>);

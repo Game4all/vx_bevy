@@ -13,7 +13,7 @@ mod terrain;
 mod voxel;
 pub use voxel::*;
 
-mod render;
+mod meshing;
 
 mod chunks_anim;
 
@@ -24,7 +24,7 @@ impl Plugin for VoxelWorldPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(VoxelMap::<Voxel, ChunkShape>::new(ChunkShape {}))
             .add_plugin(chunks::VoxelWorldChunkingPlugin)
-            .add_plugin(render::VoxelWorldRenderingPlugin)
+            .add_plugin(meshing::VoxelWorldMeshingPlugin)
             // ordering of plugin insertion matters here.
             .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
             .add_plugin(super::render::VoxelMeshRenderPipelinePlugin)
