@@ -1,6 +1,8 @@
 #import bevy_pbr::mesh_view_bind_group
 #import bevy_pbr::mesh_struct
-#import "shaders/voxel.wgsl"
+
+#import "shaders/voxel_data.wgsl"
+//#import "shaders/voxel_material.wgsl"
 
 struct Vertex {
     [[location(0)]] position: vec3<f32>;

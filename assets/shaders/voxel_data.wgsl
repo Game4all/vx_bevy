@@ -24,17 +24,6 @@ var<private> VOXEL_NORMALS: array<vec3<f32>, 6> = array<vec3<f32>, 6>(
     vec3<f32>(0., 0., 1.), 
 );
 
-struct VoxelMaterial {
-    base_color: vec4<f32>;
-};
-
-struct VoxelMaterials {
-    materials: array<VoxelMaterial, 256u>;
-};
-
-[[group(2), binding(0)]]
-var<uniform> VOXEL_MATERIALS: VoxelMaterials;
-
 // Extracts the normal face index from the encoded voxel data
 fn voxel_data_extract_normal(voxel_data: u32) -> vec3<f32> {
     return VOXEL_NORMALS[voxel_data >> 8u & 7u];
@@ -48,6 +37,7 @@ fn voxel_data_extract_normal(voxel_data: u32) -> vec3<f32> {
 //     );
 // }
 
-fn voxel_data_extract_material(voxel_data: u32) -> vec4<f32> {
-    return VOXEL_MATERIALS.materials[voxel_data & 255u].base_color;    
+// Extracts the material index from the encoded voxel data
+fn voxel_data_extract_material_index(voxel_data: u32) -> u32 {
+    return voxel_data & 255u;
 }
