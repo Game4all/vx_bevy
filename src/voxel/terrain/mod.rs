@@ -11,9 +11,9 @@ pub fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>
     .generate()
     .0
     .iter()
-    .map(|x| (x * 256.0).round() as i32)
+    .map(|x| (x * 256.0).round() as i32) //todo: add a default 128 default height
     .map(|x| x - key.location().y)
-    .map(|x| x.max(0).min((CHUNK_LENGTH - 1) as i32))
+    .map(|x| x.max(0).min((CHUNK_LENGTH) as i32))
     .map(|x| x as u32)
     .collect();
 
