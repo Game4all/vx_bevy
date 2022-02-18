@@ -47,7 +47,6 @@ fn update_view_chunks_criteria(
 /// Checks for the loaded chunks around the player and schedules loading of new chunks in sight
 fn update_view_chunks(
     player_pos: Res<CurrentLocalPlayerChunk>,
-    chunks: Res<VoxelMap<Voxel, ChunkShape>>,
     chunk_entities: Res<ChunkEntities>,
     view_radius: Res<ChunkLoadRadius>,
     mut chunk_command_queue: ResMut<ChunkCommandQueue>,
@@ -82,7 +81,7 @@ fn update_view_chunks(
     }
 
     // quick n dirty circular chunk !loading.
-    for loaded_chunk in chunks.chunks.keys() {
+    for loaded_chunk in chunk_entities.0.keys() {
         let delta = loaded_chunk.location() - player_pos.chunk_pos.location();
         if delta.x.pow(2) + delta.z.pow(2)
             > view_radius.horizontal.pow(2) * (CHUNK_LENGTH as i32).pow(2)
