@@ -1,5 +1,7 @@
 # `vx_bevy`
 
+NOTE: things are now happening in the rewrite branch.
+
 A voxel engine prototype made using the Bevy game engine.
 
 ![animated chunk loading](assets/screenshots/chunkloading.gif)
