@@ -2,6 +2,10 @@
 
 **NOTE**: `A complete rewrite from scratch is happening on this branch to take advantage of new bevy render features. Things might get split-up later on`
 
+Current state:
+
+![assets/screenshots/screenshot.png](assets/screenshots/screenshot.png)
+
 A voxel engine prototype made using the Bevy game engine, here's the todo list for this iteration.
 
 ## Feature todolist
