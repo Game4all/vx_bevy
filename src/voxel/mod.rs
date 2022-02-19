@@ -10,3 +10,6 @@ pub mod render;
 
 ///! Systems for generating terrain.
 pub mod terrain;
+
+///! Systems for defining voxel materials with physical properties.
+pub mod material;

@@ -5,7 +5,7 @@ use super::storage::{VoxelMap, VoxelMapKey};
 
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
-pub use chunks::{ChunkLoadRadius, DirtyChunks, CurrentLocalPlayerChunk};
+pub use chunks::{ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks};
 
 /// Stuff and utilities for generating terrain.
 mod terrain;
@@ -28,6 +28,7 @@ impl Plugin for VoxelWorldPlugin {
             // ordering of plugin insertion matters here.
             .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
             .add_plugin(super::render::VoxelMeshRenderPipelinePlugin)
+            .add_plugin(super::material::VoxelMaterialPlugin)
             .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin);
     }
 }
