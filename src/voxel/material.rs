@@ -18,6 +18,7 @@ pub struct VoxelMaterialRegistry {
     mat_ids: HashMap<TypeId, usize>,
 }
 
+#[allow(dead_code)]
 impl VoxelMaterialRegistry {
     #[inline]
     pub fn get_by_id(&self, id: u8) -> Option<&MaterialRegistryInfo> {
