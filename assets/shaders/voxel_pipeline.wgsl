@@ -2,7 +2,7 @@
 #import bevy_pbr::mesh_struct
 
 #import "shaders/voxel_data.wgsl"
-//#import "shaders/voxel_material.wgsl"
+#import "shaders/voxel_material.wgsl"
 
 struct Vertex {
     [[location(0)]] position: vec3<f32>;
@@ -34,5 +34,6 @@ struct Fragment {
 
 [[stage(fragment)]]
 fn fragment(frag: Fragment) -> [[location(0)]] vec4<f32> {
-    return vec4<f32>(abs(frag.normal), 1.0);
+    let color = calc_voxel_lighting(vec3<f32>(1.0, 0., 0.), frag.normal);
+    return vec4<f32>(color, 1.0);
 }

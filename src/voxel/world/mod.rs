@@ -29,7 +29,8 @@ impl Plugin for VoxelWorldPlugin {
             .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
             .add_plugin(super::render::VoxelMeshRenderPipelinePlugin)
             .add_plugin(super::material::VoxelMaterialPlugin)
-            .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin);
+            .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin)
+            .add_plugin(bevy_atmosphere::AtmospherePlugin::default());
     }
 }
 
