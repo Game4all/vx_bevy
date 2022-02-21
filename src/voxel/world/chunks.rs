@@ -8,8 +8,9 @@ use bevy::{
     utils::{HashMap, HashSet},
 };
 
-use super::{Chunk, ChunkKey, ChunkShape, Player, Voxel, CHUNK_LENGTH};
+use super::{Chunk, ChunkKey, ChunkShape, Player, CHUNK_LENGTH};
 use crate::voxel::storage::VoxelMap;
+use crate::voxel::Voxel;
 
 /// Updates the current chunk position for the current player.
 fn update_player_pos(

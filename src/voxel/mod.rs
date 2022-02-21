@@ -13,3 +13,6 @@ pub mod terrain;
 
 ///! Systems for defining voxel materials with physical properties.
 pub mod material;
+
+mod voxel;
+pub use voxel::*;

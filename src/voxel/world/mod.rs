@@ -1,7 +1,10 @@
 use bevy::prelude::{Component, Plugin};
 use ndshape::ConstShape3u32;
 
-use super::storage::{VoxelMap, VoxelMapKey};
+use super::{
+    storage::{VoxelMap, VoxelMapKey},
+    Voxel,
+};
 
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
@@ -9,9 +12,6 @@ pub use chunks::{ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks};
 
 /// Stuff and utilities for generating terrain.
 mod terrain;
-
-mod voxel;
-pub use voxel::*;
 
 mod meshing;
 
