@@ -1,4 +1,4 @@
-use super::{storage::VoxelBuffer, ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH};
+use super::{storage::VoxelBuffer, ChunkKey, ChunkShape, Grass, Rock, Voxel, CHUNK_LENGTH};
 
 pub const DEFAULT_TERRAIN_HEIGHT: u32 = 128; // equals to 4 vertical chunks
 
@@ -22,7 +22,7 @@ pub fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>
     for x in 0..CHUNK_LENGTH {
         for z in 0..CHUNK_LENGTH {
             for h in 0..heightmap[(z * CHUNK_LENGTH + x) as usize] {
-                *data.voxel_at_mut([x, h, z].into()) = Voxel(1);
+                *data.voxel_at_mut([x, h, z].into()) = Voxel(Grass::ID);
             }
         }
     }
@@ -30,7 +30,7 @@ pub fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>
     if key.location().y == 0 {
         for x in 0..CHUNK_LENGTH {
             for z in 0..CHUNK_LENGTH {
-                *data.voxel_at_mut([x, 0, z].into()) = Voxel(1);
+                *data.voxel_at_mut([x, 0, z].into()) = Voxel(Rock::ID);
             }
         }
     }

@@ -15,6 +15,9 @@ mod terrain;
 
 mod meshing;
 
+mod materials;
+pub use materials::{Dirt, Grass, Rock, Sand};
+
 mod chunks_anim;
 
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
@@ -29,6 +32,7 @@ impl Plugin for VoxelWorldPlugin {
             .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
             .add_plugin(super::render::VoxelMeshRenderPipelinePlugin)
             .add_plugin(super::material::VoxelMaterialPlugin)
+            .add_plugin(materials::VoxelWorldBaseMaterialsPlugin)
             .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin)
             .add_plugin(bevy_atmosphere::AtmospherePlugin::default());
     }
