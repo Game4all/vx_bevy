@@ -25,7 +25,7 @@ use bevy::{
     },
 };
 
-use super::gpu_material::{self, GpuVoxelMaterialArrayMeta, SetVoxelMaterialArrayBindGroup};
+use super::gpu_material::{self, GpuVoxelMaterialsMeta, SetVoxelMaterialArrayBindGroup};
 
 #[derive(Component, Clone, Default)]
 /// A marker component for voxel meshes.
@@ -61,7 +61,7 @@ impl FromWorld for VoxelMeshRenderPipeline {
                 .unwrap()
                 .load("shaders/voxel_pipeline.wgsl") as Handle<Shader>,
             material_array_layout: world
-                .get_resource::<GpuVoxelMaterialArrayMeta>()
+                .get_resource::<GpuVoxelMaterialsMeta>()
                 .unwrap()
                 .bind_group_layout
                 .clone(),

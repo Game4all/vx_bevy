@@ -1,6 +1,5 @@
 use bevy::{
-    math::UVec4,
-    prelude::{info, Plugin},
+    prelude::{info, Color, Plugin},
     utils::HashMap,
 };
 use std::{any::type_name, any::TypeId};
@@ -8,7 +7,7 @@ use std::{any::type_name, any::TypeId};
 // Registry info about a voxel material
 pub struct MaterialRegistryInfo {
     pub name: &'static str,
-    pub base_color: UVec4,
+    pub base_color: Color,
 }
 
 /// A registry for voxel material types.
@@ -44,6 +43,10 @@ impl VoxelMaterialRegistry {
         );
         self.mat_ids.insert(TypeId::of::<M>(), self.materials.len());
     }
+
+    pub fn iter_mats(&self) -> impl Iterator<Item = &MaterialRegistryInfo> {
+        self.materials.iter()
+    }
 }
 
 impl Default for VoxelMaterialRegistry {
@@ -54,7 +57,7 @@ impl Default for VoxelMaterialRegistry {
         };
 
         registry.register_material::<Void>(MaterialRegistryInfo {
-            base_color: UVec4::ZERO,
+            base_color: Color::BLACK,
             name: "Void",
         });
 

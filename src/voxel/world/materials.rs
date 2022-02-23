@@ -1,4 +1,4 @@
-use bevy::{math::{UVec4, UVec2}, prelude::Plugin};
+use bevy::prelude::Plugin;
 
 use crate::voxel::material::{MaterialRegistryInfo, VoxelMaterialRegistry};
 
@@ -37,22 +37,22 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             .unwrap();
 
         registry.register_material::<Dirt>(MaterialRegistryInfo {
-            base_color: UVec4::ZERO,
+            base_color: Default::default(),
             name: Dirt::NAME,
         });
 
         registry.register_material::<Sand>(MaterialRegistryInfo {
-            base_color: UVec4::ZERO,
+            base_color: Default::default(),
             name: Sand::NAME,
         });
 
         registry.register_material::<Grass>(MaterialRegistryInfo {
-            base_color: UVec4::new(104, 188, 68, 0),
+            base_color: Default::default(),
             name: Grass::NAME,
         });
 
         registry.register_material::<Rock>(MaterialRegistryInfo {
-            base_color: UVec4::ZERO,
+            base_color: Default::default(),
             name: Rock::NAME,
         });
     }

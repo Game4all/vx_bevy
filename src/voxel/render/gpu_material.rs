@@ -4,37 +4,34 @@ use bevy::{
     render::{
         render_phase::EntityRenderCommand,
         render_resource::{
-            std140::AsStd140, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
+            std430::{AsStd430, Std430},
+            BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
             BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, Buffer, BufferDescriptor,
             BufferSize, BufferUsages, ShaderStages,
         },
-        renderer::RenderDevice,
-        RenderApp, RenderStage,
+        renderer::{RenderDevice, RenderQueue},
+        RenderApp, RenderStage, RenderWorld,
     },
 };
 
-/// A GPU-suited representation of the PBR info for a voxel material type
-#[derive(AsStd140)]
-pub struct GpuVoxelMaterialData {
-    pub base_color: [f32; 4],
-}
+use crate::voxel::material::VoxelMaterialRegistry;
 
-#[derive(AsStd140)]
-pub struct GpuVoxelMaterialArray {
-    pub materials: [GpuVoxelMaterialData; 256],
+#[derive(AsStd430)]
+pub struct GpuVoxelMaterials {
+    pub materials: [[f32; 4]; 256],
 }
 
 /// A resource wrapping the GPU voxel material array buffer and bind group.
-pub struct GpuVoxelMaterialArrayMeta {
+pub struct GpuVoxelMaterialsMeta {
     pub bind_group_layout: BindGroupLayout,
     pub buffer: Buffer,
     pub bind_group: Option<BindGroup>,
 }
 
-impl FromWorld for GpuVoxelMaterialArrayMeta {
+impl FromWorld for GpuVoxelMaterialsMeta {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
         let render_device = world.get_resource::<RenderDevice>().unwrap();
-        GpuVoxelMaterialArrayMeta {
+        GpuVoxelMaterialsMeta {
             bind_group_layout: render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                 label: Some("voxel_engine_material_array_layout"),
                 entries: &[BindGroupLayoutEntry {
@@ -43,7 +40,7 @@ impl FromWorld for GpuVoxelMaterialArrayMeta {
                         has_dynamic_offset: false,
                         ty: bevy::render::render_resource::BufferBindingType::Uniform,
                         min_binding_size: BufferSize::new(
-                            GpuVoxelMaterialArray::std140_size_static() as u64,
+                            GpuVoxelMaterials::std430_size_static() as u64
                         ),
                     },
                     visibility: ShaderStages::VERTEX_FRAGMENT,
@@ -53,7 +50,7 @@ impl FromWorld for GpuVoxelMaterialArrayMeta {
             buffer: render_device.create_buffer(&BufferDescriptor {
                 label: None,
                 usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
-                size: GpuVoxelMaterialArray::std140_size_static() as u64,
+                size: GpuVoxelMaterials::std430_size_static() as u64,
                 mapped_at_creation: false,
             }),
             bind_group: None,
@@ -63,7 +60,7 @@ impl FromWorld for GpuVoxelMaterialArrayMeta {
 
 /// Prepares the the bind group
 fn prepare_material_array_bind_group(
-    mut material_array_bind_group: ResMut<GpuVoxelMaterialArrayMeta>,
+    mut material_array_bind_group: ResMut<GpuVoxelMaterialsMeta>,
     render_device: Res<RenderDevice>,
 ) {
     let bind_group = render_device.create_bind_group(&BindGroupDescriptor {
@@ -78,10 +75,40 @@ fn prepare_material_array_bind_group(
     material_array_bind_group.bind_group = Some(bind_group);
 }
 
+fn extract_voxel_materials(
+    mut render_world: ResMut<RenderWorld>,
+    materials: Res<VoxelMaterialRegistry>,
+) {
+    if materials.is_changed() {
+        let mut gpu_mats = GpuVoxelMaterials {
+            materials: [[0.; 4]; 256],
+        };
+
+        materials
+            .iter_mats()
+            .enumerate()
+            .for_each(|(index, material)| {
+                gpu_mats.materials[index] = material.base_color.as_linear_rgba_f32();
+            });
+
+        render_world.insert_resource(gpu_mats);
+    }
+}
+
+fn upload_voxel_materials(
+    render_queue: Res<RenderQueue>,
+    material_meta: Res<GpuVoxelMaterialsMeta>,
+    materials: Res<GpuVoxelMaterials>,
+) {
+    if materials.is_changed() {
+        render_queue.write_buffer(&material_meta.buffer, 0, materials.as_std430().as_bytes());
+    }
+}
+
 /// Binds a GPU-suited representation of voxel materials at the specified bind group index.
 pub struct SetVoxelMaterialArrayBindGroup<const I: usize>;
 impl<const I: usize> EntityRenderCommand for SetVoxelMaterialArrayBindGroup<I> {
-    type Param = SRes<GpuVoxelMaterialArrayMeta>;
+    type Param = SRes<GpuVoxelMaterialsMeta>;
 
     fn render<'w>(
         _view: Entity,
@@ -100,7 +127,9 @@ pub struct VoxelGpuMaterialPlugin;
 impl Plugin for VoxelGpuMaterialPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.sub_app_mut(RenderApp)
-            .init_resource::<GpuVoxelMaterialArrayMeta>()
-            .add_system_to_stage(RenderStage::Prepare, prepare_material_array_bind_group);
+            .init_resource::<GpuVoxelMaterialsMeta>()
+            .add_system_to_stage(RenderStage::Extract, extract_voxel_materials)
+            .add_system_to_stage(RenderStage::Prepare, prepare_material_array_bind_group)
+            .add_system_to_stage(RenderStage::Prepare, upload_voxel_materials);
     }
 }

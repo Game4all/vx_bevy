@@ -1,11 +1,7 @@
 
-// A GPU-suited representation of a voxel material.
-struct VoxelMaterial {
-    base_color: vec4<f32>;
-};
-
+// A GPU-suited representation of voxel materials.
 struct VoxelMaterials {
-    materials: array<VoxelMaterial, 256u>;
+    materials: array<vec4<f32>, 256u>;
 };
 
 [[group(2), binding(0)]]
