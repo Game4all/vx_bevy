@@ -24,6 +24,10 @@ impl VoxelMaterialRegistry {
         self.materials.get(id as usize)
     }
 
+    pub fn get_mut_by_id(&mut self, id: u8) -> Option<&mut MaterialRegistryInfo> {
+        self.materials.get_mut(id as usize)
+    }
+
     pub fn get_by_type<M: 'static>(&self) -> Option<&MaterialRegistryInfo> {
         self.mat_ids
             .get(&TypeId::of::<M>())

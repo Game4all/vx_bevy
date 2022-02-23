@@ -88,7 +88,7 @@ fn extract_voxel_materials(
             .iter_mats()
             .enumerate()
             .for_each(|(index, material)| {
-                gpu_mats.materials[index] = material.base_color.as_linear_rgba_f32();
+                gpu_mats.materials[index] = material.base_color.as_rgba_f32();
             });
 
         render_world.insert_resource(gpu_mats);

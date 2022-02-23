@@ -2,15 +2,18 @@ use bevy::{
     diagnostic::{Diagnostics, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     ecs::schedule::ShouldRun,
     input::{keyboard::KeyboardInput, ElementState},
-    prelude::{CoreStage, EventReader, KeyCode, Plugin, Res, ResMut, SystemSet, SystemStage},
+    prelude::{
+        Color, CoreStage, EventReader, KeyCode, ParallelSystemDescriptorCoercion, Plugin, Res,
+        ResMut, SystemSet, SystemStage,
+    },
 };
 use bevy_egui::{
-    egui::{self, Slider},
+    egui::{self, Rgba, Slider},
     EguiContext, EguiPlugin,
 };
 
 use crate::voxel::{
-    ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks,
+    material::VoxelMaterialRegistry, ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks,
 };
 
 fn display_debug_stats(mut egui: ResMut<EguiContext>, diagnostics: Res<Diagnostics>) {
@@ -60,22 +63,82 @@ fn display_chunk_stats(
 }
 
 fn display_debug_ui_criteria(ui_state: Res<DebugUIState>) -> ShouldRun {
-    if ui_state.0 {
+    if ui_state.display_debug_info {
         ShouldRun::Yes
     } else {
         ShouldRun::No
     }
 }
 
-fn toggle_ui_display(mut inputs: EventReader<KeyboardInput>, mut ui_state: ResMut<DebugUIState>) {
+fn display_mat_debug_ui_criteria(ui_state: Res<DebugUIState>) -> ShouldRun {
+    if ui_state.display_mat_debug {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
+fn toggle_debug_ui_displays(
+    mut inputs: EventReader<KeyboardInput>,
+    mut ui_state: ResMut<DebugUIState>,
+) {
     for input in inputs.iter() {
         match input.key_code {
             Some(key_code) if key_code == KeyCode::F3 && input.state == ElementState::Pressed => {
-                ui_state.0 = !ui_state.0;
+                ui_state.display_debug_info = !ui_state.display_debug_info;
+            }
+            Some(key_code) if key_code == KeyCode::F7 && input.state == ElementState::Pressed => {
+                ui_state.display_mat_debug = !ui_state.display_mat_debug;
             }
             _ => {}
         }
     }
+}
+
+fn display_material_editor(
+    mut egui: ResMut<EguiContext>,
+    mut ui_state: ResMut<DebugUIState>,
+    mut materials: ResMut<VoxelMaterialRegistry>,
+) {
+    egui::Window::new("material editor").show(egui.ctx_mut(), |ui| {
+        ui.heading("Select material");
+        egui::containers::ComboBox::from_label("Material")
+            .selected_text(format!(
+                "{}",
+                materials.get_by_id(ui_state.selected_mat).unwrap().name
+            ))
+            .show_ui(ui, |content| {
+                materials
+                    .iter_mats()
+                    .enumerate()
+                    .for_each(|(mat_index, mat)| {
+                        content.selectable_value(
+                            &mut ui_state.selected_mat,
+                            mat_index as u8,
+                            mat.name,
+                        );
+                    })
+            });
+
+        ui.heading("Edit material");
+        let selected_color = &mut materials
+            .get_mut_by_id(ui_state.selected_mat)
+            .unwrap()
+            .base_color;
+        let mut editable_color = Rgba::from_rgba_premultiplied(
+            selected_color.r(),
+            selected_color.g(),
+            selected_color.b(),
+            selected_color.a(),
+        );
+        egui::widgets::color_picker::color_edit_button_rgba(
+            ui,
+            &mut editable_color,
+            egui::color_picker::Alpha::Opaque,
+        );
+
+        *selected_color = Color::from(editable_color.to_array());
+    });
 }
 
 pub struct DebugUIPlugins;
@@ -89,12 +152,15 @@ impl Plugin for DebugUIPlugins {
                 CoreStage::PostUpdate,
                 "debug_ui_stage",
                 SystemStage::parallel()
-                    .with_system(toggle_ui_display)
+                    .with_system(toggle_debug_ui_displays)
                     .with_system_set(
                         SystemSet::new()
                             .with_system(display_debug_stats)
                             .with_system(display_chunk_stats)
                             .with_run_criteria(display_debug_ui_criteria),
+                    )
+                    .with_system(
+                        display_material_editor.with_run_criteria(display_mat_debug_ui_criteria),
                     ),
             )
             .init_resource::<DebugUIState>();
@@ -102,4 +168,10 @@ impl Plugin for DebugUIPlugins {
 }
 
 #[derive(Default)]
-struct DebugUIState(bool);
+struct DebugUIState {
+    display_debug_info: bool,
+    display_mat_debug: bool,
+
+    // DD
+    pub selected_mat: u8,
+}
