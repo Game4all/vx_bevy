@@ -20,6 +20,8 @@ pub use materials::{Dirt, Grass, Rock, Sand};
 
 mod chunks_anim;
 
+pub mod player;
+
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
 pub struct VoxelWorldPlugin;
 
@@ -34,13 +36,10 @@ impl Plugin for VoxelWorldPlugin {
             .add_plugin(super::material::VoxelMaterialPlugin)
             .add_plugin(materials::VoxelWorldBaseMaterialsPlugin)
             .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin)
-            .add_plugin(bevy_atmosphere::AtmospherePlugin::default());
+            .add_plugin(bevy_atmosphere::AtmospherePlugin::default())
+            .add_plugin(player::VoxelWorldPlayerControllerPlugin);
     }
 }
-
-/// Component tagging a player.
-#[derive(Component)]
-pub struct Player;
 
 pub type ChunkKey = VoxelMapKey<Voxel>;
 pub const CHUNK_LENGTH: u32 = 32;

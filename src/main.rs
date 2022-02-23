@@ -3,15 +3,12 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 mod debug;
-mod input;
 mod voxel;
 
-use input::PlayerController;
 
 fn main() {
     App::default()
         .add_plugins(DefaultPlugins)
-        .add_plugin(input::PlayerControllerPlugin)
         .add_plugin(voxel::VoxelWorldPlugin)
         .add_plugin(debug::DebugUIPlugins)
         .add_startup_system(setup)
@@ -27,6 +24,5 @@ fn setup(mut cmds: Commands) {
         transform: Transform::from_xyz(2.0, 160.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     })
-    .insert(PlayerController::default())
-    .insert(voxel::Player);
+    .insert(voxel::player::PlayerController::default());
 }

@@ -96,9 +96,9 @@ pub fn handle_player_input(
     transform.translation += direction.x * right + direction.z * forward + direction.y * Vec3::Y;
 }
 
-pub struct PlayerControllerPlugin;
+pub struct VoxelWorldPlayerControllerPlugin;
 
-impl Plugin for PlayerControllerPlugin {
+impl Plugin for VoxelWorldPlayerControllerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(handle_player_mouse_move)
             .add_system(handle_player_input);
