@@ -9,12 +9,9 @@ use futures_lite::future;
 
 use super::{
     chunks::{ChunkLoadingStage, DirtyChunks},
-    Chunk, ChunkShape, Voxel,
+    Chunk, ChunkKey, ChunkShape, Grass, Rock, Voxel, CHUNK_LENGTH,
 };
-use crate::voxel::{
-    storage::{VoxelBuffer, VoxelMap},
-    terrain,
-};
+use crate::voxel::storage::{VoxelBuffer, VoxelMap};
 
 /// Queues the terrain gen async tasks for the newly created chunks.
 fn queue_terrain_gen(
@@ -24,14 +21,14 @@ fn queue_terrain_gen(
 ) {
     new_chunks
         .iter()
-        .filter(|(_, key)| key.0.location().y < 256)
+        .filter(|(_, key)| key.0.location().y < 288)
         .map(|(entity, key)| (entity, key.0.clone()))
         .map(|(entity, key)| {
             (
                 entity,
                 (TerrainGenTask(task_pool.spawn(async move {
                     let mut chunk_data = VoxelBuffer::<Voxel, ChunkShape>::new_empty(ChunkShape {});
-                    terrain::generate_terrain(key, &mut chunk_data);
+                    generate_terrain(key, &mut chunk_data);
                     chunk_data
                 }))),
             )
@@ -91,3 +88,41 @@ impl Plugin for VoxelWorldTerrainGenPlugin {
 
 #[derive(Component)]
 struct TerrainGenTask(Task<VoxelBuffer<Voxel, ChunkShape>>);
+
+// Terrain-gen stuff
+
+const DEFAULT_TERRAIN_HEIGHT: u32 = 128; // equals to 4 vertical chunks
+
+fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>) {
+    let heightmap: Vec<u32> = simdnoise::NoiseBuilder::fbm_2d_offset(
+        key.location().x as f32,
+        CHUNK_LENGTH as usize,
+        key.location().z as f32,
+        CHUNK_LENGTH as usize,
+    )
+    .with_octaves(5)
+    .generate()
+    .0
+    .iter()
+    .map(|x| DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 256.0).round() as i32)) //todo: add a default 128 default height
+    .map(|x| x - key.location().y)
+    .map(|x| x.max(0).min((CHUNK_LENGTH) as i32))
+    .map(|x| x as u32)
+    .collect();
+
+    for x in 0..CHUNK_LENGTH {
+        for z in 0..CHUNK_LENGTH {
+            for h in 0..heightmap[(z * CHUNK_LENGTH + x) as usize] {
+                *data.voxel_at_mut([x, h, z].into()) = Voxel(Grass::ID);
+            }
+        }
+    }
+
+    if key.location().y == 0 {
+        for x in 0..CHUNK_LENGTH {
+            for z in 0..CHUNK_LENGTH {
+                *data.voxel_at_mut([x, 0, z].into()) = Voxel(Rock::ID);
+            }
+        }
+    }
+}
