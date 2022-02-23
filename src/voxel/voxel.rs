@@ -31,3 +31,13 @@ impl MergeVoxel for Voxel {
         self.0
     }
 }
+
+pub trait VoxelId {
+    fn as_mat_id(&self) -> u8;
+}
+
+impl VoxelId for Voxel {
+    fn as_mat_id(&self) -> u8 {
+        self.0
+    }
+}

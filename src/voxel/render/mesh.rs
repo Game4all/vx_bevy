@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::voxel::storage::VoxelBuffer;
+use crate::voxel::{storage::VoxelBuffer, VoxelId};
 use bevy::{
     prelude::Mesh,
     render::mesh::{Indices, VertexAttributeValues},
@@ -24,7 +24,7 @@ where
 
 impl<T, S: Shape<u32, 3>> MeshBuffers<T, S>
 where
-    T: Copy + Default + Voxel + MergeVoxel,
+    T: Copy + Default + Voxel + MergeVoxel + VoxelId,
 {
     pub fn new(shape: S) -> Self {
         let padded_shape = Shape3u32::new(shape.as_array().map(|x| x + 2));
@@ -45,7 +45,7 @@ pub fn mesh_buffer<T, S>(
     render_mesh: &mut Mesh,
     scale: f32,
 ) where
-    T: Copy + Default + Voxel + MergeVoxel,
+    T: Copy + Default + Voxel + MergeVoxel + VoxelId,
     S: Shape<u32, 3>,
 {
     mesh_buffers
@@ -96,7 +96,12 @@ pub fn mesh_buffer<T, S>(
         for quad in group.into_iter() {
             indices.extend_from_slice(&face.quad_mesh_indices(positions.len() as u32));
             positions.extend_from_slice(&face.quad_mesh_positions(&quad, scale));
-            data.extend_from_slice(&[(block_face_normal_index as u32) << 8u32; 4]);
+            data.extend_from_slice(
+                &[(block_face_normal_index as u32) << 8u32
+                    | buffer
+                        .voxel_at(quad.minimum.map(|x| x - 1).into())
+                        .as_mat_id() as u32; 4],
+            );
         }
     }
 
