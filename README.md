@@ -1,6 +1,8 @@
-# `vx_bevy`
+# backup of old readme
 
-NOTE: things are now happening in the rewrite branch.
+this is a branch containing the pre-bevy 0.6 code
+
+# `vx_bevy`
 
 A voxel engine prototype made using the Bevy game engine.
 
