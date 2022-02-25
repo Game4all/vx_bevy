@@ -6,7 +6,7 @@ use bevy::{
     },
 };
 
-use crate::voxel::render::VoxelMesh;
+use crate::voxel::render::VoxelTerrainMesh;
 
 use super::Chunk;
 
@@ -19,7 +19,7 @@ pub struct ChunkSpawnAnimation {
 }
 
 fn attach_chunk_animation(
-    ready_chunks: Query<Entity, (Added<VoxelMesh>, With<Chunk>, Changed<Visibility>)>,
+    ready_chunks: Query<Entity, (Added<VoxelTerrainMesh>, With<Chunk>, Changed<Visibility>)>,
     time: Res<Time>,
     mut commands: Commands,
 ) {

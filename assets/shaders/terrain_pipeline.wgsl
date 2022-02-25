@@ -3,6 +3,7 @@
 
 #import "shaders/voxel_data.wgsl"
 #import "shaders/voxel_material.wgsl"
+#import "shaders/noise.wgsl"
 
 struct Vertex {
     [[location(0)]] position: vec3<f32>;
@@ -16,6 +17,7 @@ struct VertexOutput {
     [[builtin(position)]] clip_position: vec4<f32>;
     [[location(0)]] normal_pt: vec3<f32>;
     [[location(1)]] data: u32;
+    [[location(2)]] world_pos: vec3<f32>;
 };
 
 [[stage(vertex)]]
@@ -26,6 +28,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     out.clip_position = view.view_proj * world_position;
     out.normal_pt = voxel_data_extract_normal(vertex.data);
     out.data = vertex.data;
+    out.world_pos = world_position.xyz;
 
     return out;
 }
@@ -33,11 +36,18 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 struct Fragment {
     [[location(0)]] normal: vec3<f32>;
     [[location(1)]] data: u32;
+    [[location(2)]] world_pos: vec3<f32>;
 };
 
 [[stage(fragment)]]
 fn fragment(frag: Fragment) -> [[location(0)]] vec4<f32> {
-    let base_col = VOXEL_MATERIALS.materials[voxel_data_extract_material_index(frag.data)];
-    let color = calc_voxel_lighting(base_col.xyz, frag.normal);
-    return vec4<f32>(color, 1.0);
+    let mat_color = VOXEL_MATERIALS.materials[voxel_data_extract_material_index(frag.data)];
+
+    // per voxel color variation
+    let color = mat_color + hash(vec4<f32>(floor(frag.world_pos - frag.normal * 0.5), 1.0)) * 0.0226;
+
+    // final voxel color with ambient lighting + normal face lighting
+    let scolor = calc_voxel_lighting(color.xyz, frag.normal);
+
+    return vec4<f32>(scolor, color.w);
 }

@@ -5,7 +5,7 @@ use super::{
     Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::voxel::{
-    render::{mesh_buffer, MeshBuffers, VoxelMeshBundle},
+    render::{mesh_buffer, MeshBuffers, VoxelTerrainMeshBundle},
     storage::VoxelMap,
 };
 use bevy::{
@@ -24,7 +24,7 @@ pub fn prepare_chunks(
     mut cmds: Commands,
 ) {
     for (chunk, chunk_key) in chunks.iter() {
-        cmds.entity(chunk).insert_bundle(VoxelMeshBundle {
+        cmds.entity(chunk).insert_bundle(VoxelTerrainMeshBundle {
             mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
             transform: Transform::from_translation(chunk_key.0.location().as_vec3()),
             visibility: Visibility { is_visible: false },

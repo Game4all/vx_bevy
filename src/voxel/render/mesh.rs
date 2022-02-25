@@ -9,7 +9,7 @@ use block_mesh::{greedy_quads, GreedyQuadsBuffer, MergeVoxel, Voxel, RIGHT_HANDE
 use ndcopy::copy3;
 use ndshape::{Shape, Shape3u32};
 
-use super::VoxelMesh;
+use super::VoxelTerrainMesh;
 
 /// Intermediate buffers for greedy meshing of voxel data which are reusable between frames to not allocate.
 pub struct MeshBuffers<T, S: Shape<u32, 3>>
@@ -112,7 +112,7 @@ pub fn mesh_buffer<T, S>(
 
     //todo: in the future we might want to encode all the information onto a single uint32
     render_mesh.set_attribute(
-        VoxelMesh::ATTRIBUTE_DATA,
+        VoxelTerrainMesh::ATTRIBUTE_DATA,
         VertexAttributeValues::Uint32(data),
     );
 

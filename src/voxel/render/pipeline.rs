@@ -29,14 +29,14 @@ use super::gpu_material::{self, GpuVoxelMaterialsMeta, SetVoxelMaterialArrayBind
 
 #[derive(Component, Clone, Default)]
 /// A marker component for voxel meshes.
-pub struct VoxelMesh;
+pub struct VoxelTerrainMesh;
 
-impl VoxelMesh {
+impl VoxelTerrainMesh {
     pub const ATTRIBUTE_DATA: &'static str = "Vertex_Data";
 }
 
-impl ExtractComponent for VoxelMesh {
-    type Query = &'static VoxelMesh;
+impl ExtractComponent for VoxelTerrainMesh {
+    type Query = &'static VoxelTerrainMesh;
 
     type Filter = ();
 
@@ -45,21 +45,21 @@ impl ExtractComponent for VoxelMesh {
     }
 }
 
-/// A render pipeline for rendering voxel meshes.
-pub struct VoxelMeshRenderPipeline {
+/// A render pipeline for rendering voxel terrain meshes.
+pub struct VoxelTerrainRenderPipeline {
     mesh_pipeline: MeshPipeline,
     shader: Handle<Shader>,
     material_array_layout: BindGroupLayout,
 }
 
-impl FromWorld for VoxelMeshRenderPipeline {
+impl FromWorld for VoxelTerrainRenderPipeline {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
-        VoxelMeshRenderPipeline {
+        VoxelTerrainRenderPipeline {
             mesh_pipeline: world.get_resource::<MeshPipeline>().unwrap().clone(),
             shader: world
                 .get_resource::<AssetServer>()
                 .unwrap()
-                .load("shaders/voxel_pipeline.wgsl") as Handle<Shader>,
+                .load("shaders/terrain_pipeline.wgsl") as Handle<Shader>,
             material_array_layout: world
                 .get_resource::<GpuVoxelMaterialsMeta>()
                 .unwrap()
@@ -69,7 +69,7 @@ impl FromWorld for VoxelMeshRenderPipeline {
     }
 }
 
-impl SpecializedPipeline for VoxelMeshRenderPipeline {
+impl SpecializedPipeline for VoxelTerrainRenderPipeline {
     type Key = MeshPipelineKey;
 
     fn specialize(
@@ -108,11 +108,11 @@ impl SpecializedPipeline for VoxelMeshRenderPipeline {
 fn queue_voxel_meshes(
     t3d_draw_funcs: Res<DrawFunctions<Transparent3d>>,
     render_meshes: Res<RenderAssets<Mesh>>,
-    voxel_pipeline: Res<VoxelMeshRenderPipeline>,
+    voxel_pipeline: Res<VoxelTerrainRenderPipeline>,
     mut pipeline_cache: ResMut<RenderPipelineCache>,
-    mut specialized_pipelines: ResMut<SpecializedPipelines<VoxelMeshRenderPipeline>>,
+    mut specialized_pipelines: ResMut<SpecializedPipelines<VoxelTerrainRenderPipeline>>,
     msaa: Res<Msaa>,
-    material_meshes: Query<(Entity, &Handle<Mesh>, &MeshUniform), With<VoxelMesh>>,
+    material_meshes: Query<(Entity, &Handle<Mesh>, &MeshUniform), With<VoxelTerrainMesh>>,
     mut views: Query<(&ExtractedView, &mut RenderPhase<Transparent3d>)>,
 ) {
     let draw_custom = t3d_draw_funcs.read().get_id::<DrawVoxel>().unwrap();
@@ -148,9 +148,9 @@ type DrawVoxel = (
 );
 
 #[derive(Bundle, Default)]
-pub struct VoxelMeshBundle {
+pub struct VoxelTerrainMeshBundle {
     pub mesh: Handle<Mesh>,
-    pub voxel: VoxelMesh,
+    pub voxel: VoxelTerrainMesh,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub visibility: Visibility,
@@ -162,12 +162,12 @@ pub struct VoxelMeshRenderPipelinePlugin;
 
 impl Plugin for VoxelMeshRenderPipelinePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugin(ExtractComponentPlugin::<VoxelMesh>::default())
+        app.add_plugin(ExtractComponentPlugin::<VoxelTerrainMesh>::default())
             .add_plugin(gpu_material::VoxelGpuMaterialPlugin);
         app.sub_app_mut(RenderApp)
             .add_render_command::<Transparent3d, DrawVoxel>()
-            .init_resource::<VoxelMeshRenderPipeline>()
-            .init_resource::<SpecializedPipelines<VoxelMeshRenderPipeline>>()
+            .init_resource::<VoxelTerrainRenderPipeline>()
+            .init_resource::<SpecializedPipelines<VoxelTerrainRenderPipeline>>()
             .add_system_to_stage(RenderStage::Queue, queue_voxel_meshes);
     }
 }
