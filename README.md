@@ -9,8 +9,8 @@ Current state:
 A voxel engine prototype made using the Bevy game engine, here's the todo list for this iteration.
 
 ## Feature todolist
-- [ ] Dynamic unloading / loading of chunks
-- [ ] Animated chunk loading
+- [x] Dynamic unloading / loading of chunks
+- [x] Animated chunk loading
 - [ ] Add ability to interact with the world (placing & breaking voxels)
 - [ ] Nice surface worldgen 
 
