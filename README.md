@@ -6,7 +6,7 @@ Current state:
 
 ![assets/screenshots/screenshot.png](assets/screenshots/screenshot.png)
 
-A voxel engine prototype made using the Bevy game engine, here's the todo list for this iteration.
+A voxel engine prototype made using the Bevy game engine, here's a list of features i would love to get with this prototype:
 
 ## Feature todolist
 - [x] Dynamic unloading / loading of chunks
