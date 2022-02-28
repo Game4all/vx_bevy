@@ -12,10 +12,7 @@ use super::{
     materials::Snow,
     Chunk, ChunkKey, ChunkShape, Dirt, Grass, Rock, Sand, Voxel, CHUNK_LENGTH,
 };
-use crate::voxel::{
-    material::Void,
-    storage::{VoxelBuffer, VoxelMap},
-};
+use crate::voxel::storage::{VoxelBuffer, VoxelMap};
 
 /// Queues the terrain gen async tasks for the newly created chunks.
 fn queue_terrain_gen(
