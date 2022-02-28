@@ -9,9 +9,13 @@ use futures_lite::future;
 
 use super::{
     chunks::{ChunkLoadingStage, DirtyChunks},
-    Chunk, ChunkKey, ChunkShape, Grass, Rock, Voxel, CHUNK_LENGTH,
+    materials::Snow,
+    Chunk, ChunkKey, ChunkShape, Dirt, Grass, Rock, Sand, Voxel, CHUNK_LENGTH,
 };
-use crate::voxel::storage::{VoxelBuffer, VoxelMap};
+use crate::voxel::{
+    material::Void,
+    storage::{VoxelBuffer, VoxelMap},
+};
 
 /// Queues the terrain gen async tasks for the newly created chunks.
 fn queue_terrain_gen(
@@ -113,16 +117,28 @@ fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>) {
     for x in 0..CHUNK_LENGTH {
         for z in 0..CHUNK_LENGTH {
             for h in 0..heightmap[(z * CHUNK_LENGTH + x) as usize] {
-                *data.voxel_at_mut([x, h, z].into()) = Voxel(Grass::ID);
+                *data.voxel_at_mut([x, h, z].into()) =
+                    get_mat_by_height(key.location().y as u32 + h);
             }
         }
     }
 
     if key.location().y == 0 {
         for x in 0..CHUNK_LENGTH {
-            for z in 0..CHUNK_LENGTH {
+            for z in 0..CHUNK_LENGTH.max(1) {
                 *data.voxel_at_mut([x, 0, z].into()) = Voxel(Rock::ID);
             }
         }
+    }
+}
+
+#[inline]
+fn get_mat_by_height(h: u32) -> Voxel {
+    match h {
+        0..=18 => Voxel(Sand::ID),
+        188..=192 => Voxel(Dirt::ID),
+        193..=224 => Voxel(Rock::ID),
+        225..=384 => Voxel(Snow::ID),
+        _ => Voxel(Grass::ID),
     }
 }

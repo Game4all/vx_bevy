@@ -1,4 +1,4 @@
-use bevy::prelude::{Plugin, Color};
+use bevy::prelude::{Color, Plugin};
 
 use crate::voxel::material::{MaterialRegistryInfo, VoxelMaterialRegistry};
 
@@ -27,6 +27,12 @@ impl Rock {
     pub const NAME: &'static str = "Rock";
 }
 
+pub struct Snow;
+impl Snow {
+    pub const ID: u8 = 5;
+    pub const NAME: &'static str = "Snow";
+}
+
 pub struct VoxelWorldBaseMaterialsPlugin;
 
 impl Plugin for VoxelWorldBaseMaterialsPlugin {
@@ -37,12 +43,12 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             .unwrap();
 
         registry.register_material::<Dirt>(MaterialRegistryInfo {
-            base_color: Color::MAROON,
+            base_color: Color::rgb_u8(112, 97, 92),
             name: Dirt::NAME,
         });
 
         registry.register_material::<Sand>(MaterialRegistryInfo {
-            base_color: Color::YELLOW,
+            base_color: Color::rgb_u8(228, 219, 148),
             name: Sand::NAME,
         });
 
@@ -54,6 +60,11 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         registry.register_material::<Rock>(MaterialRegistryInfo {
             base_color: Color::GRAY,
             name: Rock::NAME,
+        });
+
+        registry.register_material::<Snow>(MaterialRegistryInfo {
+            base_color: Color::WHITE,
+            name: Snow::NAME,
         });
     }
 }
