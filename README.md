@@ -5,6 +5,7 @@
 Current state:
 
 ![assets/screenshots/screenshot.png](assets/screenshots/screenshot.png)
+![assets/screenshots/clip.gif](assets/screenshots/clip.gif)
 
 A voxel engine prototype made using the Bevy game engine, here's a list of features i would love to get with this prototype:
 

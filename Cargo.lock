@@ -2864,9 +2864,8 @@ dependencies = [
 
 [[package]]
 name = "simdnoise"
-version = "3.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9f69a3fa031fc2906ffe27aecc55bdd2c9cb95327c4695ea814a083145fa462"
+version = "3.1.7"
+source = "git+https://github.com/jackmott/rust-simd-noise#3a4f3e6f79608616b6ee186dc665b601d015dc1e"
 dependencies = [
  "simdeez",
 ]

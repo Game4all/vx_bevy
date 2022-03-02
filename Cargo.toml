@@ -17,7 +17,7 @@ thread_local = "1.1.4"
 bevy_egui = "0.11.1"
 futures-lite = "1.12.0"
 lazy_static = "1.4.0"
-simdnoise = "3.1.6"
+simdnoise = { git = "https://github.com/jackmott/rust-simd-noise" }
 bevy_atmosphere = "0.2.0"
 
 [profile.dev]

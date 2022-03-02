@@ -22,7 +22,7 @@ fn queue_terrain_gen(
 ) {
     new_chunks
         .iter()
-        .filter(|(_, key)| key.0.location().y < 288)
+        .filter(|(_, key)| key.0.location().y < 352)
         .map(|(entity, key)| (entity, key.0.clone()))
         .map(|(entity, key)| {
             (
@@ -105,7 +105,7 @@ fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>) {
     .generate()
     .0
     .iter()
-    .map(|x| DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 256.0).round() as i32)) //todo: add a default 128 default height
+    .map(|x| DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 8.0).round() as i32)) //todo: add a default 128 default height
     .map(|x| x - key.location().y)
     .map(|x| x.max(0).min((CHUNK_LENGTH) as i32))
     .map(|x| x as u32)
