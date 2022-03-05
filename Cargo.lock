@@ -3188,6 +3188,7 @@ dependencies = [
  "bevy",
  "bevy_atmosphere",
  "bevy_egui",
+ "bitflags",
  "block-mesh",
  "futures-lite",
  "lazy_static",

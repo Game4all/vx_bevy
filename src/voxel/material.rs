@@ -2,12 +2,21 @@ use bevy::{
     prelude::{info, Color, Plugin},
     utils::HashMap,
 };
+use bitflags::bitflags;
 use std::{any::type_name, any::TypeId};
 
 // Registry info about a voxel material
 pub struct MaterialRegistryInfo {
     pub name: &'static str,
     pub base_color: Color,
+    pub flags: VoxelMaterialFlags,
+}
+
+bitflags! {
+    pub struct VoxelMaterialFlags : u32 {
+        const SOLID = 0 << 0;
+        const LIQUID = 1 << 1;
+    }
 }
 
 /// A registry for voxel material types.
@@ -63,6 +72,7 @@ impl Default for VoxelMaterialRegistry {
         registry.register_material::<Void>(MaterialRegistryInfo {
             base_color: Color::BLACK,
             name: "Void",
+            flags: VoxelMaterialFlags::SOLID
         });
 
         registry

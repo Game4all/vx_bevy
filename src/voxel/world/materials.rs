@@ -1,6 +1,6 @@
 use bevy::prelude::{Color, Plugin};
 
-use crate::voxel::material::{MaterialRegistryInfo, VoxelMaterialRegistry};
+use crate::voxel::material::{MaterialRegistryInfo, VoxelMaterialFlags, VoxelMaterialRegistry};
 
 pub struct Dirt;
 
@@ -33,6 +33,12 @@ impl Snow {
     pub const NAME: &'static str = "Snow";
 }
 
+pub struct Water;
+impl Water {
+    pub const ID: u8 = 6;
+    pub const NAME: &'static str = "Water";
+}
+
 pub struct VoxelWorldBaseMaterialsPlugin;
 
 impl Plugin for VoxelWorldBaseMaterialsPlugin {
@@ -45,26 +51,37 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         registry.register_material::<Dirt>(MaterialRegistryInfo {
             base_color: Color::rgb_u8(112, 97, 92),
             name: Dirt::NAME,
+            flags: VoxelMaterialFlags::SOLID,
         });
 
         registry.register_material::<Sand>(MaterialRegistryInfo {
             base_color: Color::rgb_u8(228, 219, 148),
             name: Sand::NAME,
+            flags: VoxelMaterialFlags::SOLID,
         });
 
         registry.register_material::<Grass>(MaterialRegistryInfo {
             base_color: Color::LIME_GREEN,
             name: Grass::NAME,
+            flags: VoxelMaterialFlags::SOLID,
         });
 
         registry.register_material::<Rock>(MaterialRegistryInfo {
             base_color: Color::GRAY,
             name: Rock::NAME,
+            flags: VoxelMaterialFlags::SOLID,
         });
 
         registry.register_material::<Snow>(MaterialRegistryInfo {
             base_color: Color::WHITE,
             name: Snow::NAME,
+            flags: VoxelMaterialFlags::SOLID,
+        });
+
+        registry.register_material::<Water>(MaterialRegistryInfo {
+            base_color: Color::rgb_u8(106, 235, 187),
+            name: Water::NAME,
+            flags: VoxelMaterialFlags::LIQUID,
         });
     }
 }

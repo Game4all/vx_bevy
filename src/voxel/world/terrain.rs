@@ -9,7 +9,7 @@ use futures_lite::future;
 
 use super::{
     chunks::{ChunkLoadingStage, DirtyChunks},
-    materials::Snow,
+    materials::{Snow, Water},
     Chunk, ChunkKey, ChunkShape, Dirt, Grass, Rock, Sand, Voxel, CHUNK_LENGTH,
 };
 use crate::voxel::storage::{VoxelBuffer, VoxelMap};
@@ -111,6 +111,16 @@ fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>) {
     .map(|x| x as u32)
     .collect();
 
+    if key.location().y == 0 {
+        for x in 0..CHUNK_LENGTH {
+            for z in 0..CHUNK_LENGTH {
+                for y in 1..8 {
+                    *data.voxel_at_mut([x, y, z].into()) = Voxel(Water::ID);
+                }
+            }
+        }
+    }
+
     for x in 0..CHUNK_LENGTH {
         for z in 0..CHUNK_LENGTH {
             for h in 0..heightmap[(z * CHUNK_LENGTH + x) as usize] {
@@ -122,7 +132,7 @@ fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>) {
 
     if key.location().y == 0 {
         for x in 0..CHUNK_LENGTH {
-            for z in 0..CHUNK_LENGTH.max(1) {
+            for z in 0..CHUNK_LENGTH {
                 *data.voxel_at_mut([x, 0, z].into()) = Voxel(Rock::ID);
             }
         }
