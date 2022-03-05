@@ -2,7 +2,7 @@
 #import bevy_pbr::mesh_struct
 
 #import "shaders/voxel_data.wgsl"
-#import "shaders/voxel_material.wgsl"
+#import "shaders/terrain_uniforms.wgsl"
 #import "shaders/noise.wgsl"
 
 struct Vertex {

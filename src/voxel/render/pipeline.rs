@@ -25,7 +25,7 @@ use bevy::{
     },
 };
 
-use super::gpu_material::{self, GpuVoxelMaterialsMeta, SetVoxelMaterialArrayBindGroup};
+use super::terrain_uniforms::{self, TerrainUniformsMeta, SetTerrainUniformsBindGroup};
 
 #[derive(Component, Clone, Default)]
 /// A marker component for voxel meshes.
@@ -61,7 +61,7 @@ impl FromWorld for VoxelTerrainRenderPipeline {
                 .unwrap()
                 .load("shaders/terrain_pipeline.wgsl") as Handle<Shader>,
             material_array_layout: world
-                .get_resource::<GpuVoxelMaterialsMeta>()
+                .get_resource::<TerrainUniformsMeta>()
                 .unwrap()
                 .bind_group_layout
                 .clone(),
@@ -143,7 +143,7 @@ type DrawVoxel = (
     SetItemPipeline,
     SetMeshViewBindGroup<0>,
     SetMeshBindGroup<1>,
-    SetVoxelMaterialArrayBindGroup<2>,
+    SetTerrainUniformsBindGroup<2>,
     DrawMesh,
 );
 
@@ -163,7 +163,7 @@ pub struct VoxelMeshRenderPipelinePlugin;
 impl Plugin for VoxelMeshRenderPipelinePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugin(ExtractComponentPlugin::<VoxelTerrainMesh>::default())
-            .add_plugin(gpu_material::VoxelGpuMaterialPlugin);
+            .add_plugin(terrain_uniforms::VoxelTerrainUniformsPlugin);
         app.sub_app_mut(RenderApp)
             .add_render_command::<Transparent3d, DrawVoxel>()
             .init_resource::<VoxelTerrainRenderPipeline>()
