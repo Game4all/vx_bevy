@@ -1,8 +1,14 @@
 
+let VOXEL_MAT_FLAG_LIQUID: u32 = 2u; // 1 << 1
+
+struct VoxelMat {
+    base_color: vec4<f32>;
+    flags: u32;
+};
 
 // A GPU-suited representation of voxel materials.
 struct VoxelMaterials {
-    materials: array<vec4<f32>, 256u>;
+    materials: array<VoxelMat, 256u>;
 };
 
 struct Time {

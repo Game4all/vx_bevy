@@ -41,13 +41,13 @@ struct Fragment {
 
 [[stage(fragment)]]
 fn fragment(frag: Fragment) -> [[location(0)]] vec4<f32> {
-    let mat_color = VOXEL_MATERIALS.materials[voxel_data_extract_material_index(frag.data)];
+    let material = VOXEL_MATERIALS.materials[voxel_data_extract_material_index(frag.data)];
 
-    // per voxel color variation
-    let color = mat_color + hash(vec4<f32>(floor(frag.world_pos - frag.normal * 0.5), 1.0)) * 0.0226;
+    var base_color: vec4<f32> = material.base_color;
+    base_color = base_color + hash(vec4<f32>(floor(frag.world_pos - frag.normal * 0.5), 1.0)) * 0.0226;
 
     // final voxel color with ambient lighting + normal face lighting
-    let scolor = calc_voxel_lighting(color.xyz, frag.normal);
+    let scolor = calc_voxel_lighting(base_color.xyz, frag.normal);
 
-    return vec4<f32>(scolor, color.w);
+    return vec4<f32>(scolor, base_color.w);
 }

@@ -103,6 +103,12 @@ fn prepare_terrain_uniforms(
 #[derive(AsStd430, Clone, Copy)]
 pub struct GpuVoxelMaterial {
     pub base_color: [f32; 4],
+    pub flags: u32,
+
+    //theres a problem with crevice and the struct alignment so these are needed to align the uniform buffer size
+    pub __padding1: u32,
+    pub __padding2: u32,
+    pub __padding3: u32,
 }
 
 #[derive(AsStd430)]
@@ -118,6 +124,10 @@ fn extract_voxel_materials(
         let mut gpu_mats = TerrainMaterialsUniform {
             materials: [GpuVoxelMaterial {
                 base_color: [0f32; 4],
+                flags: 0,
+                __padding1: 0,
+                __padding2: 0,
+                __padding3: 0,
             }; 256],
         };
 
@@ -126,6 +136,7 @@ fn extract_voxel_materials(
             .enumerate()
             .for_each(|(index, material)| {
                 gpu_mats.materials[index].base_color = material.base_color.as_rgba_f32();
+                gpu_mats.materials[index].flags = material.flags.bits();
             });
 
         render_world.insert_resource(gpu_mats);
