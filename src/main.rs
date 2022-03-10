@@ -5,7 +5,6 @@ use bevy::prelude::*;
 mod debug;
 mod voxel;
 
-
 fn main() {
     App::default()
         .add_plugins(DefaultPlugins)
