@@ -4,7 +4,7 @@ use std::num::NonZeroUsize;
 use bevy::core_pipeline::Transparent3d;
 
 use bevy::ecs::system::lifetimeless::{Read, SQuery, SRes};
-use bevy::pbr::{DrawMesh, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup};
+use bevy::pbr::{MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup};
 use bevy::prelude::{
     Bundle, ComputedVisibility, Entity, GlobalTransform, Mesh, Msaa, Query, Res, ResMut, Transform,
     Visibility, With,
@@ -150,8 +150,7 @@ type DrawVoxel<const P: bool> = (
     SetMeshViewBindGroup<0>,
     SetMeshBindGroup<1>,
     SetTerrainUniformsBindGroup<2>,
-    //DrawVoxelMesh<P>,
-    DrawMesh,
+    DrawVoxelMesh<true>,
 );
 
 #[derive(Bundle, Default)]
@@ -165,9 +164,9 @@ pub struct VoxelTerrainMeshBundle {
     pub aabb: Aabb,
 }
 
-pub struct DrawVoxelMesh<const P: bool>;
+pub struct DrawVoxelMesh<const SOLID: bool>;
 
-impl<const P: bool> EntityRenderCommand for DrawVoxelMesh<P> {
+impl<const SOLID: bool> EntityRenderCommand for DrawVoxelMesh<SOLID> {
     type Param = (
         SRes<RenderAssets<Mesh>>,
         SQuery<(Read<Handle<Mesh>>, Read<VoxelTerrainMesh>)>,
@@ -187,16 +186,22 @@ impl<const P: bool> EntityRenderCommand for DrawVoxelMesh<P> {
                 index_format,
             } = &gpu_mesh.buffer_info
             {
+                let draw_range = if SOLID {
+                    0..voxel_mesh
+                        .transparent_phase_mesh_index
+                        .map(|x| x.get() as u32)
+                        .unwrap_or(*count)
+                } else {
+                    0..*count
+                };
+
                 pass.set_vertex_buffer(0, gpu_mesh.vertex_buffer.slice(..));
                 pass.set_index_buffer(buffer.slice(..), 0, *index_format);
-                let max_indice = *count
-                    - voxel_mesh
-                        .transparent_phase_mesh_index
-                        .map(|x| x.get())
-                        .unwrap_or_default() as u32;
-                pass.draw_indexed(0..max_indice, 0, 0..1);
+                pass.draw_indexed(draw_range, 0, 0..1);
+                RenderCommandResult::Success
+            } else {
+                RenderCommandResult::Failure
             }
-            RenderCommandResult::Success
         } else {
             RenderCommandResult::Failure
         }
