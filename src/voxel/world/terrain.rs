@@ -114,7 +114,7 @@ fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>) {
     if key.location().y == 0 {
         for x in 0..CHUNK_LENGTH {
             for z in 0..CHUNK_LENGTH {
-                for y in 1..8 {
+                for y in 1..13 {
                     *data.voxel_at_mut([x, y, z].into()) = Voxel(Water::ID);
                 }
             }
@@ -142,7 +142,7 @@ fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>) {
 #[inline]
 fn get_mat_by_height(h: u32) -> Voxel {
     match h {
-        0..=18 => Voxel(Sand::ID),
+        0..=22 => Voxel(Sand::ID),
         188..=192 => Voxel(Dirt::ID),
         193..=224 => Voxel(Rock::ID),
         225..=384 => Voxel(Snow::ID),
