@@ -32,11 +32,11 @@ impl MergeVoxel for Voxel {
     }
 }
 
-pub trait VoxelId {
+pub trait MaterialVoxel : MergeVoxel + MeshableVoxel {
     fn as_mat_id(&self) -> u8;
 }
 
-impl VoxelId for Voxel {
+impl MaterialVoxel for Voxel {
     fn as_mat_id(&self) -> u8 {
         self.0
     }
