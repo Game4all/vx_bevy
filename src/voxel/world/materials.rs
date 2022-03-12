@@ -1,43 +1,16 @@
 use bevy::prelude::{Color, Plugin};
 
-use crate::voxel::material::{MaterialRegistryInfo, VoxelMaterialFlags, VoxelMaterialRegistry};
+use crate::{
+    define_voxel_material,
+    voxel::material::{MaterialRegistryInfo, VoxelMaterialFlags, VoxelMaterialRegistry},
+};
 
-pub struct Dirt;
-
-impl Dirt {
-    pub const ID: u8 = 1;
-    pub const NAME: &'static str = "Dirt";
-}
-
-pub struct Sand;
-impl Sand {
-    pub const ID: u8 = 2;
-    pub const NAME: &'static str = "Sand";
-}
-
-pub struct Grass;
-impl Grass {
-    pub const ID: u8 = 3;
-    pub const NAME: &'static str = "Grass";
-}
-
-pub struct Rock;
-impl Rock {
-    pub const ID: u8 = 4;
-    pub const NAME: &'static str = "Rock";
-}
-
-pub struct Snow;
-impl Snow {
-    pub const ID: u8 = 5;
-    pub const NAME: &'static str = "Snow";
-}
-
-pub struct Water;
-impl Water {
-    pub const ID: u8 = 6;
-    pub const NAME: &'static str = "Water";
-}
+define_voxel_material!(Dirt, "Dirt", 1);
+define_voxel_material!(Sand, "Sand", 2);
+define_voxel_material!(Grass, "Grass", 3);
+define_voxel_material!(Rock, "Rock", 4);
+define_voxel_material!(Snow, "Snow", 5);
+define_voxel_material!(Water, "Water", 6);
 
 pub struct VoxelWorldBaseMaterialsPlugin;
 

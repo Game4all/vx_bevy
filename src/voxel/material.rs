@@ -12,6 +12,17 @@ pub struct MaterialRegistryInfo {
     pub flags: VoxelMaterialFlags,
 }
 
+#[macro_export]
+macro_rules! define_voxel_material {
+    ($types: ident, $name: expr, $id: expr) => {
+        pub struct $types;
+        impl $types {
+            pub const ID: u8 = $id;
+            pub const NAME: &'static str = $name;
+        }
+    };
+}
+
 bitflags! {
     pub struct VoxelMaterialFlags : u32 {
         const SOLID = 0 << 0;
@@ -72,7 +83,7 @@ impl Default for VoxelMaterialRegistry {
         registry.register_material::<Void>(MaterialRegistryInfo {
             base_color: Color::BLACK,
             name: "Void",
-            flags: VoxelMaterialFlags::SOLID
+            flags: VoxelMaterialFlags::SOLID,
         });
 
         registry
