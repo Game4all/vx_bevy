@@ -1,21 +1,14 @@
-use std::mem::size_of;
-use std::num::NonZeroUsize;
-
-use bevy::core_pipeline::Transparent3d;
-
-use bevy::ecs::system::lifetimeless::{Read, SQuery, SRes};
-use bevy::pbr::{MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup};
+use bevy::core_pipeline::AlphaMask3d;
+use bevy::pbr::{DrawMesh, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup};
 use bevy::prelude::{
     Bundle, ComputedVisibility, Entity, GlobalTransform, Mesh, Msaa, Query, Res, ResMut, Transform,
     Visibility, With,
 };
-use bevy::render::mesh::GpuBufferInfo;
+use std::mem::size_of;
+
 use bevy::render::primitives::Aabb;
 use bevy::render::render_asset::RenderAssets;
-use bevy::render::render_phase::{
-    AddRenderCommand, DrawFunctions, EntityRenderCommand, RenderCommandResult, RenderPhase,
-    SetItemPipeline,
-};
+use bevy::render::render_phase::{AddRenderCommand, DrawFunctions, RenderPhase, SetItemPipeline};
 use bevy::render::render_resource::{
     BindGroupLayout, RenderPipelineCache, SpecializedPipeline, SpecializedPipelines,
     VertexAttribute, VertexBufferLayout, VertexFormat,
@@ -35,9 +28,7 @@ use super::terrain_uniforms::{self, SetTerrainUniformsBindGroup, TerrainUniforms
 
 #[derive(Component, Clone, Default)]
 /// A marker component for voxel meshes.
-pub struct VoxelTerrainMesh {
-    pub transparent_phase_mesh_index: Option<NonZeroUsize>,
-}
+pub struct VoxelTerrainMesh;
 
 impl VoxelTerrainMesh {
     pub const ATTRIBUTE_DATA: &'static str = "Vertex_Data";
@@ -114,23 +105,23 @@ impl SpecializedPipeline for VoxelTerrainRenderPipeline {
 
 #[allow(clippy::too_many_arguments)]
 fn queue_voxel_meshes(
-    t3d_draw_funcs: Res<DrawFunctions<Transparent3d>>,
+    oq_draw_funcs: Res<DrawFunctions<AlphaMask3d>>,
     render_meshes: Res<RenderAssets<Mesh>>,
     voxel_pipeline: Res<VoxelTerrainRenderPipeline>,
     mut pipeline_cache: ResMut<RenderPipelineCache>,
     mut specialized_pipelines: ResMut<SpecializedPipelines<VoxelTerrainRenderPipeline>>,
     msaa: Res<Msaa>,
     material_meshes: Query<(Entity, &Handle<Mesh>, &MeshUniform), With<VoxelTerrainMesh>>,
-    mut views: Query<(&ExtractedView, &mut RenderPhase<Transparent3d>)>,
+    mut views: Query<(&ExtractedView, &mut RenderPhase<AlphaMask3d>)>,
 ) {
-    let draw_custom = t3d_draw_funcs.read().get_id::<DrawVoxel<true>>().unwrap();
+    let draw_custom = oq_draw_funcs.read().get_id::<DrawVoxel>().unwrap();
     let key = MeshPipelineKey::from_msaa_samples(msaa.samples);
     for (view, mut transparent_phase) in views.iter_mut() {
         let view_matrix = view.transform.compute_matrix();
         let view_row_2 = view_matrix.row(2);
         material_meshes.for_each(|(entity, mesh_handle, mesh_uniform)| {
             if let Some(mesh) = render_meshes.get(mesh_handle) {
-                transparent_phase.add(Transparent3d {
+                transparent_phase.add(AlphaMask3d {
                     entity,
                     pipeline: specialized_pipelines.specialize(
                         &mut pipeline_cache,
@@ -145,12 +136,12 @@ fn queue_voxel_meshes(
     }
 }
 
-type DrawVoxel<const P: bool> = (
+type DrawVoxel = (
     SetItemPipeline,
     SetMeshViewBindGroup<0>,
     SetMeshBindGroup<1>,
     SetTerrainUniformsBindGroup<2>,
-    DrawVoxelMesh<true>,
+    DrawMesh,
 );
 
 #[derive(Bundle, Default)]
@@ -163,51 +154,6 @@ pub struct VoxelTerrainMeshBundle {
     pub computed_visibility: ComputedVisibility,
     pub aabb: Aabb,
 }
-
-pub struct DrawVoxelMesh<const SOLID: bool>;
-
-impl<const SOLID: bool> EntityRenderCommand for DrawVoxelMesh<SOLID> {
-    type Param = (
-        SRes<RenderAssets<Mesh>>,
-        SQuery<(Read<Handle<Mesh>>, Read<VoxelTerrainMesh>)>,
-    );
-
-    fn render<'w>(
-        _view: Entity,
-        item: Entity,
-        (meshes, query): bevy::ecs::system::SystemParamItem<'w, '_, Self::Param>,
-        pass: &mut bevy::render::render_phase::TrackedRenderPass<'w>,
-    ) -> bevy::render::render_phase::RenderCommandResult {
-        let (mesh_handle, voxel_mesh) = query.get(item).unwrap();
-        if let Some(gpu_mesh) = meshes.into_inner().get(mesh_handle) {
-            if let GpuBufferInfo::Indexed {
-                buffer,
-                count,
-                index_format,
-            } = &gpu_mesh.buffer_info
-            {
-                let draw_range = if SOLID {
-                    0..voxel_mesh
-                        .transparent_phase_mesh_index
-                        .map(|x| x.get() as u32)
-                        .unwrap_or(*count)
-                } else {
-                    0..*count
-                };
-
-                pass.set_vertex_buffer(0, gpu_mesh.vertex_buffer.slice(..));
-                pass.set_index_buffer(buffer.slice(..), 0, *index_format);
-                pass.draw_indexed(draw_range, 0, 0..1);
-                RenderCommandResult::Success
-            } else {
-                RenderCommandResult::Failure
-            }
-        } else {
-            RenderCommandResult::Failure
-        }
-    }
-}
-
 pub struct VoxelMeshRenderPipelinePlugin;
 
 impl Plugin for VoxelMeshRenderPipelinePlugin {
@@ -215,7 +161,7 @@ impl Plugin for VoxelMeshRenderPipelinePlugin {
         app.add_plugin(ExtractComponentPlugin::<VoxelTerrainMesh>::default())
             .add_plugin(terrain_uniforms::VoxelTerrainUniformsPlugin);
         app.sub_app_mut(RenderApp)
-            .add_render_command::<Transparent3d, DrawVoxel<true>>()
+            .add_render_command::<AlphaMask3d, DrawVoxel>()
             .init_resource::<VoxelTerrainRenderPipeline>()
             .init_resource::<SpecializedPipelines<VoxelTerrainRenderPipeline>>()
             .add_system_to_stage(RenderStage::Queue, queue_voxel_meshes);
