@@ -1,5 +1,6 @@
 # `vx_bevy`
 
+
 A minecraft-esque voxel engine rendering prototype made using the Bevy game engine.
 
 Chunk are rendered using a triangle mesh per chunk. Chunks are greedily meshed.
