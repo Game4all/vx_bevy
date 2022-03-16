@@ -1,22 +1,27 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
-use vx_client::{player::PlayerController, ClientPlugins};
-use vx_core::{CorePlugins, Player};
+
+mod debug;
+mod voxel;
 
 fn main() {
-    App::new()
+    App::default()
         .add_plugins(DefaultPlugins)
-        .add_plugins(CorePlugins)
-        .add_plugins(ClientPlugins)
-        .add_startup_system(setup.system())
+        .add_plugin(voxel::VoxelWorldPlugin)
+        .add_plugin(debug::DebugUIPlugins)
+        .add_startup_system(setup)
         .run();
 }
 
-fn setup(mut commands: Commands) {
-    commands
-        .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(0., 150.0, 0.0),
+fn setup(mut cmds: Commands) {
+    cmds.spawn_bundle(PerspectiveCameraBundle {
+        perspective_projection: PerspectiveProjection {
+            fov: PI / 2.0,
             ..Default::default()
-        })
-        .insert(Player)
-        .insert(PlayerController::default());
+        },
+        transform: Transform::from_xyz(2.0, 160.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    })
+    .insert(voxel::player::PlayerController::default());
 }

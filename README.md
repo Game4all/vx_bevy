@@ -1,30 +1,24 @@
 # `vx_bevy`
 
-NOTE: things are now happening in the rewrite branch.
 
-A voxel engine prototype made using the Bevy game engine.
+A minecraft-esque voxel engine rendering prototype made using the Bevy game engine.
 
-![animated chunk loading](assets/screenshots/chunkloading.gif)
-![not much to see](assets/screenshots/ss.png)
+Chunk are rendered using a triangle mesh per chunk. Chunks are greedily meshed.
 
-## Goals and features
-- [x] Very basic worldgen
-- [x] Animated chunk loading (ala cube world)
+Meshing and generation tasks are using bevy's `AsyncComputeTaskPool` to dispatch tasks across frame to prevent frame stuttering.
 
-_Optimizations_:
+Performance is okayish (~100fps on a 1060 + 8th gen intel on release mode) with default render distance (16 chunks) altough mesh stitching could allow this to go even higher up.
 
-- [ ] Frustum culling
-- [ ] Change view distance calculation
+Also don't go under the world.
 
-_Interactivity_:
+## Screenshots
 
-- [ ] Add ability to interact with the world (placing & breaking blocks)
+![assets/screenshots/screenshot.png](assets/screenshots/screenshot.png)
+![assets/screenshots/clip.gif](assets/screenshots/clip.gif)
+![assets/screenshots/clip2.gif](assets/screenshots/clip2.gif)
 
+Visible artifacts are due to gif encoding.
 
-_World_:
-- [ ] Revamp worldgen
-- [ ] Add generation of flora (trees)
-- [ ] Get a better shader for voxels.
+## Acknowledgments
 
-_Other_:
-- [ ] Rewrite this from scratch as this has turned into a mess.
+This uses the awesome [block-mesh](https://github.com/bonsairobo/block-mesh-rs) crate which handles greedy meshing.

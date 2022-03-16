@@ -1,9 +1,7 @@
-[workspace]
-members = ["crates/*"]
 
 [package]
 name = "vx_bevy"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Lucas A. <game4allyt@gmail.com>"]
 edition = "2021"
 resolver = "2"
@@ -11,9 +9,17 @@ resolver = "2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vx_core = { path = "crates/vx_core" }
-vx_client = { path = "crates/vx_client" }
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "6caa2622" }
+bevy = "0.6.1"
+ndshape = "0.2.0"
+block-mesh = "0.1.0"
+ndcopy = "0.2.0"
+thread_local = "1.1.4"
+bevy_egui = "0.11.1"
+futures-lite = "1.12.0"
+lazy_static = "1.4.0"
+simdnoise = { git = "https://github.com/jackmott/rust-simd-noise" }
+bevy_atmosphere = "0.2.0"
+bitflags = "1.3.2"
 
 [profile.dev]
 opt-level = 3
