@@ -64,6 +64,8 @@ pub fn handle_player_input(
     let forward = transform.rotation.mul_vec3(Vec3::Z).normalize() * const_vec3!([1.0, 0., 1.0]);
     let right = transform.rotation.mul_vec3(Vec3::X).normalize();
 
+    let mut acceleration = 1.0f32;
+
     if input.pressed(KeyCode::W) {
         direction.z -= 1.0;
     }
@@ -88,12 +90,18 @@ pub fn handle_player_input(
         direction.y -= 1.0;
     }
 
+    if input.pressed(KeyCode::LControl) {
+        acceleration *= 8.0;
+    }
+
     if direction == Vec3::ZERO {
         return;
     }
 
     // hardcoding 0.10 as a factor for now to not go zoomin across the world.
-    transform.translation += direction.x * right + direction.z * forward + direction.y * Vec3::Y;
+    transform.translation += direction.x * right * acceleration
+        + direction.z * forward * acceleration
+        + direction.y * Vec3::Y * acceleration;
 }
 
 pub struct VoxelWorldPlayerControllerPlugin;
