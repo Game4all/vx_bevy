@@ -57,7 +57,7 @@ where
 pub struct VoxelMap<V, S>
 where
     V: Clone + Copy + Default + PartialEq + Eq + Hash,
-    S: Shape<u32, 3> + Clone,
+    S: Shape<3, Coord = u32> + Clone,
 {
     pub chunks: BTreeMap<VoxelMapKey<V>, VoxelBuffer<V, S>>,
     shape: S,
@@ -67,7 +67,7 @@ where
 impl<V, S> VoxelMap<V, S>
 where
     V: Clone + Copy + Default + PartialEq + Eq + Hash,
-    S: Shape<u32, 3> + Clone,
+    S: Shape<3, Coord = u32> + Clone,
 {
     pub fn new(chunk_shape: S) -> Self {
         Self {

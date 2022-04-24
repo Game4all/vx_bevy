@@ -7,31 +7,31 @@ use bevy::{
 };
 use block_mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG};
 use ndcopy::copy3;
-use ndshape::{Shape, Shape3u32};
+use ndshape::{RuntimeShape, Shape};
 
 use super::VoxelTerrainMesh;
 
 /// Intermediate buffers for greedy meshing of voxel data which are reusable between frames to not allocate.
-pub struct MeshBuffers<T, S: Shape<u32, 3>>
+pub struct MeshBuffers<T, S: Shape<3, Coord = u32>>
 where
     T: Copy + Default + MaterialVoxel,
 {
     // A padded buffer to run greedy meshing algorithm on
-    scratch_buffer: VoxelBuffer<T, Shape3u32>,
+    scratch_buffer: VoxelBuffer<T, RuntimeShape<u32, 3>>,
     greedy_buffer: GreedyQuadsBuffer,
     _phantom: PhantomData<S>,
 }
 
-impl<T, S: Shape<u32, 3>> MeshBuffers<T, S>
+impl<T, S: Shape<3, Coord = u32>> MeshBuffers<T, S>
 where
     T: Copy + Default + MaterialVoxel,
 {
     pub fn new(shape: S) -> Self {
-        let padded_shape = Shape3u32::new(shape.as_array().map(|x| x + 2));
+        let padded_shape = RuntimeShape::<u32, 3>::new(shape.as_array().map(|x| x + 2));
 
         Self {
             greedy_buffer: GreedyQuadsBuffer::new(padded_shape.size() as usize),
-            scratch_buffer: VoxelBuffer::<T, Shape3u32>::new_empty(padded_shape),
+            scratch_buffer: VoxelBuffer::<T, RuntimeShape<u32, 3>>::new_empty(padded_shape),
             _phantom: Default::default(),
         }
     }
@@ -46,7 +46,7 @@ pub fn mesh_buffer<T, S>(
     scale: f32,
 ) where
     T: Copy + Default + MaterialVoxel,
-    S: Shape<u32, 3>,
+    S: Shape<3, Coord = u32>,
 {
     mesh_buffers
         .greedy_buffer
@@ -105,13 +105,13 @@ pub fn mesh_buffer<T, S>(
         }
     }
 
-    render_mesh.set_attribute(
+    render_mesh.insert_attribute(
         Mesh::ATTRIBUTE_POSITION,
         VertexAttributeValues::Float32x3(positions),
     );
 
     //todo: in the future we might want to encode all the information onto a single uint32
-    render_mesh.set_attribute(
+    render_mesh.insert_attribute(
         VoxelTerrainMesh::ATTRIBUTE_DATA,
         VertexAttributeValues::Uint32(data),
     );

@@ -4,7 +4,7 @@ use ndshape::Shape;
 /// A buffer of typed voxel data stored as a contiguous array in memory.
 #[allow(dead_code)]
 #[derive(Clone)]
-pub struct VoxelBuffer<V, S: Shape<u32, 3>>
+pub struct VoxelBuffer<V, S: Shape<3, Coord = u32>>
 where
     V: Copy + Clone + Default,
 {
@@ -13,7 +13,7 @@ where
 }
 
 #[allow(dead_code)]
-impl<V, S: Shape<u32, 3>> VoxelBuffer<V, S>
+impl<V, S: Shape<3, Coord = u32>> VoxelBuffer<V, S>
 where
     V: Copy + Clone + Default,
 {

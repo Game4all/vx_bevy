@@ -13,13 +13,11 @@ impl Default for Voxel {
 
 impl MeshableVoxel for Voxel {
     #[inline]
-    fn is_empty(&self) -> bool {
-        self.0 == EMPTY_VOXEL.0
-    }
-
-    #[inline]
-    fn is_opaque(&self) -> bool {
-        true
+    fn get_visibility(&self) -> block_mesh::VoxelVisibility {
+        match self.0 {
+            0 => block_mesh::VoxelVisibility::Empty,
+            _ => block_mesh::VoxelVisibility::Opaque,
+        }
     }
 }
 
@@ -32,7 +30,7 @@ impl MergeVoxel for Voxel {
     }
 }
 
-pub trait MaterialVoxel : MergeVoxel + MeshableVoxel {
+pub trait MaterialVoxel: MergeVoxel + MeshableVoxel {
     fn as_mat_id(&self) -> u8;
 }
 
