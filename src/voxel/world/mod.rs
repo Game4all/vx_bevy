@@ -10,17 +10,12 @@ use super::{
 mod chunks;
 pub use chunks::{ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks};
 
+mod chunks_anim;
+pub mod materials;
+mod meshing;
+pub mod player;
 /// Stuff and utilities for generating terrain.
 mod terrain;
-
-mod meshing;
-
-mod materials;
-pub use materials::{Dirt, Grass, Rock, Sand};
-
-mod chunks_anim;
-
-pub mod player;
 
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
 pub struct VoxelWorldPlugin;

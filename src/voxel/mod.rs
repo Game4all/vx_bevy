@@ -5,6 +5,9 @@ pub mod storage;
 mod world;
 pub use world::*;
 
+///! Terrain generator.
+pub mod terraingen;
+
 ///! Systems and utilities for rendering voxels.
 pub mod render;
 
