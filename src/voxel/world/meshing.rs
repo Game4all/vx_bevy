@@ -14,7 +14,7 @@ use bevy::{
     tasks::{AsyncComputeTaskPool, Task},
 };
 use futures_lite::future;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use thread_local::ThreadLocal;
 
 /// Attaches to the newly inserted chunk entities components required for rendering.
@@ -34,11 +34,9 @@ pub fn prepare_chunks(
     }
 }
 
-lazy_static! {
-    // a pool of mesh buffers shared between meshing tasks.
-    static ref SHARED_MESH_BUFFERS: ThreadLocal<RefCell<MeshBuffers<Voxel, ChunkShape>>> =
-        ThreadLocal::default();
-}
+// a pool of mesh buffers shared between meshing tasks.
+static SHARED_MESH_BUFFERS: Lazy<ThreadLocal<RefCell<MeshBuffers<Voxel, ChunkShape>>>> =
+    Lazy::new(|| ThreadLocal::default());
 
 /// Queues meshing tasks for the chunks in need of a remesh.
 fn queue_mesh_tasks(

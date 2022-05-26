@@ -3392,9 +3392,9 @@ dependencies = [
  "bitflags",
  "block-mesh",
  "futures-lite",
- "lazy_static",
  "ndcopy",
  "ndshape",
+ "once_cell",
  "simdnoise",
  "thread_local",
 ]
