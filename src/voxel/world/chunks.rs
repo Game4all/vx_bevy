@@ -25,7 +25,7 @@ fn update_player_pos(
             (player_coords.z as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
         );
 
-        chunk_pos.world_pos = player_coords.as_ivec3();
+        chunk_pos.world_pos = player_coords.round().as_ivec3();
 
         if chunk_pos.chunk_pos.location() != nearest_chunk_origin {
             chunk_pos.chunk_pos = ChunkKey::from_ivec3(nearest_chunk_origin);
@@ -166,6 +166,11 @@ impl ChunkEntities {
     pub fn detach_entity(&mut self, pos: ChunkKey) -> Option<Entity> {
         self.0.remove(&pos)
     }
+
+    /// Returns an iterator iterating over the loaded chunk keys.
+    pub fn iter_keys(&self) -> impl Iterator<Item = &ChunkKey> {
+        self.0.keys()
+    }
 }
 
 /// Holds the dirty chunk for the current frame.
@@ -197,6 +202,19 @@ pub struct CurrentLocalPlayerChunk {
 pub struct ChunkLoadRadius {
     pub horizontal: i32,
     pub vertical: i32,
+}
+
+/// A queue tracking the creation / destroy commands for chunks.
+#[derive(Default)]
+pub struct ChunkCommandQueue {
+    create: Vec<ChunkKey>,
+    destroy: Vec<ChunkKey>,
+}
+
+impl ChunkCommandQueue {
+    pub fn queue_unload<'a>(&mut self, region: impl Iterator<Item = &'a ChunkKey>) {
+        self.destroy.extend(region);
+    }
 }
 
 impl Plugin for VoxelWorldChunkingPlugin {
@@ -235,11 +253,4 @@ impl Plugin for VoxelWorldChunkingPlugin {
             clear_dirty_chunks.label(ChunkLoadingSystem::ClearDirtyChunks),
         );
     }
-}
-
-/// An internal queue tracking the creation / destroy commands for chunks.
-#[derive(Default)]
-struct ChunkCommandQueue {
-    create: Vec<ChunkKey>,
-    destroy: Vec<ChunkKey>,
 }

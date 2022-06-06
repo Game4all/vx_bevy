@@ -8,7 +8,7 @@ use super::{
 
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
-pub use chunks::{ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks};
+pub use chunks::{ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks, ChunkCommandQueue, ChunkEntities};
 
 mod chunks_anim;
 pub mod materials;

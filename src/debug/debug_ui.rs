@@ -13,7 +13,8 @@ use bevy_egui::{
 };
 
 use crate::voxel::{
-    material::VoxelMaterialRegistry, ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks,
+    material::VoxelMaterialRegistry, ChunkCommandQueue, ChunkEntities, ChunkLoadRadius,
+    CurrentLocalPlayerChunk, DirtyChunks,
 };
 
 fn display_debug_stats(mut egui: ResMut<EguiContext>, diagnostics: Res<Diagnostics>) {
@@ -42,6 +43,8 @@ fn display_chunk_stats(
     dirty_chunks: Res<DirtyChunks>,
     player_pos: Res<CurrentLocalPlayerChunk>,
     mut chunk_loading_radius: ResMut<ChunkLoadRadius>,
+    mut chunk_command_queue: ResMut<ChunkCommandQueue>,
+    loaded_chunks: Res<ChunkEntities>,
 ) {
     egui::Window::new("voxel world stuff").show(egui.ctx_mut(), |ui| {
         ui.heading("Chunks");
@@ -50,9 +53,15 @@ fn display_chunk_stats(
             dirty_chunks.num_dirty()
         ));
         ui.separator();
-        ui.label(" Horizontal chunk loading radius");
+        ui.label("Horizontal chunk loading radius");
         ui.add(Slider::new(&mut chunk_loading_radius.horizontal, 8..=32));
         ui.separator();
+
+        if ui.button("Clear loaded chunks").clicked() {
+            chunk_command_queue.queue_unload(loaded_chunks.iter_keys());
+        }
+        ui.separator();
+
         ui.heading("Current player position");
         ui.label(format!("Current position : {}", player_pos.world_pos));
         ui.label(format!(
