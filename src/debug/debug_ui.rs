@@ -52,6 +52,7 @@ fn display_chunk_stats(
             "Chunks invalidations (per frame):  {}",
             dirty_chunks.num_dirty()
         ));
+        ui.label(format!("Loaded chunk count: {}", loaded_chunks.len()));
         ui.separator();
         ui.label("Horizontal chunk loading radius");
         ui.add(Slider::new(&mut chunk_loading_radius.horizontal, 8..=32));

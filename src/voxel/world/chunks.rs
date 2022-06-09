@@ -171,6 +171,11 @@ impl ChunkEntities {
     pub fn iter_keys(&self) -> impl Iterator<Item = &ChunkKey> {
         self.0.keys()
     }
+
+    /// Return the number of loaded chunks.
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 /// Holds the dirty chunk for the current frame.
