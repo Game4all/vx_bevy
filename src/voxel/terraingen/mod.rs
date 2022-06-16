@@ -1,63 +1,44 @@
-use super::{
-    materials::{Dirt, Grass, Rock, Sand, Snow, Water},
-    storage::VoxelBuffer,
-    ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
-};
+use std::sync::RwLock;
 
-const DEFAULT_TERRAIN_HEIGHT: u32 = 128; // equals to 4 vertical chunks
+use bevy::prelude::Plugin;
+use once_cell::sync::Lazy;
 
-pub fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>) {
-    let heightmap: Vec<u32> = simdnoise::NoiseBuilder::fbm_2d_offset(
-        key.location().x as f32,
-        CHUNK_LENGTH as usize,
-        key.location().z as f32,
-        CHUNK_LENGTH as usize,
-    )
-    .with_octaves(5)
-    .generate()
-    .0
-    .iter()
-    .map(|x| DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 6.0).round() as i32)) //todo: add a default 128 default height
-    .map(|x| x - key.location().y)
-    .map(|x| x.max(0).min((CHUNK_LENGTH) as i32))
-    .map(|x| x as u32)
-    .collect();
+use super::{storage::VoxelBuffer, ChunkKey, ChunkShape, Voxel};
 
-    if key.location().y == 0 {
-        for x in 0..CHUNK_LENGTH {
-            for z in 0..CHUNK_LENGTH {
-                for y in 1..16 {
-                    *data.voxel_at_mut([x, y, z].into()) = Voxel(Water::ID);
-                }
-            }
-        }
+mod generators;
+
+// Terrain generator singleton.
+pub static TERRAIN_GENERATOR: Lazy<RwLock<TerrainGenerator>> = Lazy::new(|| Default::default());
+
+pub trait BiomeTerrainGenerator: 'static + Sync + Send {
+    fn generate_terrain(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>);
+}
+
+#[derive(Default)]
+pub struct TerrainGenerator {
+    biomes: Vec<Box<dyn BiomeTerrainGenerator>>, // should use a btree map for faster lookup in the future when a biome map is generated.
+}
+
+impl TerrainGenerator {
+    pub fn register_biome(&mut self, biome: Box<dyn BiomeTerrainGenerator>) {
+        self.biomes.push(biome);
     }
 
-    for x in 0..CHUNK_LENGTH {
-        for z in 0..CHUNK_LENGTH {
-            for h in 0..heightmap[(z * CHUNK_LENGTH + x) as usize] {
-                *data.voxel_at_mut([x, h, z].into()) =
-                    get_mat_by_height(key.location().y as u32 + h);
-            }
-        }
-    }
-
-    if key.location().y == 0 {
-        for x in 0..CHUNK_LENGTH {
-            for z in 0..CHUNK_LENGTH {
-                *data.voxel_at_mut([x, 0, z].into()) = Voxel(Rock::ID);
-            }
-        }
+    pub fn generate(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
+        self.biomes
+            .first()
+            .unwrap()
+            .generate_terrain(chunk_key, buffer);
     }
 }
 
-#[inline]
-fn get_mat_by_height(h: u32) -> Voxel {
-    match h {
-        0..=29 => Voxel(Sand::ID),
-        188..=192 => Voxel(Dirt::ID),
-        193..=224 => Voxel(Rock::ID),
-        225..=384 => Voxel(Snow::ID),
-        _ => Voxel(Grass::ID),
+pub struct TerrainGeneratorPlugin;
+
+impl Plugin for TerrainGeneratorPlugin {
+    fn build(&self, _: &mut bevy::prelude::App) {
+        TERRAIN_GENERATOR
+            .write()
+            .expect("Failed to acquire terrain generator singleton.")
+            .register_biome(Box::new(generators::DefaultTerrainGenerator));
     }
 }

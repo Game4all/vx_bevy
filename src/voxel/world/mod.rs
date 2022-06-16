@@ -3,18 +3,19 @@ use ndshape::ConstShape3u32;
 
 use super::{
     storage::{VoxelMap, VoxelMapKey},
-    Voxel,
+    terraingen, Voxel,
 };
 
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
-pub use chunks::{ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks, ChunkCommandQueue, ChunkEntities};
+pub use chunks::{
+    ChunkCommandQueue, ChunkEntities, ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks,
+};
 
 mod chunks_anim;
 pub mod materials;
 mod meshing;
 pub mod player;
-/// Stuff and utilities for generating terrain.
 mod terrain;
 
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
@@ -26,6 +27,7 @@ impl Plugin for VoxelWorldPlugin {
             .add_plugin(chunks::VoxelWorldChunkingPlugin)
             .add_plugin(meshing::VoxelWorldMeshingPlugin)
             // ordering of plugin insertion matters here.
+            .add_plugin(terraingen::TerrainGeneratorPlugin)
             .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
             .add_plugin(super::render::VoxelMeshRenderPipelinePlugin)
             .add_plugin(super::material::VoxelMaterialPlugin)

@@ -4,7 +4,8 @@ use super::{
 };
 use crate::voxel::{
     storage::{VoxelBuffer, VoxelMap},
-    terraingen, Voxel,
+    terraingen::TERRAIN_GENERATOR,
+    Voxel,
 };
 use bevy::{
     prelude::{
@@ -30,7 +31,10 @@ fn queue_terrain_gen(
                 entity,
                 (TerrainGenTask(task_pool.spawn(async move {
                     let mut chunk_data = VoxelBuffer::<Voxel, ChunkShape>::new_empty(ChunkShape {});
-                    terraingen::generate_terrain(key, &mut chunk_data);
+                    TERRAIN_GENERATOR
+                        .read()
+                        .unwrap()
+                        .generate(key, &mut chunk_data);
                     chunk_data
                 }))),
             )
