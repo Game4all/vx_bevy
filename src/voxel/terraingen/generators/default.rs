@@ -11,6 +11,10 @@ impl BiomeTerrainGenerator for DefaultTerrainGenerator {
     fn generate_terrain(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
         generate_terrain(chunk_key, buffer);
     }
+
+    fn biome_temp_humidity(&self) -> float_ord::FloatOrd<f32> {
+        float_ord::FloatOrd(0.0)
+    }
 }
 
 const DEFAULT_TERRAIN_HEIGHT: u32 = 128; // equals to 4 vertical chunks
@@ -26,7 +30,7 @@ pub fn generate_terrain(key: ChunkKey, data: &mut VoxelBuffer<Voxel, ChunkShape>
     .generate()
     .0
     .iter()
-    .map(|x| DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 6.0).round() as i32)) //todo: add a default 128 default height
+    .map(|x| DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 4.0).round() as i32)) //todo: add a default 128 default height
     .map(|x| x - key.location().y)
     .map(|x| x.max(0).min((CHUNK_LENGTH) as i32))
     .map(|x| x as u32)
