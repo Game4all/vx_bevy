@@ -19,11 +19,23 @@ pub mod noise;
 // Terrain generator singleton.
 pub static TERRAIN_GENERATOR: Lazy<RwLock<TerrainGenerator>> = Lazy::new(|| Default::default());
 
+/// A trait representing terrain generation for a specific biome type.
 pub trait BiomeTerrainGenerator: 'static + Sync + Send {
     fn generate_terrain(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>);
 
     //fixme: rename this as it is misleading (this won't use temperature or humidity stats for biome placement but I haven't been able to think of a better name for now)
     fn biome_temp_humidity(&self) -> FloatOrd<f32>;
+}
+
+/// Utility trait for boxing biome generators.
+pub trait IntoBoxedTerrainGenerator: BiomeTerrainGenerator + Sized {
+    fn into_boxed_generator(self) -> Box<Self>;
+}
+
+impl<T: BiomeTerrainGenerator> IntoBoxedTerrainGenerator for T {
+    fn into_boxed_generator(self) -> Box<Self> {
+        Box::new(self)
+    }
 }
 
 #[derive(Default)]
@@ -84,7 +96,7 @@ impl Plugin for TerrainGeneratorPlugin {
         TERRAIN_GENERATOR
             .write()
             .expect("Failed to acquire terrain generator singleton.")
-            .register_biome(Box::new(generators::DefaultTerrainGenerator));
+            .register_biome(generators::DefaultTerrainGenerator.into_boxed_generator());
 
         // this is hacked in to visualize the noise.
         {
