@@ -1,16 +1,15 @@
 use float_ord::FloatOrd;
 use std::{collections::BTreeMap, sync::RwLock};
 
-use bevy::{
-    math::{vec2, Vec3Swizzles},
-    prelude::Plugin,
-};
+use bevy::{math::Vec3Swizzles, prelude::Plugin};
 use once_cell::sync::Lazy;
 
+use self::generators::FlatBiomeTerrainGenerator;
+
 use super::{
-    materials::{Grass, Sand, Water},
+    materials::{Sand, Water},
     storage::VoxelBuffer,
-    ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
+    ChunkKey, ChunkShape, Voxel,
 };
 
 mod generators;
@@ -41,52 +40,30 @@ impl<T: BiomeTerrainGenerator> IntoBoxedTerrainGenerator for T {
 #[derive(Default)]
 pub struct TerrainGenerator {
     biomes_map: BTreeMap<FloatOrd<f32>, Box<dyn BiomeTerrainGenerator>>,
-
-    // fixme: this is temporary for visualizing the noise.
-    pub(crate) voxel_maps: BTreeMap<FloatOrd<f32>, Voxel>,
 }
 
 impl TerrainGenerator {
-    pub fn register_biome(&mut self, biome: Box<dyn BiomeTerrainGenerator>) {
+    pub fn register_biome(&mut self, biome: Box<dyn BiomeTerrainGenerator>) -> &mut Self {
         self.biomes_map.insert(biome.biome_temp_humidity(), biome);
+        self
     }
 
-    /// returns the biome with the closest temp / humidity
-    // fn biome_at(&self, chunk_key: ChunkKey) -> &Box<dyn BiomeTerrainGenerator> {
-    //     const BIOME_INVSCALE: f32 = 0.0024;
-
-    //     let coords =
-    //         noise::voronoi(chunk_key.location().xzy().truncate().as_vec2() * BIOME_INVSCALE);
-    //     let p = FloatOrd(noise::rand2to1i(coords));
-
-    //     self.biomes_map
-    //         .range(..=p)
-    //         .last()
-    //         .map_or(self.biomes_map.first_key_value().unwrap().1, |x| x.1)
-    // }
-
-    pub fn generate(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
+    // returns the biome with the closest temp / humidity
+    fn biome_at(&self, chunk_key: ChunkKey) -> &Box<dyn BiomeTerrainGenerator> {
         const BIOME_INVSCALE: f32 = 0.001;
 
-        if chunk_key.location().y != 0 {
-            return;
-        }
+        let coords =
+            noise::voronoi(chunk_key.location().xzy().truncate().as_vec2() * BIOME_INVSCALE);
+        let p = FloatOrd(noise::rand2to1i(coords));
 
-        let v = noise::voronoi(chunk_key.location().xzy().truncate().as_vec2() * BIOME_INVSCALE);
-
-        let p = FloatOrd(noise::rand2to1i(v));
-
-        let voxel = self
-            .voxel_maps
+        self.biomes_map
             .range(..=p)
             .last()
-            .map_or(Voxel(Grass::ID), |x| *x.1);
+            .map_or(self.biomes_map.first_key_value().unwrap().1, |x| x.1)
+    }
 
-        for x in 0..CHUNK_LENGTH {
-            for z in 0..CHUNK_LENGTH {
-                *buffer.voxel_at_mut([x, 0, z].into()) = voxel;
-            }
-        }
+    pub fn generate(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
+        self.biome_at(chunk_key).generate_terrain(chunk_key, buffer);
     }
 }
 pub struct TerrainGeneratorPlugin;
@@ -96,13 +73,12 @@ impl Plugin for TerrainGeneratorPlugin {
         TERRAIN_GENERATOR
             .write()
             .expect("Failed to acquire terrain generator singleton.")
-            .register_biome(generators::DefaultTerrainGenerator.into_boxed_generator());
-
-        // this is hacked in to visualize the noise.
-        {
-            let mut reg = &mut TERRAIN_GENERATOR.write().expect("D").voxel_maps;
-            reg.insert(FloatOrd(1.419f32), Voxel(Water::ID));
-            reg.insert(FloatOrd(0.8), Voxel(Sand::ID));
-        }
+            .register_biome(generators::DefaultTerrainGenerator.into_boxed_generator())
+            .register_biome(
+                FlatBiomeTerrainGenerator::new(Voxel(Water::ID), 1.419f32).into_boxed_generator(),
+            )
+            .register_biome(
+                FlatBiomeTerrainGenerator::new(Voxel(Sand::ID), 0.8f32).into_boxed_generator(),
+            );
     }
 }
