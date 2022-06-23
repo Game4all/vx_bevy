@@ -1,5 +1,6 @@
 
 let VOXEL_MAT_FLAG_LIQUID: u32 = 2u; // 1 << 1
+let TERRAIN_CHUNK_LENGTH: u32 = 32u;
 
 struct VoxelMat {
     base_color: vec4<f32>;
@@ -15,11 +16,18 @@ struct Time {
     time: f32;
 };
 
+struct TerrainRenderSettings {
+    render_distance: u32;
+};
+
 [[group(2), binding(0)]]
 var<uniform> VOXEL_MATERIALS: VoxelMaterials;
 
 [[group(2), binding(1)]]
 var<uniform> time: Time;
+
+[[group(2), binding(2)]]
+var<uniform> terrain_settings: TerrainRenderSettings;
 
 // Returns computed fragment color from the current ambient light + diffuse per face lighting
 fn calc_voxel_lighting(col: vec3<f32>, n: vec3<f32>) -> vec3<f32> {

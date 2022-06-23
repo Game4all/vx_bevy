@@ -1,7 +1,7 @@
 use bevy::{
     core::Time,
     ecs::system::lifetimeless::SRes,
-    prelude::{Entity, FromWorld, Plugin, Res, ResMut},
+    prelude::{warn, Entity, FromWorld, Plugin, Res, ResMut},
     render::{
         render_phase::EntityRenderCommand,
         render_resource::{
@@ -15,13 +15,14 @@ use bevy::{
     },
 };
 
-use crate::voxel::material::VoxelMaterialRegistry;
+use crate::voxel::{material::VoxelMaterialRegistry, ChunkLoadRadius};
 
 /// A resource wrapping buffer references and bind groups for the different uniforms used for rendering terrains
 pub struct TerrainUniformsMeta {
     pub bind_group_layout: BindGroupLayout,
     pub materials_buffer: Buffer,
     pub time_buffer: Buffer,
+    pub render_distance_buffer: Buffer,
     pub bind_group: Option<BindGroup>,
 }
 
@@ -56,6 +57,18 @@ impl FromWorld for TerrainUniformsMeta {
                         visibility: ShaderStages::VERTEX_FRAGMENT,
                         count: None,
                     },
+                    BindGroupLayoutEntry {
+                        binding: 2,
+                        ty: BindingType::Buffer {
+                            has_dynamic_offset: false,
+                            ty: bevy::render::render_resource::BufferBindingType::Uniform,
+                            min_binding_size: BufferSize::new(
+                                TerrainRenderSettingsUniform::std430_size_static() as u64,
+                            ),
+                        },
+                        count: None,
+                        visibility: ShaderStages::VERTEX_FRAGMENT,
+                    },
                 ],
             }),
             materials_buffer: render_device.create_buffer(&BufferDescriptor {
@@ -68,6 +81,12 @@ impl FromWorld for TerrainUniformsMeta {
                 label: None,
                 usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
                 size: TerrainTimeUniform::std430_size_static() as u64,
+                mapped_at_creation: false,
+            }),
+            render_distance_buffer: render_device.create_buffer(&BufferDescriptor {
+                label: None,
+                usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
+                size: TerrainRenderSettingsUniform::std430_size_static() as u64,
                 mapped_at_creation: false,
             }),
             bind_group: None,
@@ -89,6 +108,10 @@ fn prepare_terrain_uniforms(
             BindGroupEntry {
                 binding: 1,
                 resource: terrain_uniforms.time_buffer.as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 2,
+                resource: terrain_uniforms.render_distance_buffer.as_entire_binding(),
             },
         ],
         label: None,
@@ -177,6 +200,38 @@ fn upload_time_uniform(
     render_queue.write_buffer(&material_meta.time_buffer, 0, time.as_std430().as_bytes());
 }
 
+fn extract_terrain_render_settings_uniform(
+    mut render_world: ResMut<RenderWorld>,
+    render_distance: Res<ChunkLoadRadius>,
+) {
+    if render_distance.is_changed() {
+        render_world.insert_resource(TerrainRenderSettingsUniform {
+            render_distance: render_distance.horizontal as u32,
+        })
+    }
+}
+
+fn upload_render_distance_uniform(
+    uniform: Res<TerrainRenderSettingsUniform>,
+    material_meta: Res<TerrainUniformsMeta>,
+    render_queue: Res<RenderQueue>,
+) {
+    if uniform.is_changed() {
+        render_queue.write_buffer(
+            &material_meta.render_distance_buffer,
+            0u64,
+            uniform.as_std430().as_bytes(),
+        );
+    }
+}
+
+// terrain render settings uniform
+#[derive(AsStd430)]
+struct TerrainRenderSettingsUniform {
+    // current render distance radius
+    pub render_distance: u32,
+}
+
 /// Binds the terrain uniforms for use in shaders.
 pub struct SetTerrainUniformsBindGroup<const I: usize>;
 impl<const I: usize> EntityRenderCommand for SetTerrainUniformsBindGroup<I> {
@@ -204,6 +259,11 @@ impl Plugin for VoxelTerrainUniformsPlugin {
             .add_system_to_stage(RenderStage::Extract, extract_time)
             .add_system_to_stage(RenderStage::Prepare, prepare_terrain_uniforms)
             .add_system_to_stage(RenderStage::Prepare, upload_voxel_materials)
-            .add_system_to_stage(RenderStage::Prepare, upload_time_uniform);
+            .add_system_to_stage(RenderStage::Prepare, upload_time_uniform)
+            .add_system_to_stage(
+                RenderStage::Extract,
+                extract_terrain_render_settings_uniform,
+            )
+            .add_system_to_stage(RenderStage::Prepare, upload_render_distance_uniform);
     }
 }

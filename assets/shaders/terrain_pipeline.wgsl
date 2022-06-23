@@ -4,6 +4,7 @@
 #import "shaders/voxel_data.wgsl"
 #import "shaders/terrain_uniforms.wgsl"
 #import "shaders/noise.wgsl"
+#import "shaders/fog.wgsl"
 
 struct Vertex {
     [[location(0)]] position: vec3<f32>;
@@ -47,7 +48,9 @@ fn fragment(frag: Fragment) -> [[location(0)]] vec4<f32> {
     base_color = base_color + hash(vec4<f32>(floor(frag.world_pos - frag.normal * 0.5), 1.0)) * 0.0226;
 
     // final voxel color with ambient lighting + normal face lighting
-    let scolor = calc_voxel_lighting(base_color.xyz, frag.normal);
+    var scolor = calc_voxel_lighting(base_color.xyz, frag.normal);
 
-    return vec4<f32>(scolor, base_color.w);
+    // fragment distance from camera, used to determine amount of fog to apply.
+    let fog_distance = distance(frag.world_pos, view.world_position);
+    return ffog_apply_fog(fog_distance, f32(terrain_settings.render_distance) * 10.0, vec4<f32>(scolor, base_color.w));
 }
