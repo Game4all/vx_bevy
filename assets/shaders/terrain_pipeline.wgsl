@@ -52,5 +52,5 @@ fn fragment(frag: Fragment) -> [[location(0)]] vec4<f32> {
 
     // fragment distance from camera, used to determine amount of fog to apply.
     let fog_distance = distance(frag.world_pos, view.world_position);
-    return ffog_apply_fog(fog_distance, f32(terrain_settings.render_distance) * 32.0, f32(TERRAIN_CHUNK_LENGTH), vec4<f32>(scolor, base_color.w));
+    return ffog_apply_fog(fog_distance, f32(terrain_settings.render_distance) * f32(TERRAIN_CHUNK_LENGTH), f32(TERRAIN_CHUNK_LENGTH), vec4<f32>(scolor, base_color.w));
 }
