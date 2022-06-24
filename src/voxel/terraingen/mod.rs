@@ -4,10 +4,10 @@ use std::{collections::BTreeMap, sync::RwLock};
 use bevy::{math::Vec3Swizzles, prelude::Plugin};
 use once_cell::sync::Lazy;
 
-use self::generators::FlatBiomeTerrainGenerator;
+use self::generators::{FlatBiomeTerrainGenerator, HeightmapBiomeTerrainGenerator};
 
 use super::{
-    materials::{Sand, Water},
+    materials::{Grass, Sand, Water},
     storage::VoxelBuffer,
     ChunkKey, ChunkShape, Voxel,
 };
@@ -63,7 +63,8 @@ impl TerrainGenerator {
     }
 
     pub fn generate(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
-        self.biome_at(chunk_key).generate_terrain(chunk_key, buffer);
+        let biome = self.biome_at(chunk_key);
+        biome.generate_terrain(chunk_key, buffer);
     }
 }
 pub struct TerrainGeneratorPlugin;
@@ -73,12 +74,16 @@ impl Plugin for TerrainGeneratorPlugin {
         TERRAIN_GENERATOR
             .write()
             .expect("Failed to acquire terrain generator singleton.")
-            .register_biome(generators::DefaultTerrainGenerator.into_boxed_generator())
+            // .register_biome(generators::DefaultTerrainGenerator.into_boxed_generator())
+            .register_biome(
+                HeightmapBiomeTerrainGenerator::new(Voxel(Grass::ID), 0.0f32)
+                    .into_boxed_generator(),
+            )
             .register_biome(
                 FlatBiomeTerrainGenerator::new(Voxel(Water::ID), 1.419f32).into_boxed_generator(),
             )
             .register_biome(
-                FlatBiomeTerrainGenerator::new(Voxel(Sand::ID), 0.8f32).into_boxed_generator(),
+                HeightmapBiomeTerrainGenerator::new(Voxel(Sand::ID), 0.8f32).into_boxed_generator(),
             );
     }
 }

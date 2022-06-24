@@ -1,7 +1,7 @@
 use bevy::{
     core::Time,
     ecs::system::lifetimeless::SRes,
-    prelude::{warn, Entity, FromWorld, Plugin, Res, ResMut},
+    prelude::{Entity, FromWorld, Plugin, Res, ResMut},
     render::{
         render_phase::EntityRenderCommand,
         render_resource::{

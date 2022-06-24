@@ -1,5 +1,4 @@
 #![feature(map_first_last)]
-
 use std::f32::consts::PI;
 
 use bevy::prelude::*;

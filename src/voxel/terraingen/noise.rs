@@ -1,5 +1,7 @@
 use bevy::math::{Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
 
+#[allow(dead_code)]
+
 pub fn rand2to1(p: Vec2, dot: Vec2) -> f32 {
     let sp: Vec2 = p.to_array().map(|x| x.sin()).into();
     let random = sp.dot(dot);
