@@ -407,18 +407,15 @@ dependencies = [
 
 [[package]]
 name = "bevy_egui"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9e78332493e8d2ee07046c3fe07f026dfc4509f86756a739a59cfa5af29c65b"
+checksum = "27dc596053c0aa4b5ec698d8d7ef524f6cc457db7ac7d42c330f32d80720bff6"
 dependencies = [
  "arboard",
  "bevy",
- "bytemuck",
  "egui",
  "thread_local",
  "webbrowser",
- "wgpu",
- "winit",
 ]
 
 [[package]]
@@ -1365,9 +1362,9 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "egui"
-version = "0.17.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a3cd1d47e12f7a17912595241622e373aa652a4e0fa90b3f9278f90a64aedf7"
+checksum = "eb095a8b9feb9b7ff8f00b6776dffcef059538a3f4a91238e03c900e9c9ad9a2"
 dependencies = [
  "ahash",
  "epaint",
@@ -1376,9 +1373,9 @@ dependencies = [
 
 [[package]]
 name = "emath"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a977a80456be58a2c2d48e69c1d0baadef46cecef5a0c98df141c468da006f12"
+checksum = "c223f58c7e38abe1770f367b969f1b3fbd4704b67666bcb65dbb1adb0980ba72"
 dependencies = [
  "bytemuck",
 ]
@@ -1395,9 +1392,9 @@ dependencies = [
 
 [[package]]
 name = "epaint"
-version = "0.17.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "033292846059f08e03a71e1b5db2ee6ab7c9622c3b48da21f4bd13258ebee2db"
+checksum = "0c29567088888e8ac3e8f61bbb2ddc820207ebb8d69eefde5bcefa06d65e4e89"
 dependencies = [
  "ab_glyph",
  "ahash",
@@ -1405,6 +1402,7 @@ dependencies = [
  "bytemuck",
  "emath",
  "nohash-hasher",
+ "parking_lot 0.12.0",
 ]
 
 [[package]]
@@ -3507,9 +3505,9 @@ dependencies = [
 
 [[package]]
 name = "webbrowser"
-version = "0.6.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9c28b6b6a78440b02647358625e3febc90724126480b9da6a967b5f674b3554"
+checksum = "fc6a3cffdb686fbb24d9fb8f03a213803277ed2300f11026a3afe1f108dc021b"
 dependencies = [
  "jni",
  "ndk-glue 0.6.0",
