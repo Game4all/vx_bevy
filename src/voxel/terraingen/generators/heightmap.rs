@@ -1,4 +1,7 @@
-use crate::voxel::{terraingen::BiomeTerrainGenerator, Voxel, CHUNK_LENGTH};
+use crate::voxel::{
+    terraingen::{noise::NoiseMap, BiomeTerrainGenerator},
+    ChunkKey, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
+};
 
 pub struct HeightmapBiomeTerrainGenerator {
     pub voxel: Voxel,
@@ -11,33 +14,30 @@ impl HeightmapBiomeTerrainGenerator {
     pub const fn new(voxel: Voxel, biome_ord: f32) -> Self {
         Self { voxel, biome_ord }
     }
+
+    #[inline]
+    fn heightmap_scale_func(x: f32, chunk_key: ChunkKey) -> u32 {
+        ((Self::DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 1.0).round() as i32))
+            - chunk_key.location().y as i32)
+            .max(0)
+            .min((CHUNK_LENGTH) as i32) as u32
+    }
 }
 
 impl BiomeTerrainGenerator for HeightmapBiomeTerrainGenerator {
     fn generate_terrain(
         &self,
         chunk_key: crate::voxel::ChunkKey,
+        heightmap: NoiseMap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut crate::voxel::storage::VoxelBuffer<Voxel, crate::voxel::ChunkShape>,
     ) {
-        let heightmap: Vec<u32> = simdnoise::NoiseBuilder::fbm_2d_offset(
-            chunk_key.location().x as f32,
-            CHUNK_LENGTH as usize,
-            chunk_key.location().z as f32,
-            CHUNK_LENGTH as usize,
-        )
-        .with_octaves(4)
-        .generate()
-        .0
-        .iter()
-        .map(|x| Self::DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 1.0).round() as i32)) //todo: add a default 128 default height
-        .map(|x| x - chunk_key.location().y)
-        .map(|x| x.max(0).min((CHUNK_LENGTH) as i32))
-        .map(|x| x as u32)
-        .collect();
-
         for x in 0..CHUNK_LENGTH {
             for z in 0..CHUNK_LENGTH {
-                for h in 0..heightmap[(z * CHUNK_LENGTH + x) as usize] {
+                let height = heightmap.map(x as usize, z as usize, |x| {
+                    Self::heightmap_scale_func(x, chunk_key)
+                });
+
+                for h in 0..height {
                     *buffer.voxel_at_mut([x, h, z].into()) = self.voxel;
                 }
             }

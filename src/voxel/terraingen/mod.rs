@@ -4,12 +4,15 @@ use std::{collections::BTreeMap, sync::RwLock};
 use bevy::{math::Vec3Swizzles, prelude::Plugin};
 use once_cell::sync::Lazy;
 
-use self::generators::{FlatBiomeTerrainGenerator, HeightmapBiomeTerrainGenerator};
+use self::{
+    generators::{FlatBiomeTerrainGenerator, HeightmapBiomeTerrainGenerator},
+    noise::NoiseMap,
+};
 
 use super::{
     materials::{Grass, Sand, Water},
     storage::VoxelBuffer,
-    ChunkKey, ChunkShape, Voxel,
+    ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH_U,
 };
 
 mod generators;
@@ -21,7 +24,12 @@ pub static TERRAIN_GENERATOR: Lazy<RwLock<TerrainGenerator>> = Lazy::new(|| Defa
 /// A trait representing terrain generation for a specific biome type.
 pub trait BiomeTerrainGenerator: 'static + Sync + Send {
     /// Generate the general terrain shape for a chunk.
-    fn generate_terrain(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>);
+    fn generate_terrain(
+        &self,
+        chunk_key: ChunkKey,
+        heightmap: NoiseMap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
+        buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+    );
 
     //fixme: rename this as it is misleading (this won't use temperature or humidity stats for biome placement but I haven't been able to think of a better name for now)
     fn biome_temp_humidity(&self) -> FloatOrd<f32>;
@@ -65,7 +73,19 @@ impl TerrainGenerator {
 
     pub fn generate(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
         let biome = self.biome_at(chunk_key);
-        biome.generate_terrain(chunk_key, buffer);
+        let noise = simdnoise::NoiseBuilder::fbm_2d_offset(
+            chunk_key.location().x as f32,
+            CHUNK_LENGTH_U,
+            chunk_key.location().z as f32,
+            CHUNK_LENGTH_U,
+        )
+        .with_octaves(4)
+        .generate()
+        .0;
+
+        let noise_map = NoiseMap::<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>::from_slice(&noise);
+
+        biome.generate_terrain(chunk_key, noise_map, buffer);
     }
 }
 
@@ -76,7 +96,6 @@ impl Plugin for TerrainGeneratorPlugin {
         TERRAIN_GENERATOR
             .write()
             .expect("Failed to acquire terrain generator singleton.")
-            // .register_biome(generators::DefaultTerrainGenerator.into_boxed_generator())
             .register_biome(
                 HeightmapBiomeTerrainGenerator::new(Voxel(Grass::ID), 0.0f32)
                     .into_boxed_generator(),

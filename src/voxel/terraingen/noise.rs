@@ -1,6 +1,5 @@
 use bevy::math::{Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
 
-#[allow(dead_code)]
 
 pub fn rand2to1(p: Vec2, dot: Vec2) -> f32 {
     let sp: Vec2 = p.to_array().map(|x| x.sin()).into();
@@ -22,6 +21,7 @@ pub fn rand2to1i(vec: Vec2) -> f32 {
     return (p3.x + p3.y) * p3.z.fract();
 }
 
+#[allow(dead_code)]
 #[inline(always)]
 pub fn rand2to3(p: Vec2) -> Vec3 {
     Vec3::new(
@@ -31,12 +31,14 @@ pub fn rand2to3(p: Vec2) -> Vec3 {
     )
 }
 
+#[allow(dead_code)]
 #[inline(always)]
 pub fn rand1dto1d(p: f32, mutator: f32) -> f32 {
     let random = (p + mutator).sin();
     return (random * 143758.5453).fract();
 }
 
+#[allow(dead_code)]
 #[inline(always)]
 pub fn rand1to3(p: f32) -> Vec3 {
     Vec3::new(
@@ -68,4 +70,31 @@ pub fn voronoi(p: Vec2) -> Vec2 {
     }
 
     return closest_point;
+}
+
+/// A view into a slice of noise values with W x H dimensions.
+/// Provides methods for fetching a value at specified coordinates and to map values to a range.
+#[derive(Clone, Copy)]
+pub struct NoiseMap<'a, T: Copy, const W: usize, const H: usize> {
+    slice: &'a [T],
+}
+
+impl<'a, T: Copy, const W: usize, const H: usize> NoiseMap<'a, T, W, H> {
+    /// Gets the value at the specified coordinates.
+    #[inline]
+    pub fn get(&self, x: usize, y: usize) -> T {
+        self.slice[y * W + x]
+    }
+
+    /// Constructs a view into a slice of noise values with W x H dimensions.
+    #[inline]
+    pub fn from_slice(slice: &'a [T]) -> Self {
+        Self { slice }
+    }
+
+    /// Maps the value at the specified coordinates to another range of another type.
+    #[inline]
+    pub fn map<F: Copy>(&self, x: usize, y: usize, map_fn: impl Fn(T) -> F) -> F {
+        map_fn(self.get(x, y))
+    }
 }
