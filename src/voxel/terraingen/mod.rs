@@ -20,6 +20,7 @@ pub static TERRAIN_GENERATOR: Lazy<RwLock<TerrainGenerator>> = Lazy::new(|| Defa
 
 /// A trait representing terrain generation for a specific biome type.
 pub trait BiomeTerrainGenerator: 'static + Sync + Send {
+    /// Generate the general terrain shape for a chunk.
     fn generate_terrain(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>);
 
     //fixme: rename this as it is misleading (this won't use temperature or humidity stats for biome placement but I haven't been able to think of a better name for now)
@@ -67,6 +68,7 @@ impl TerrainGenerator {
         biome.generate_terrain(chunk_key, buffer);
     }
 }
+
 pub struct TerrainGeneratorPlugin;
 
 impl Plugin for TerrainGeneratorPlugin {
