@@ -1,4 +1,5 @@
 use crate::voxel::{
+    materials::Rock,
     terraingen::{noise::NoiseMap, BiomeTerrainGenerator},
     ChunkKey, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
@@ -17,10 +18,21 @@ impl HeightmapBiomeTerrainGenerator {
 
     #[inline]
     fn heightmap_scale_func(x: f32, chunk_key: ChunkKey) -> u32 {
-        ((Self::DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 1.0).round() as i32))
+        ((Self::DEFAULT_TERRAIN_HEIGHT as i32 + ((x * 3.0).round() as i32))
             - chunk_key.location().y as i32)
             .max(0)
             .min((CHUNK_LENGTH) as i32) as u32
+    }
+
+    fn make_world_bottom_border(
+        &self,
+        buffer: &mut crate::voxel::storage::VoxelBuffer<Voxel, crate::voxel::ChunkShape>,
+    ) {
+        for x in 0..CHUNK_LENGTH {
+            for z in 0..CHUNK_LENGTH {
+                *buffer.voxel_at_mut([x, 0, z].into()) = Voxel(Rock::ID);
+            }
+        }
     }
 }
 
@@ -41,6 +53,10 @@ impl BiomeTerrainGenerator for HeightmapBiomeTerrainGenerator {
                     *buffer.voxel_at_mut([x, h, z].into()) = self.voxel;
                 }
             }
+        }
+
+        if chunk_key.location().y == 0 {
+            self.make_world_bottom_border(buffer);
         }
     }
 
