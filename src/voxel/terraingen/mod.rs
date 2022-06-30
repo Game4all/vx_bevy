@@ -5,6 +5,7 @@ use bevy::{math::Vec3Swizzles, prelude::Plugin};
 use once_cell::sync::Lazy;
 
 use self::{
+    common::terrain_generate_world_bottom_border,
     generators::{FlatBiomeTerrainGenerator, HeightmapBiomeTerrainGenerator},
     noise::NoiseMap,
 };
@@ -16,7 +17,12 @@ use super::{
 };
 
 mod generators;
+
+/// noise functions ported over from C / GLSL code
 pub mod noise;
+
+/// common functions used by all terrain generators
+pub mod common;
 
 // Terrain generator singleton.
 pub static TERRAIN_GENERATOR: Lazy<RwLock<TerrainGenerator>> = Lazy::new(|| Default::default());
@@ -86,6 +92,10 @@ impl TerrainGenerator {
         let noise_map = NoiseMap::<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>::from_slice(&noise);
 
         biome.generate_terrain(chunk_key, noise_map, buffer);
+
+        if chunk_key.location().y == 0 {
+            terrain_generate_world_bottom_border(buffer);
+        }
     }
 }
 
