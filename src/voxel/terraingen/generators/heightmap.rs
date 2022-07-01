@@ -1,3 +1,5 @@
+use ilattice::{glam::UVec3, prelude::Extent};
+
 use crate::voxel::{
     terraingen::{noise::NoiseMap, BiomeTerrainGenerator},
     ChunkKey, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
@@ -31,17 +33,17 @@ impl BiomeTerrainGenerator for HeightmapBiomeTerrainGenerator {
         heightmap: NoiseMap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut crate::voxel::storage::VoxelBuffer<Voxel, crate::voxel::ChunkShape>,
     ) {
-        for x in 0..CHUNK_LENGTH {
-            for z in 0..CHUNK_LENGTH {
-                let height = heightmap.map(x as usize, z as usize, |x| {
+        Extent::from_min_and_shape(UVec3::ZERO, UVec3::new(CHUNK_LENGTH, 1, CHUNK_LENGTH))
+            .iter3()
+            .for_each(|vec| {
+                let height = heightmap.map(vec.x as usize, vec.z as usize, |x| {
                     Self::heightmap_scale_func(x, chunk_key)
                 });
 
                 for h in 0..height {
-                    *buffer.voxel_at_mut([x, h, z].into()) = self.voxel;
+                    *buffer.voxel_at_mut([vec.x, h, vec.z].into()) = self.voxel;
                 }
-            }
-        }
+            });
     }
 
     fn biome_temp_humidity(&self) -> float_ord::FloatOrd<f32> {

@@ -3397,6 +3397,7 @@ dependencies = [
  "block-mesh",
  "float-ord",
  "futures-lite",
+ "ilattice",
  "ndcopy",
  "ndshape",
  "once_cell",
