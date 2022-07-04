@@ -1,5 +1,5 @@
 use crate::voxel::{
-    terraingen::{noise::NoiseMap, BiomeTerrainGenerator},
+    terraingen::{noise::Heightmap, BiomeTerrainGenerator},
     Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
 
@@ -18,7 +18,7 @@ impl BiomeTerrainGenerator for FlatBiomeTerrainGenerator {
     fn generate_terrain(
         &self,
         chunk_key: crate::voxel::ChunkKey,
-        _heightmap: NoiseMap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
+        _heightmap: Heightmap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut crate::voxel::storage::VoxelBuffer<
             crate::voxel::Voxel,
             crate::voxel::ChunkShape,

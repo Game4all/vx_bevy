@@ -1,7 +1,7 @@
 use ilattice::{glam::UVec3, prelude::Extent};
 
 use crate::voxel::{
-    terraingen::{noise::NoiseMap, BiomeTerrainGenerator},
+    terraingen::{noise::Heightmap, BiomeTerrainGenerator},
     ChunkKey, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
 
@@ -30,13 +30,13 @@ impl BiomeTerrainGenerator for HeightmapBiomeTerrainGenerator {
     fn generate_terrain(
         &self,
         chunk_key: crate::voxel::ChunkKey,
-        heightmap: NoiseMap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
+        heightmap: Heightmap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut crate::voxel::storage::VoxelBuffer<Voxel, crate::voxel::ChunkShape>,
     ) {
         Extent::from_min_and_shape(UVec3::ZERO, UVec3::new(CHUNK_LENGTH, 1, CHUNK_LENGTH))
             .iter3()
             .for_each(|vec| {
-                let height = heightmap.map(vec.x as usize, vec.z as usize, |x| {
+                let height = heightmap.map([vec.x as u32, vec.z as u32], |x| {
                     Self::heightmap_scale_func(x, chunk_key)
                 });
 

@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 use self::{
     common::terrain_generate_world_bottom_border,
     generators::{FlatBiomeTerrainGenerator, HeightmapBiomeTerrainGenerator},
-    noise::NoiseMap,
+    noise::Heightmap,
 };
 
 use super::{
@@ -34,7 +34,7 @@ pub trait BiomeTerrainGenerator: 'static + Sync + Send {
     fn generate_terrain(
         &self,
         chunk_key: ChunkKey,
-        heightmap: NoiseMap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
+        heightmap: Heightmap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     );
 
@@ -90,7 +90,7 @@ impl TerrainGenerator {
         .generate()
         .0;
 
-        let noise_map = NoiseMap::<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>::from_slice(&noise);
+        let noise_map = Heightmap::<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>::from_slice(&noise);
 
         biome.generate_terrain(chunk_key, noise_map, buffer);
 

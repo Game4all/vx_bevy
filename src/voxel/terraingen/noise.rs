@@ -1,6 +1,5 @@
 use bevy::math::{Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
 
-
 pub fn rand2to1(p: Vec2, dot: Vec2) -> f32 {
     let sp: Vec2 = p.to_array().map(|x| x.sin()).into();
     let random = sp.dot(dot);
@@ -75,15 +74,15 @@ pub fn voronoi(p: Vec2) -> Vec2 {
 /// A view into a slice of noise values with W x H dimensions.
 /// Provides methods for fetching a value at specified coordinates and to map values to a range.
 #[derive(Clone, Copy)]
-pub struct NoiseMap<'a, T: Copy, const W: usize, const H: usize> {
+pub struct Heightmap<'a, T: Copy, const W: usize, const H: usize> {
     slice: &'a [T],
 }
 
-impl<'a, T: Copy, const W: usize, const H: usize> NoiseMap<'a, T, W, H> {
+impl<'a, T: Copy, const W: usize, const H: usize> Heightmap<'a, T, W, H> {
     /// Gets the value at the specified coordinates.
     #[inline]
-    pub fn get(&self, x: usize, y: usize) -> T {
-        self.slice[y * W + x]
+    pub fn get(&self, pos: [u32; 2]) -> T {
+        self.slice[pos[1] as usize * W + pos[0] as usize]
     }
 
     /// Constructs a view into a slice of noise values with W x H dimensions.
@@ -94,7 +93,7 @@ impl<'a, T: Copy, const W: usize, const H: usize> NoiseMap<'a, T, W, H> {
 
     /// Maps the value at the specified coordinates to another range of another type.
     #[inline]
-    pub fn map<F: Copy>(&self, x: usize, y: usize, map_fn: impl Fn(T) -> F) -> F {
-        map_fn(self.get(x, y))
+    pub fn map<F: Copy>(&self, pos: [u32; 2], map_fn: impl Fn(T) -> F) -> F {
+        map_fn(self.get(pos))
     }
 }
