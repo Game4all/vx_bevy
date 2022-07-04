@@ -1,3 +1,4 @@
+use ilattice::extent::Extent;
 use ilattice::glam::UVec3;
 use ndshape::Shape;
 
@@ -58,5 +59,17 @@ where
     #[inline]
     pub fn shape(&self) -> &S {
         &self.shape
+    }
+
+    /// Fills an extent of this buffer with the specified value.
+    #[inline]
+    pub fn fill_extent(&mut self, extent: Extent<UVec3>, val: V) {
+        ndcopy::fill3(
+            extent.shape.to_array(),
+            val,
+            &mut self.data,
+            &self.shape,
+            extent.minimum.to_array(),
+        );
     }
 }

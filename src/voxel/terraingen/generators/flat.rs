@@ -30,7 +30,7 @@ impl BiomeTerrainGenerator for FlatBiomeTerrainGenerator {
 
         for x in 0..CHUNK_LENGTH {
             for z in 0..CHUNK_LENGTH {
-                *buffer.voxel_at_mut([x, 1, z].into()) = self.voxel;
+                *buffer.voxel_at_mut([x, 2, z].into()) = self.voxel;
             }
         }
     }
