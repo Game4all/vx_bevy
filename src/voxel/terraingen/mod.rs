@@ -11,6 +11,7 @@ use self::{
 };
 
 use super::{
+    material::VoxelMaterial,
     materials::{Grass, Sand, Water},
     storage::VoxelBuffer,
     ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH_U,
@@ -107,14 +108,16 @@ impl Plugin for TerrainGeneratorPlugin {
             .write()
             .expect("Failed to acquire terrain generator singleton.")
             .register_biome(
-                HeightmapBiomeTerrainGenerator::new(Voxel(Grass::ID), 0.0f32)
+                HeightmapBiomeTerrainGenerator::new(Grass::into_voxel(), 0.0f32)
                     .into_boxed_generator(),
             )
             .register_biome(
-                FlatBiomeTerrainGenerator::new(Voxel(Water::ID), 1.419f32).into_boxed_generator(),
+                FlatBiomeTerrainGenerator::new(Water::into_voxel(), 1.419f32)
+                    .into_boxed_generator(),
             )
             .register_biome(
-                HeightmapBiomeTerrainGenerator::new(Voxel(Sand::ID), 0.8f32).into_boxed_generator(),
+                HeightmapBiomeTerrainGenerator::new(Sand::into_voxel(), 0.8f32)
+                    .into_boxed_generator(),
             );
     }
 }

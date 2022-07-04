@@ -5,6 +5,10 @@ use bevy::{
 use bitflags::bitflags;
 use std::{any::type_name, any::TypeId};
 
+use super::Voxel;
+
+//todo: rewrite this in a way which allows constifying stuff.
+
 // Registry info about a voxel material
 pub struct MaterialRegistryInfo {
     pub name: &'static str,
@@ -12,13 +16,24 @@ pub struct MaterialRegistryInfo {
     pub flags: VoxelMaterialFlags,
 }
 
+/// Helper / marker trait for voxel materials.
+pub trait VoxelMaterial {
+    const ID: u8;
+
+    fn into_voxel() -> Voxel {
+        Voxel(Self::ID)
+    }
+}
+
 #[macro_export]
-macro_rules! define_voxel_material {
-    ($types: ident, $name: expr, $id: expr) => {
+macro_rules! voxel_material {
+    ($types: ident, $id: expr) => {
         pub struct $types;
         impl $types {
-            pub const ID: u8 = $id;
-            pub const NAME: &'static str = $name;
+            pub const NAME: &'static str = stringify!($types);
+        }
+        impl crate::voxel::material::VoxelMaterial for $types {
+            const ID: u8 = $id;
         }
     };
 }
@@ -27,6 +42,7 @@ bitflags! {
     pub struct VoxelMaterialFlags : u32 {
         const SOLID = 0 << 0;
         const LIQUID = 1 << 1;
+        const UNBREAKABLE = 1 << 2;
     }
 }
 

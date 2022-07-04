@@ -1,4 +1,5 @@
 use crate::voxel::{
+    material::VoxelMaterial,
     materials::{Dirt, Grass, Rock, Sand, Snow, Water},
     storage::VoxelBuffer,
     terraingen::{noise::NoiseMap, BiomeTerrainGenerator},
@@ -30,7 +31,7 @@ impl BiomeTerrainGenerator for DefaultTerrainGenerator {
             for x in 0..CHUNK_LENGTH {
                 for z in 0..CHUNK_LENGTH {
                     for y in 1..16 {
-                        *buffer.voxel_at_mut([x, y, z].into()) = Voxel(Water::ID);
+                        *buffer.voxel_at_mut([x, y, z].into()) = Water::into_voxel();
                     }
                 }
             }
@@ -66,10 +67,10 @@ impl BiomeTerrainGenerator for DefaultTerrainGenerator {
 #[inline]
 fn get_mat_by_height(h: u32) -> Voxel {
     match h {
-        0..=29 => Voxel(Sand::ID),
-        188..=192 => Voxel(Dirt::ID),
-        193..=224 => Voxel(Rock::ID),
-        225..=384 => Voxel(Snow::ID),
-        _ => Voxel(Grass::ID),
+        0..=29 => Sand::into_voxel(),
+        188..=192 => Dirt::into_voxel(),
+        193..=224 => Rock::into_voxel(),
+        225..=384 => Snow::into_voxel(),
+        _ => Grass::into_voxel(),
     }
 }

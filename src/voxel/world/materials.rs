@@ -1,16 +1,17 @@
 use bevy::prelude::{Color, Plugin};
 
 use crate::{
-    define_voxel_material,
     voxel::material::{MaterialRegistryInfo, VoxelMaterialFlags, VoxelMaterialRegistry},
+    voxel_material,
 };
 
-define_voxel_material!(Dirt, "Dirt", 1);
-define_voxel_material!(Sand, "Sand", 2);
-define_voxel_material!(Grass, "Grass", 3);
-define_voxel_material!(Rock, "Rock", 4);
-define_voxel_material!(Snow, "Snow", 5);
-define_voxel_material!(Water, "Water", 6);
+voxel_material!(Dirt, 1);
+voxel_material!(Sand, 2);
+voxel_material!(Grass, 3);
+voxel_material!(Rock, 4);
+voxel_material!(Snow, 5);
+voxel_material!(Water, 6);
+voxel_material!(Bedrock, 7);
 
 pub struct VoxelWorldBaseMaterialsPlugin;
 
@@ -55,6 +56,12 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: *Color::rgb_u8(106, 235, 187).set_a(0.4),
             name: Water::NAME,
             flags: VoxelMaterialFlags::LIQUID,
+        });
+
+        registry.register_material::<Bedrock>(MaterialRegistryInfo {
+            base_color: Color::DARK_GRAY,
+            name: Bedrock::NAME,
+            flags: VoxelMaterialFlags::UNBREAKABLE,
         });
     }
 }
