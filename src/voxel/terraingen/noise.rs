@@ -1,5 +1,7 @@
 use bevy::math::{Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
 
+use crate::voxel::ChunkKey;
+
 pub fn rand2to1(p: Vec2, dot: Vec2) -> f32 {
     let sp: Vec2 = p.to_array().map(|x| x.sin()).into();
     let random = sp.dot(dot);
@@ -69,6 +71,21 @@ pub fn voronoi(p: Vec2) -> Vec2 {
     }
 
     return closest_point;
+}
+
+pub fn generate_heightmap_data(key: ChunkKey, chunk_len: usize) -> Vec<f32> {
+    simdnoise::NoiseBuilder::fbm_2d_offset(
+        key.location().x as f32,
+        chunk_len,
+        key.location().z as f32,
+        chunk_len,
+    )
+    .with_octaves(4)
+    .generate()
+    .0
+    .iter()
+    .map(|x| 128.0 + x * 4.0)
+    .collect()
 }
 
 /// A view into a slice of noise values with W x H dimensions.

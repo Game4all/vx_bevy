@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 use self::{
     common::terrain_generate_world_bottom_border,
     generators::{FlatBiomeTerrainGenerator, HeightmapBiomeTerrainGenerator},
-    noise::Heightmap,
+    noise::{generate_heightmap_data, Heightmap},
 };
 
 use super::{
@@ -79,20 +79,14 @@ impl TerrainGenerator {
     }
 
     pub fn generate(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
-        let biome = self.biome_at(chunk_key);
-        let noise = simdnoise::NoiseBuilder::fbm_2d_offset(
-            chunk_key.location().x as f32,
-            CHUNK_LENGTH_U,
-            chunk_key.location().z as f32,
-            CHUNK_LENGTH_U,
-        )
-        .with_octaves(4)
-        .generate()
-        .0;
+        // let biome = self.biome_at(chunk_key);
+        let noise = generate_heightmap_data(chunk_key, CHUNK_LENGTH_U);
 
         let noise_map = Heightmap::<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>::from_slice(&noise);
 
-        biome.generate_terrain(chunk_key, noise_map, buffer);
+        common::terrain_carve_heightmap(buffer, chunk_key, &noise_map);
+
+        // biome.generate_terrain(chunk_key, noise_map, buffer);
 
         if chunk_key.location().y == 0 {
             terrain_generate_world_bottom_border(buffer);
