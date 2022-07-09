@@ -107,10 +107,4 @@ impl<'a, T: Copy, const W: usize, const H: usize> Heightmap<'a, T, W, H> {
     pub fn from_slice(slice: &'a [T]) -> Self {
         Self { slice }
     }
-
-    /// Maps the value at the specified coordinates to another range of another type.
-    #[inline]
-    pub fn map<F: Copy>(&self, pos: [u32; 2], map_fn: impl Fn(T) -> F) -> F {
-        map_fn(self.get(pos))
-    }
 }
