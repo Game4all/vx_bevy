@@ -347,7 +347,7 @@ checksum = "3da0a284fb26c02cb96ef4d5bbf4de5fad7e1a901730035a61813bf64e28482e"
 dependencies = [
  "bevy-crevice-derive",
  "bytemuck",
- "glam 0.20.2",
+ "glam",
  "mint",
 ]
 
@@ -552,7 +552,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20288df0f70ff258bbaffaf55209f1271a7436438591bbffc3d81e4d84b423f2"
 dependencies = [
  "bevy_reflect",
- "glam 0.20.2",
+ "glam",
 ]
 
 [[package]]
@@ -586,7 +586,7 @@ dependencies = [
  "bevy_utils",
  "downcast-rs",
  "erased-serde",
- "glam 0.20.2",
+ "glam",
  "parking_lot 0.11.2",
  "serde",
  "smallvec",
@@ -1607,12 +1607,6 @@ dependencies = [
 
 [[package]]
 name = "glam"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b8509e6791516e81c1a630d0bd7fbac36d2fa8712a9da8662e716b52d5051ca"
-
-[[package]]
-name = "glam"
 version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4fa84eead97d5412b2a20aed4d66612a97a9e41e08eababdb9ae2bf88667490"
@@ -1766,7 +1760,7 @@ version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04ab9d20ba513ff1582a7d885e91839f62cf28bef7c56b1b0428ca787315979b"
 dependencies = [
- "glam 0.20.2",
+ "glam",
  "lazy_static",
 ]
 
@@ -1796,10 +1790,9 @@ dependencies = [
 [[package]]
 name = "ilattice"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3db9046391c0e0658a18e23877706d16e48cc8b4711702b9f703776410c2b84"
+source = "git+https://github.com/bonsairobo/ilattice-rs#30b6b463f05cb2f3190639fd85b75bc8da2c87ca"
 dependencies = [
- "glam 0.19.0",
+ "glam",
 ]
 
 [[package]]
