@@ -5,7 +5,7 @@ use bevy::{math::Vec3Swizzles, prelude::Plugin};
 use once_cell::sync::Lazy;
 
 use self::{
-    biomes::BiomeTerrainGenerator,
+    biomes::{BiomeTerrainGenerator, IntoBoxedTerrainGenerator},
     common::terrain_generate_world_bottom_border,
     noise::{generate_heightmap_data, Heightmap},
 };
@@ -53,14 +53,14 @@ impl TerrainGenerator {
     }
 
     pub fn generate(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
-        // let biome = self.biome_at(chunk_key);
+        let biome = self.biome_at(chunk_key);
         let noise = generate_heightmap_data(chunk_key, CHUNK_LENGTH_U);
 
         let noise_map = Heightmap::<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>::from_slice(&noise);
 
         common::terrain_carve_heightmap(buffer, chunk_key, &noise_map);
 
-        // biome.carve_terrain(chunk_key, noise_map, buffer);
+        biome.carve_terrain(chunk_key, noise_map, buffer);
 
         if chunk_key.location().y == 0 {
             terrain_generate_world_bottom_border(buffer);
@@ -71,5 +71,17 @@ impl TerrainGenerator {
 pub struct TerrainGeneratorPlugin;
 
 impl Plugin for TerrainGeneratorPlugin {
-    fn build(&self, _: &mut bevy::prelude::App) {}
+    fn build(&self, _: &mut bevy::prelude::App) {
+        TERRAIN_GENERATOR
+            .write()
+            .unwrap()
+            .register_biome_generator(
+                0.0f32,
+                biomes::BasicPlainsBiomeTerrainGenerator.into_boxed_generator(),
+            )
+            .register_biome_generator(
+                0.8f32,
+                biomes::BasicDesertBiomeTerrainGenerator.into_boxed_generator(),
+            );
+    }
 }

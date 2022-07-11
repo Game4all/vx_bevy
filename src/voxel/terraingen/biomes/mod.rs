@@ -2,7 +2,14 @@ use crate::voxel::{storage::VoxelBuffer, ChunkKey, ChunkShape, Voxel, CHUNK_LENG
 
 use super::noise::Heightmap;
 
+mod layered;
+pub use layered::*;
+
+mod test;
+pub use test::*;
+
 /// A trait representing a terrain generator for a biome.
+/// A biome can be defined as a collection of features that are applied on top of the terrain.
 pub trait BiomeTerrainGenerator: 'static + Sync + Send {
     /// Carve the terrain using the materials for the biome.
     fn carve_terrain(

@@ -36,7 +36,7 @@ pub fn terrain_carve_heightmap(
     Extent::from_min_and_shape(UVec2::ZERO, UVec2::new(CHUNK_LENGTH, CHUNK_LENGTH))
         .iter2()
         .for_each(|pos| {
-            let local_height = ((heighmap.get(pos.into()) - key.location().y as f32) as u32)
+            let local_height = ((heighmap.get(pos.into()).round() - key.location().y as f32) as u32)
                 .min(CHUNK_LENGTH)
                 .max(0);
 

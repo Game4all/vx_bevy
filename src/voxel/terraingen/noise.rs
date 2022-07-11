@@ -84,7 +84,7 @@ pub fn generate_heightmap_data(key: ChunkKey, chunk_len: usize) -> Vec<f32> {
     .generate()
     .0
     .iter()
-    .map(|x| 128.0 + x * 4.0)
+    .map(|x| 128.0 + x * 5.0)
     .collect()
 }
 
