@@ -11,7 +11,8 @@ voxel_material!(Grass, 3);
 voxel_material!(Rock, 4);
 voxel_material!(Snow, 5);
 voxel_material!(Water, 6);
-voxel_material!(Bedrock, 7);
+voxel_material!(Sandstone, 7);
+voxel_material!(Bedrock, 8);
 
 pub struct VoxelWorldBaseMaterialsPlugin;
 
@@ -56,6 +57,12 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: *Color::rgb_u8(78, 167, 215).set_a(0.4),
             name: Water::NAME,
             flags: VoxelMaterialFlags::LIQUID,
+        });
+
+        registry.register_material::<Sandstone>(MaterialRegistryInfo {
+            base_color: Color::rgb_u8(198, 192, 144),
+            name: Sandstone::NAME,
+            flags: VoxelMaterialFlags::SOLID,
         });
 
         registry.register_material::<Bedrock>(MaterialRegistryInfo {

@@ -1,6 +1,6 @@
 use crate::voxel::{
     material::VoxelMaterial,
-    materials::{Dirt, Grass, Sand},
+    materials::{Dirt, Grass, Sand, Sandstone},
     Voxel,
 };
 
@@ -11,7 +11,8 @@ pub struct BasicDesertBiomeTerrainGenerator;
 impl LayeredBiomeTerrainGenerator for BasicDesertBiomeTerrainGenerator {
     fn fill_strata(&self, layer: u32) -> Voxel {
         match layer {
-            _ => Sand::into_voxel(),
+            0..=5 => Sand::into_voxel(),
+            _ => Sandstone::into_voxel(),
         }
     }
 }
