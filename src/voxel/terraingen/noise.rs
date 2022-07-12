@@ -91,20 +91,20 @@ pub fn generate_heightmap_data(key: ChunkKey, chunk_len: usize) -> Vec<f32> {
 /// A view into a slice of noise values with W x H dimensions.
 /// Provides methods for fetching a value at specified coordinates and to map values to a range.
 #[derive(Clone, Copy)]
-pub struct Heightmap<'a, T: Copy, const W: usize, const H: usize> {
-    slice: &'a [T],
+pub struct Heightmap<'a, const W: usize, const H: usize> {
+    slice: &'a [f32],
 }
 
-impl<'a, T: Copy, const W: usize, const H: usize> Heightmap<'a, T, W, H> {
+impl<'a, const W: usize, const H: usize> Heightmap<'a,  W, H> {
     /// Gets the value at the specified coordinates.
     #[inline]
-    pub fn get(&self, pos: [u32; 2]) -> T {
-        self.slice[pos[1] as usize * W + pos[0] as usize]
+    pub fn get(&self, pos: [u32; 2]) -> u32 {
+        self.slice[pos[1] as usize * W + pos[0] as usize].round() as u32
     }
 
     /// Constructs a view into a slice of noise values with W x H dimensions.
     #[inline]
-    pub fn from_slice(slice: &'a [T]) -> Self {
+    pub fn from_slice(slice: &'a [f32]) -> Self {
         Self { slice }
     }
 }

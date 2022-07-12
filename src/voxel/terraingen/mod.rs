@@ -56,7 +56,7 @@ impl TerrainGenerator {
         let biome = self.biome_at(chunk_key);
         let noise = generate_heightmap_data(chunk_key, CHUNK_LENGTH_U);
 
-        let noise_map = Heightmap::<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>::from_slice(&noise);
+        let noise_map = Heightmap::<CHUNK_LENGTH_U, CHUNK_LENGTH_U>::from_slice(&noise);
 
         common::terrain_carve_heightmap(buffer, chunk_key, &noise_map);
 

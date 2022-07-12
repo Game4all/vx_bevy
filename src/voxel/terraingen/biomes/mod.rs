@@ -15,7 +15,7 @@ pub trait BiomeTerrainGenerator: 'static + Sync + Send {
     fn carve_terrain(
         &self,
         chunk_key: ChunkKey,
-        heightmap: Heightmap<f32, CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
+        heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     );
 }
