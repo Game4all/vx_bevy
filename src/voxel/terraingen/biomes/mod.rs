@@ -18,6 +18,14 @@ pub trait BiomeTerrainGenerator: 'static + Sync + Send {
         heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     );
+
+    /// Decorate the terrain with this biome specific features (e.g. flowers, trees, ores etc).
+    fn decorate_terrain(
+        &self,
+        chunk_key: ChunkKey,
+        heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
+        buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+    );
 }
 
 /// Utility trait for boxing biome generators.

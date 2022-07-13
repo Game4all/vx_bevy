@@ -1,17 +1,17 @@
 use std::ops::Div;
 
+use bevy::math::{UVec3, Vec2, Vec3Swizzles};
 use ilattice::{glam::UVec2, prelude::Extent};
 
 use crate::voxel::{
     material::VoxelMaterial,
     materials::{Dirt, Grass},
     storage::{VoxelBuffer, VoxelMapKey},
-    terraingen::noise::Heightmap,
-    Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
+    terraingen::noise::{self, Heightmap},
+    ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
 
 use super::BiomeTerrainGenerator;
-
 
 /// A biome terrain generator that applies a set of layers on top of the terrain.
 pub trait LayeredBiomeTerrainGenerator: BiomeTerrainGenerator {
@@ -27,6 +27,14 @@ pub trait LayeredBiomeTerrainGenerator: BiomeTerrainGenerator {
     fn num_layers(&self) -> u32 {
         8
     }
+
+    fn place_decoration(
+        &self,
+        key: ChunkKey,
+        pos: UVec3,
+        buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+    ) {
+    }
 }
 
 impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
@@ -34,7 +42,7 @@ impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
         &self,
         chunk_key: VoxelMapKey<Voxel>,
         heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
-        buffer: &mut VoxelBuffer<crate::voxel::Voxel, crate::voxel::ChunkShape>,
+        buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
         Extent::from_min_and_shape(UVec2::ZERO, UVec2::splat(CHUNK_LENGTH))
             .iter2()
@@ -55,6 +63,23 @@ impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
                             _ => {}
                         }
                     }
+                }
+            });
+    }
+
+    fn decorate_terrain(
+        &self,
+        chunk_key: crate::voxel::ChunkKey,
+        heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
+        buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+    ) {
+        Extent::from_min_and_shape(UVec2::ZERO, UVec2::splat(CHUNK_LENGTH))
+            .iter2()
+            .for_each(|pos| {
+                let height = heightmap.get(pos.into());
+                if height.div(CHUNK_LENGTH) == (chunk_key.location().y as u32).div(CHUNK_LENGTH) {
+                    let local_height = height.rem_euclid(CHUNK_LENGTH);
+                    self.place_decoration(chunk_key, [pos.x, local_height, pos.y].into(), buffer);
                 }
             });
     }

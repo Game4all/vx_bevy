@@ -61,6 +61,7 @@ impl TerrainGenerator {
         common::terrain_carve_heightmap(buffer, chunk_key, &noise_map);
 
         biome.carve_terrain(chunk_key, noise_map, buffer);
+        biome.decorate_terrain(chunk_key, noise_map, buffer);
 
         if chunk_key.location().y == 0 {
             terrain_generate_world_bottom_border(buffer);
