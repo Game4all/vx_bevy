@@ -2,7 +2,7 @@ use bevy::math::{UVec3, Vec2, Vec3Swizzles};
 
 use crate::voxel::{
     material::VoxelMaterial,
-    materials::{Dirt, Grass, Sand, Sandstone},
+    materials::{Dirt, Grass, Sand, Sandstone, Cactus},
     storage::VoxelBuffer,
     terraingen::noise,
     ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
@@ -34,7 +34,7 @@ impl LayeredBiomeTerrainGenerator for BasicDesertBiomeTerrainGenerator {
         if cacti_spawn_chance > 0.992 {
             let size = ((cacti_spawn_chance - 0.992) * 2000.0) as u32;
             for h in pos.y..(pos.y + size).min(CHUNK_LENGTH) {
-                *buffer.voxel_at_mut([pos.x, h, pos.z].into()) = Grass::into_voxel();
+                *buffer.voxel_at_mut([pos.x, h, pos.z].into()) = Cactus::into_voxel();
             }
         }
     }

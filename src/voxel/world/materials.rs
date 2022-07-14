@@ -13,6 +13,7 @@ voxel_material!(Snow, 5);
 voxel_material!(Water, 6);
 voxel_material!(Sandstone, 7);
 voxel_material!(Bedrock, 8);
+voxel_material!(Cactus, 9);
 
 pub struct VoxelWorldBaseMaterialsPlugin;
 
@@ -69,6 +70,12 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::DARK_GRAY,
             name: Bedrock::NAME,
             flags: VoxelMaterialFlags::UNBREAKABLE,
+        });
+
+        registry.register_material::<Cactus>(MaterialRegistryInfo {
+            base_color: Color::rgb_u8(0, 96, 0),
+            name: Cactus::NAME,
+            flags: VoxelMaterialFlags::SOLID,
         });
     }
 }
