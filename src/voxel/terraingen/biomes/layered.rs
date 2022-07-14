@@ -1,13 +1,13 @@
 use std::ops::Div;
 
-use bevy::math::{UVec3, Vec2, Vec3Swizzles};
+use bevy::math::UVec3;
 use ilattice::{glam::UVec2, prelude::Extent};
 
 use crate::voxel::{
     material::VoxelMaterial,
     materials::{Dirt, Grass},
     storage::{VoxelBuffer, VoxelMapKey},
-    terraingen::noise::{self, Heightmap},
+    terraingen::noise::Heightmap,
     ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
 
@@ -30,9 +30,9 @@ pub trait LayeredBiomeTerrainGenerator: BiomeTerrainGenerator {
 
     fn place_decoration(
         &self,
-        key: ChunkKey,
-        pos: UVec3,
-        buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+        _key: ChunkKey,
+        _pos: UVec3,
+        _buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
     }
 }
