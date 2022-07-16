@@ -83,6 +83,10 @@ impl Plugin for TerrainGeneratorPlugin {
             .register_biome_generator(
                 0.8f32,
                 biomes::BasicDesertBiomeTerrainGenerator.into_boxed_generator(),
+            )
+            .register_biome_generator(
+                3.21,
+                biomes::BasicSnowyPlainsBiomeTerrainGenerator.into_boxed_generator(),
             );
     }
 }

@@ -2,7 +2,7 @@ use bevy::math::{UVec3, Vec2, Vec3Swizzles};
 
 use crate::voxel::{
     material::VoxelMaterial,
-    materials::{Dirt, Grass, Sand, Sandstone, Cactus},
+    materials::{Dirt, Grass, Sand, Sandstone, Cactus, Snow},
     storage::VoxelBuffer,
     terraingen::noise,
     ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
@@ -48,5 +48,26 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
             0..=1 => Grass::into_voxel(),
             _ => Dirt::into_voxel(),
         }
+    }
+}
+
+
+pub struct BasicSnowyPlainsBiomeTerrainGenerator;
+
+impl LayeredBiomeTerrainGenerator for BasicSnowyPlainsBiomeTerrainGenerator {
+    fn fill_strata(&self, layer: u32) -> Voxel {
+        match layer {
+            0 => Snow::into_voxel(),
+            1..=2 => Grass::into_voxel(),
+            _ => Dirt::into_voxel(),
+        }
+    }
+
+    fn place_decoration(
+        &self,
+        _key: ChunkKey,
+        _pos: UVec3,
+        _buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+    ) {
     }
 }
