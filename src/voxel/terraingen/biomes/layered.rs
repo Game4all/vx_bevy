@@ -73,10 +73,15 @@ impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
         heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
+        if chunk_key.location().y <= 96 {
+            return;
+        }
+
         Extent::from_min_and_shape(UVec2::ZERO, UVec2::splat(CHUNK_LENGTH))
             .iter2()
             .for_each(|pos| {
                 let height = heightmap.get(pos.into());
+
                 if height.div(CHUNK_LENGTH) == (chunk_key.location().y as u32).div(CHUNK_LENGTH) {
                     let local_height = height.rem_euclid(CHUNK_LENGTH);
                     self.place_decoration(chunk_key, [pos.x, local_height, pos.y].into(), buffer);

@@ -14,6 +14,8 @@ voxel_material!(Water, 6);
 voxel_material!(Sandstone, 7);
 voxel_material!(Bedrock, 8);
 voxel_material!(Cactus, 9);
+voxel_material!(Wood, 10);
+voxel_material!(Leaves, 11);
 
 pub struct VoxelWorldBaseMaterialsPlugin;
 
@@ -75,6 +77,18 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         registry.register_material::<Cactus>(MaterialRegistryInfo {
             base_color: Color::rgb_u8(0, 96, 0),
             name: Cactus::NAME,
+            flags: VoxelMaterialFlags::SOLID,
+        });
+
+        registry.register_material::<Wood>(MaterialRegistryInfo {
+            base_color: Color::rgb_u8(188, 147, 97),
+            name: Wood::NAME,
+            flags: VoxelMaterialFlags::SOLID,
+        });
+
+        registry.register_material::<Leaves>(MaterialRegistryInfo {
+            base_color: Color::rgb_u8(90, 186, 69),
+            name: Leaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
         });
     }
