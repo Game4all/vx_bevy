@@ -2,7 +2,7 @@ use bevy::math::{UVec3, Vec2, Vec3Swizzles};
 
 use crate::voxel::{
     material::VoxelMaterial,
-    materials::{Cactus, Dirt, Grass, Sand, Sandstone, Snow},
+    materials::{Cactus, Dirt, Grass, Leaves, Sand, Sandstone, Snow, Wood},
     storage::VoxelBuffer,
     terraingen::{common::make_tree, noise},
     ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
@@ -62,8 +62,9 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
         );
 
         if spawn_chance > 0.981 {
-            if pos.y <= 13 { // this is a stupid hack but a real fix would be to allow terrain decoration to work vertically
-                make_tree(buffer, pos);
+            if pos.y <= 13 {
+                // this is a stupid hack but a real fix would be to allow terrain decoration to work vertically
+                make_tree::<Wood, Leaves>(buffer, pos);
             }
         }
     }
@@ -82,9 +83,20 @@ impl LayeredBiomeTerrainGenerator for BasicSnowyPlainsBiomeTerrainGenerator {
 
     fn place_decoration(
         &self,
-        _key: ChunkKey,
-        _pos: UVec3,
-        _buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+        key: ChunkKey,
+        pos: UVec3,
+        buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
+        let spawn_chance = noise::rand2to1(
+            (pos.xz().as_vec2() + key.location().xz().as_vec2()) * 0.1,
+            Vec2::new(12.989, 78.233),
+        );
+
+        if spawn_chance > 0.981 {
+            if pos.y <= 13 {
+                // this is a stupid hack but a real fix would be to allow terrain decoration to work vertically
+                make_tree::<Wood, Snow>(buffer, pos);
+            }
+        }
     }
 }

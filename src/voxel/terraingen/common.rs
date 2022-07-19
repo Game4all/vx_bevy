@@ -3,7 +3,7 @@ use ilattice::{glam::UVec2, glam::UVec3, prelude::Extent};
 
 use crate::voxel::{
     material::VoxelMaterial,
-    materials::{Bedrock, Leaves, Rock, Water, Wood},
+    materials::{Bedrock, Rock, Water},
     storage::VoxelBuffer,
     ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
@@ -49,12 +49,18 @@ pub fn terrain_carve_heightmap(
 }
 
 /// Make a tree using SDF functions
-pub fn make_tree(buffer: &mut VoxelBuffer<Voxel, ChunkShape>, origin: UVec3) {
+pub fn make_tree<T: VoxelMaterial, L: VoxelMaterial>(
+    buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+    origin: UVec3,
+) {
     Extent::from_min_and_shape(UVec3::ZERO, UVec3::splat(CHUNK_LENGTH)) //may want to calculate an extent encompassing the tree instead of iterating over the complete 32^3 volume
         .iter3()
         .map(|position| {
-            let trunk_distance =
-                sdf::sdf_capped_cylinder(position.as_vec3() - (origin.as_vec3() + 2.0 * Vec3::Y), 1.5, 8.0) < 0.;
+            let trunk_distance = sdf::sdf_capped_cylinder(
+                position.as_vec3() - (origin.as_vec3() + 2.0 * Vec3::Y),
+                1.5,
+                8.0,
+            ) < 0.;
             let leaves_distance = sdf::sdf_sphere(
                 position.as_vec3() - (origin.as_vec3() + 14.0 * Vec3::Y),
                 6.0,
@@ -63,11 +69,11 @@ pub fn make_tree(buffer: &mut VoxelBuffer<Voxel, ChunkShape>, origin: UVec3) {
         })
         .for_each(|(trunk_distance, leaves_distance, position)| {
             if trunk_distance {
-                *buffer.voxel_at_mut(position) = Wood::into_voxel();
+                *buffer.voxel_at_mut(position) = T::into_voxel()
             }
 
             if leaves_distance {
-                *buffer.voxel_at_mut(position) = Leaves::into_voxel();
+                *buffer.voxel_at_mut(position) = L::into_voxel()
             }
         });
 }
