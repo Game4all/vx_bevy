@@ -62,7 +62,7 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
         );
 
         if spawn_chance > 0.981 {
-            if pos.y <= 16 || pos.x > 8 && pos.x < 23 {
+            if pos.y <= 13 { // this is a stupid hack but a real fix would be to allow terrain decoration to work vertically
                 make_tree(buffer, pos);
             }
         }
