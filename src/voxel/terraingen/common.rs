@@ -4,11 +4,12 @@ use ilattice::{glam::UVec2, glam::UVec3, prelude::Extent};
 use crate::voxel::{
     material::VoxelMaterial,
     materials::{Bedrock, Rock, Water},
+    sdf,
     storage::VoxelBuffer,
     ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
 
-use super::{noise::Heightmap, sdf};
+use super::noise::Heightmap;
 
 /// Generate the world bottom border for a chunk.
 pub fn terrain_generate_world_bottom_border(buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {

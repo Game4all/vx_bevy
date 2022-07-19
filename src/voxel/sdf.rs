@@ -21,3 +21,9 @@ pub fn sdf_capped_cylinder(p: Vec3, h: f32, r: f32) -> f32 {
     let d = vec2(p.xz().length(), p.y).abs() - vec2(h, r);
     d.x.max(d.y).min(0.) + d.max(Vec2::ZERO).length()
 }
+
+#[allow(dead_code)]
+pub fn sdf_box(p: Vec3, b: Vec3) -> f32 {
+    let q = p.abs() - b;
+    q.x.max(q.y).max(q.z).min(0.) + q.max(Vec3::ZERO).length()
+}

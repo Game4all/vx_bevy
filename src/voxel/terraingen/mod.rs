@@ -14,9 +14,6 @@ use super::{storage::VoxelBuffer, ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH_U};
 
 mod biomes;
 
-/// rust ports of signed distance field functions for use in world generation.
-pub mod sdf;
-
 /// noise functions ported over from C / GLSL code
 pub mod noise;
 

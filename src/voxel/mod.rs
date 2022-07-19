@@ -14,5 +14,8 @@ pub mod render;
 ///! Systems for defining voxel materials with physical properties.
 pub mod material;
 
+/// rust ports of signed distance field functions for use in world generation.
+pub mod sdf;
+
 mod voxel;
 pub use voxel::*;
