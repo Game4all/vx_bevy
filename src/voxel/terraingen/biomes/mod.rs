@@ -5,8 +5,14 @@ use super::noise::Heightmap;
 mod layered;
 pub use layered::*;
 
-mod test;
-pub use test::*;
+mod plains;
+pub use plains::*;
+
+mod desert;
+pub use desert::*;
+
+mod snowy_plains;
+pub use snowy_plains::*;
 
 /// A trait representing a terrain generator for a biome.
 /// A biome can be defined as a collection of features that are applied on top of the terrain.
