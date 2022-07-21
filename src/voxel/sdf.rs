@@ -27,3 +27,10 @@ pub fn sdf_box(p: Vec3, b: Vec3) -> f32 {
     let q = p.abs() - b;
     q.x.max(q.y).max(q.z).min(0.) + q.max(Vec3::ZERO).length()
 }
+
+#[allow(dead_code)]
+pub fn sdf_v_capsule(p: Vec3, h: f32, r: f32) -> f32 {
+    let mut pp = p;
+    pp.y -= p.y.clamp(0.0, h);
+    pp.length() - r
+}
