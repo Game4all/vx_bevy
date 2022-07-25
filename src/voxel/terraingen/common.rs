@@ -26,7 +26,7 @@ pub fn terrain_carve_heightmap(
     heighmap: &Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
 ) {
     // drown the terrain under sea level.
-    if key.location().y <= 96 {
+    if key.y <= 96 {
         buffer.fill_extent(
             Extent::from_min_and_shape(UVec3::ZERO, UVec3::splat(CHUNK_LENGTH)),
             Water::into_voxel(),
@@ -39,7 +39,7 @@ pub fn terrain_carve_heightmap(
         .for_each(|pos| {
             let local_height = heighmap
                 .get(pos.into())
-                .checked_sub(key.location().y as u32)
+                .checked_sub(key.y as u32)
                 .unwrap_or_default()
                 .min(CHUNK_LENGTH);
 

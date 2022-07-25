@@ -75,9 +75,9 @@ pub fn voronoi(p: Vec2) -> Vec2 {
 
 pub fn generate_heightmap_data(key: ChunkKey, chunk_len: usize) -> Vec<f32> {
     simdnoise::NoiseBuilder::fbm_2d_offset(
-        key.location().x as f32,
+        key.x as f32,
         chunk_len,
-        key.location().z as f32,
+        key.z as f32,
         chunk_len,
     )
     .with_octaves(4)

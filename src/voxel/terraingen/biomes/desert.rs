@@ -29,7 +29,7 @@ impl LayeredBiomeTerrainGenerator for BasicDesertBiomeTerrainGenerator {
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
         let cacti_spawn_chance = noise::rand2to1(
-            (pos.xz().as_vec2() + key.location().xz().as_vec2()) * 0.1,
+            (pos.xz().as_vec2() + key.xz().as_vec2()) * 0.1,
             Vec2::new(12.989, 78.233),
         );
 

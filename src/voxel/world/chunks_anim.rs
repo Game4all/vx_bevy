@@ -40,7 +40,7 @@ fn step_chunk_animation(
         let delta = (time.time_since_startup().as_secs_f32() - animation.start_time)
             .min(ANIMATION_DURATION);
 
-        let ytransform = _chunk.0.location().y as f32 - ANIMATION_HEIGHT
+        let ytransform = _chunk.0.y as f32 - ANIMATION_HEIGHT
             + (1. - (1. - (delta / ANIMATION_DURATION)).powi(5)) * ANIMATION_HEIGHT;
 
         transform.translation.y = ytransform;

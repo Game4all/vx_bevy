@@ -26,7 +26,7 @@ pub fn prepare_chunks(
     for (chunk, chunk_key) in chunks.iter() {
         cmds.entity(chunk).insert_bundle(VoxelTerrainMeshBundle {
             mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
-            transform: Transform::from_translation(chunk_key.0.location().as_vec3()),
+            transform: Transform::from_translation(chunk_key.0.as_vec3()),
             visibility: Visibility { is_visible: false },
             aabb: Aabb::from_min_max(Vec3::ZERO, Vec3::splat(CHUNK_LENGTH as f32)),
             ..Default::default()

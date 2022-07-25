@@ -6,7 +6,7 @@ use ilattice::{glam::UVec2, prelude::Extent};
 use crate::voxel::{
     material::VoxelMaterial,
     materials::{Dirt, Grass},
-    storage::{VoxelBuffer, VoxelMapKey},
+    storage::VoxelBuffer,
     terraingen::noise::Heightmap,
     ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
@@ -40,7 +40,7 @@ pub trait LayeredBiomeTerrainGenerator: BiomeTerrainGenerator {
 impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
     fn carve_terrain(
         &self,
-        chunk_key: VoxelMapKey<Voxel>,
+        chunk_key: ChunkKey,
         heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
@@ -49,7 +49,7 @@ impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
             .for_each(|pos| {
                 let height = heightmap.get(pos.into());
                 // we only want to apply surface layer decoration on top of the surface chunk
-                if height.div(CHUNK_LENGTH) == (chunk_key.location().y as u32).div(CHUNK_LENGTH) {
+                if height.div(CHUNK_LENGTH) == (chunk_key.y as u32).div(CHUNK_LENGTH) {
                     let local_height = height.rem_euclid(CHUNK_LENGTH);
 
                     for h in 0..=self.num_layers() {
@@ -73,7 +73,7 @@ impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
         heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
-        if chunk_key.location().y <= 96 {
+        if chunk_key.y <= 96 {
             return;
         }
 
@@ -82,7 +82,7 @@ impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
             .for_each(|pos| {
                 let height = heightmap.get(pos.into());
 
-                if height.div(CHUNK_LENGTH) == (chunk_key.location().y as u32).div(CHUNK_LENGTH) {
+                if height.div(CHUNK_LENGTH) == (chunk_key.y as u32).div(CHUNK_LENGTH) {
                     let local_height = height.rem_euclid(CHUNK_LENGTH);
                     self.place_decoration(chunk_key, [pos.x, local_height, pos.y].into(), buffer);
                 }

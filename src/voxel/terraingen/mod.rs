@@ -42,8 +42,7 @@ impl TerrainGenerator {
     fn biome_at(&self, chunk_key: ChunkKey) -> &Box<dyn BiomeTerrainGenerator> {
         const BIOME_INVSCALE: f32 = 0.001;
 
-        let coords =
-            noise::voronoi(chunk_key.location().xzy().truncate().as_vec2() * BIOME_INVSCALE);
+        let coords = noise::voronoi(chunk_key.xzy().truncate().as_vec2() * BIOME_INVSCALE);
         let p = FloatOrd(noise::rand2to1i(coords));
 
         self.biomes_map
@@ -63,7 +62,7 @@ impl TerrainGenerator {
         biome.carve_terrain(chunk_key, noise_map, buffer);
         biome.decorate_terrain(chunk_key, noise_map, buffer);
 
-        if chunk_key.location().y == 0 {
+        if chunk_key.y == 0 {
             terrain_generate_world_bottom_border(buffer);
         }
     }

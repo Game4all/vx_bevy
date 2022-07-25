@@ -24,7 +24,7 @@ fn queue_terrain_gen(
 ) {
     new_chunks
         .iter()
-        .filter(|(_, key)| key.0.location().y < 288)
+        .filter(|(_, key)| key.0.y < 288)
         .map(|(entity, key)| (entity, key.0.clone()))
         .map(|(entity, key)| {
             (

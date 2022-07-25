@@ -27,8 +27,8 @@ fn update_player_pos(
 
         chunk_pos.world_pos = player_coords.round().as_ivec3();
 
-        if chunk_pos.chunk_pos.location() != nearest_chunk_origin {
-            chunk_pos.chunk_pos = ChunkKey::from_ivec3(nearest_chunk_origin);
+        if chunk_pos.chunk_pos != nearest_chunk_origin.into() {
+            chunk_pos.chunk_pos = nearest_chunk_origin.into();
         }
     }
 }
@@ -62,7 +62,7 @@ fn update_view_chunks(
                 }
 
                 let chunk_key = {
-                    let mut pos = player_pos.chunk_pos.location()
+                    let mut pos: IVec3 = *player_pos.chunk_pos
                         + IVec3::new(
                             x * CHUNK_LENGTH as i32,
                             y * CHUNK_LENGTH as i32,
@@ -71,7 +71,7 @@ fn update_view_chunks(
 
                     pos.y = pos.y.max(0);
 
-                    ChunkKey::from_ivec3(pos)
+                    pos.into()
                 };
 
                 if chunk_entities.entity(chunk_key).is_none() {
@@ -83,7 +83,7 @@ fn update_view_chunks(
 
     // quick n dirty circular chunk !loading.
     for loaded_chunk in chunk_entities.0.keys() {
-        let delta = loaded_chunk.location() - player_pos.chunk_pos.location();
+        let delta: IVec3 = **loaded_chunk - *player_pos.chunk_pos;
         if delta.x.pow(2) + delta.z.pow(2)
             > view_radius.horizontal.pow(2) * (CHUNK_LENGTH as i32).pow(2)
             || delta.y.pow(2) > view_radius.vertical.pow(2) * (CHUNK_LENGTH as i32).pow(2)
@@ -230,7 +230,7 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkEntities>()
         .insert_resource(CurrentLocalPlayerChunk {
-            chunk_pos: ChunkKey::from_ivec3(IVec3::ZERO),
+            chunk_pos: IVec3::ZERO.into(),
             world_pos: IVec3::ZERO,
         })
         .init_resource::<ChunkCommandQueue>()

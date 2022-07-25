@@ -38,7 +38,7 @@ impl Plugin for VoxelWorldPlugin {
     }
 }
 
-pub type ChunkKey = VoxelMapKey<Voxel>;
+pub type ChunkKey = VoxelMapKey;
 pub const CHUNK_LENGTH: u32 = 32;
 pub const CHUNK_LENGTH_U: usize = CHUNK_LENGTH as usize;
 pub type ChunkShape = ConstShape3u32<CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH>;
