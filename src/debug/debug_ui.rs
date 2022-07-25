@@ -65,7 +65,7 @@ fn display_chunk_stats(
 
         ui.heading("Current player position");
         ui.label(format!("Current position : {}", player_pos.world_pos));
-        ui.label(format!("Current chunk : {:?}", player_pos.chunk_pos));
+        ui.label(format!("Current chunk : {:?}", player_pos.chunk_min));
     });
 }
 

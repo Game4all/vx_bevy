@@ -18,17 +18,13 @@ fn update_player_pos(
     mut chunk_pos: ResMut<CurrentLocalPlayerChunk>,
 ) {
     if let Ok(ply) = player.get_single() {
-        let player_coords = ply.translation.floor();
-        let nearest_chunk_origin = IVec3::new(
-            (player_coords.x as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
-            (player_coords.y as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
-            (player_coords.z as i32 / CHUNK_LENGTH as i32) * CHUNK_LENGTH as i32,
-        );
+        let player_coords = ply.translation.as_ivec3();
+        let nearest_chunk_origin = !IVec3::splat((CHUNK_LENGTH - 1) as i32) & player_coords;
 
-        chunk_pos.world_pos = player_coords.round().as_ivec3();
+        chunk_pos.world_pos = player_coords;
 
-        if chunk_pos.chunk_pos != nearest_chunk_origin.into() {
-            chunk_pos.chunk_pos = nearest_chunk_origin.into();
+        if chunk_pos.chunk_min != nearest_chunk_origin.into() {
+            chunk_pos.chunk_min = nearest_chunk_origin.into();
         }
     }
 }
@@ -62,7 +58,7 @@ fn update_view_chunks(
                 }
 
                 let chunk_key = {
-                    let mut pos: IVec3 = *player_pos.chunk_pos
+                    let mut pos: IVec3 = player_pos.chunk_min
                         + IVec3::new(
                             x * CHUNK_LENGTH as i32,
                             y * CHUNK_LENGTH as i32,
@@ -83,7 +79,7 @@ fn update_view_chunks(
 
     // quick n dirty circular chunk !loading.
     for loaded_chunk in chunk_entities.0.keys() {
-        let delta: IVec3 = **loaded_chunk - *player_pos.chunk_pos;
+        let delta: IVec3 = **loaded_chunk - player_pos.chunk_min;
         if delta.x.pow(2) + delta.z.pow(2)
             > view_radius.horizontal.pow(2) * (CHUNK_LENGTH as i32).pow(2)
             || delta.y.pow(2) > view_radius.vertical.pow(2) * (CHUNK_LENGTH as i32).pow(2)
@@ -95,7 +91,7 @@ fn update_view_chunks(
     // load chunks starting from the player position
     chunk_command_queue
         .create
-        .sort_unstable_by_key(|key| key.distance(&player_pos.chunk_pos));
+        .sort_unstable_by_key(|key| key.distance(&player_pos.chunk_min.into()));
 }
 
 /// Creates the requested chunks and attach them an ECS entity.
@@ -199,7 +195,7 @@ impl DirtyChunks {
 
 /// Resource storing the current chunk the player is in as well as its current coords.
 pub struct CurrentLocalPlayerChunk {
-    pub chunk_pos: ChunkKey,
+    pub chunk_min: IVec3,
     pub world_pos: IVec3,
 }
 
@@ -230,7 +226,7 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkEntities>()
         .insert_resource(CurrentLocalPlayerChunk {
-            chunk_pos: IVec3::ZERO.into(),
+            chunk_min: IVec3::ZERO.into(),
             world_pos: IVec3::ZERO,
         })
         .init_resource::<ChunkCommandQueue>()

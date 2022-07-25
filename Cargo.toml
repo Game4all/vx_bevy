@@ -30,4 +30,4 @@ ilattice = { git = "https://github.com/bonsairobo/ilattice-rs" }
 opt-level = 3
 
 [profile.release]
-lto = true
+lto = "thin"
