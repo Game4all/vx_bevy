@@ -1,6 +1,4 @@
-use bevy::math::{Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
-
-use crate::voxel::ChunkKey;
+use bevy::math::{IVec3, Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
 
 pub fn rand2to1(p: Vec2, dot: Vec2) -> f32 {
     let sp: Vec2 = p.to_array().map(|x| x.sin()).into();
@@ -73,19 +71,14 @@ pub fn voronoi(p: Vec2) -> Vec2 {
     return closest_point;
 }
 
-pub fn generate_heightmap_data(key: ChunkKey, chunk_len: usize) -> Vec<f32> {
-    simdnoise::NoiseBuilder::fbm_2d_offset(
-        key.x as f32,
-        chunk_len,
-        key.z as f32,
-        chunk_len,
-    )
-    .with_octaves(4)
-    .generate()
-    .0
-    .iter()
-    .map(|x| 128.0 + x * 5.0)
-    .collect()
+pub fn generate_heightmap_data(key: IVec3, chunk_len: usize) -> Vec<f32> {
+    simdnoise::NoiseBuilder::fbm_2d_offset(key.x as f32, chunk_len, key.z as f32, chunk_len)
+        .with_octaves(4)
+        .generate()
+        .0
+        .iter()
+        .map(|x| 128.0 + x * 5.0)
+        .collect()
 }
 
 /// A view into a slice of noise values with W x H dimensions.
@@ -95,7 +88,7 @@ pub struct Heightmap<'a, const W: usize, const H: usize> {
     slice: &'a [f32],
 }
 
-impl<'a, const W: usize, const H: usize> Heightmap<'a,  W, H> {
+impl<'a, const W: usize, const H: usize> Heightmap<'a, W, H> {
     /// Gets the value at the specified coordinates.
     #[inline]
     pub fn get(&self, pos: [u32; 2]) -> u32 {

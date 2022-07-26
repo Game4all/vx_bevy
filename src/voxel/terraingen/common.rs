@@ -1,4 +1,4 @@
-use bevy::math::Vec3;
+use bevy::math::{IVec3, Vec3};
 use ilattice::{glam::UVec2, glam::UVec3, prelude::Extent};
 
 use crate::voxel::{
@@ -6,7 +6,7 @@ use crate::voxel::{
     materials::{Bedrock, Rock, Water},
     sdf,
     storage::VoxelBuffer,
-    ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
+    ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
 
 use super::noise::Heightmap;
@@ -22,7 +22,7 @@ pub fn terrain_generate_world_bottom_border(buffer: &mut VoxelBuffer<Voxel, Chun
 /// Carve the general terrain shape for a chunk.
 pub fn terrain_carve_heightmap(
     buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
-    key: ChunkKey,
+    key: IVec3,
     heighmap: &Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
 ) {
     // drown the terrain under sea level.

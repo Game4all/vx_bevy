@@ -1,6 +1,6 @@
 use std::ops::Div;
 
-use bevy::math::UVec3;
+use bevy::math::{IVec3, UVec3};
 use ilattice::{glam::UVec2, prelude::Extent};
 
 use crate::voxel::{
@@ -8,7 +8,7 @@ use crate::voxel::{
     materials::{Dirt, Grass},
     storage::VoxelBuffer,
     terraingen::noise::Heightmap,
-    ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
+    ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
 
 use super::BiomeTerrainGenerator;
@@ -30,7 +30,7 @@ pub trait LayeredBiomeTerrainGenerator: BiomeTerrainGenerator {
 
     fn place_decoration(
         &self,
-        _key: ChunkKey,
+        _key: IVec3,
         _pos: UVec3,
         _buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
@@ -40,7 +40,7 @@ pub trait LayeredBiomeTerrainGenerator: BiomeTerrainGenerator {
 impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
     fn carve_terrain(
         &self,
-        chunk_key: ChunkKey,
+        chunk_key: IVec3,
         heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
@@ -69,7 +69,7 @@ impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
 
     fn decorate_terrain(
         &self,
-        chunk_key: crate::voxel::ChunkKey,
+        chunk_key: IVec3,
         heightmap: Heightmap<CHUNK_LENGTH_U, CHUNK_LENGTH_U>,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {

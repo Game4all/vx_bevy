@@ -1,7 +1,10 @@
 use float_ord::FloatOrd;
 use std::{collections::BTreeMap, sync::RwLock};
 
-use bevy::{math::Vec3Swizzles, prelude::Plugin};
+use bevy::{
+    math::{IVec3, Vec3Swizzles},
+    prelude::Plugin,
+};
 use once_cell::sync::Lazy;
 
 use self::{
@@ -10,7 +13,7 @@ use self::{
     noise::{generate_heightmap_data, Heightmap},
 };
 
-use super::{storage::VoxelBuffer, ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH_U};
+use super::{storage::VoxelBuffer, ChunkShape, Voxel, CHUNK_LENGTH_U};
 
 mod biomes;
 
@@ -39,7 +42,7 @@ impl TerrainGenerator {
     }
 
     //returns the biome with the closest temp / humidity
-    fn biome_at(&self, chunk_key: ChunkKey) -> &Box<dyn BiomeTerrainGenerator> {
+    fn biome_at(&self, chunk_key: IVec3) -> &Box<dyn BiomeTerrainGenerator> {
         const BIOME_INVSCALE: f32 = 0.001;
 
         let coords = noise::voronoi(chunk_key.xzy().truncate().as_vec2() * BIOME_INVSCALE);
@@ -51,7 +54,7 @@ impl TerrainGenerator {
             .map_or(self.biomes_map.first_key_value().unwrap().1, |x| x.1)
     }
 
-    pub fn generate(&self, chunk_key: ChunkKey, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
+    pub fn generate(&self, chunk_key: IVec3, buffer: &mut VoxelBuffer<Voxel, ChunkShape>) {
         let biome = self.biome_at(chunk_key);
         let noise = generate_heightmap_data(chunk_key, CHUNK_LENGTH_U);
 

@@ -7,8 +7,9 @@ use bevy::{
     },
     utils::{HashMap, HashSet},
 };
+use float_ord::FloatOrd;
 
-use super::{player::PlayerController, Chunk, ChunkKey, ChunkShape, CHUNK_LENGTH};
+use super::{player::PlayerController, Chunk, ChunkShape, CHUNK_LENGTH};
 use crate::voxel::storage::VoxelMap;
 use crate::voxel::Voxel;
 
@@ -67,7 +68,7 @@ fn update_view_chunks(
 
                     pos.y = pos.y.max(0);
 
-                    pos.into()
+                    pos
                 };
 
                 if chunk_entities.entity(chunk_key).is_none() {
@@ -79,7 +80,7 @@ fn update_view_chunks(
 
     // quick n dirty circular chunk !loading.
     for loaded_chunk in chunk_entities.0.keys() {
-        let delta: IVec3 = **loaded_chunk - player_pos.chunk_min;
+        let delta: IVec3 = *loaded_chunk - player_pos.chunk_min;
         if delta.x.pow(2) + delta.z.pow(2)
             > view_radius.horizontal.pow(2) * (CHUNK_LENGTH as i32).pow(2)
             || delta.y.pow(2) > view_radius.vertical.pow(2) * (CHUNK_LENGTH as i32).pow(2)
@@ -89,9 +90,9 @@ fn update_view_chunks(
     }
 
     // load chunks starting from the player position
-    chunk_command_queue
-        .create
-        .sort_unstable_by_key(|key| key.distance(&player_pos.chunk_min.into()));
+    chunk_command_queue.create.sort_unstable_by_key(|key| {
+        FloatOrd(key.as_vec3().distance(player_pos.chunk_min.as_vec3()))
+    });
 }
 
 /// Creates the requested chunks and attach them an ECS entity.
@@ -114,7 +115,7 @@ fn destroy_chunks(
     for command in chunks_command_queue.destroy.drain(..) {
         cmds.entity(chunk_entities.detach_entity(command).unwrap())
             .despawn();
-        chunks.remove(&command);
+        chunks.remove(command);
     }
 }
 
@@ -145,26 +146,26 @@ pub struct VoxelWorldChunkingPlugin;
 
 /// Stores the Entity <-> Chunk voxel data buffer mapping
 #[derive(Default)]
-pub struct ChunkEntities(HashMap<ChunkKey, Entity>);
+pub struct ChunkEntities(HashMap<IVec3, Entity>);
 
 impl ChunkEntities {
     /// Returns the entity attached to the chunk.
-    pub fn entity(&self, pos: ChunkKey) -> Option<Entity> {
+    pub fn entity(&self, pos: IVec3) -> Option<Entity> {
         self.0.get(&pos).map(|x| x.clone())
     }
 
     /// Attaches the specified entity to the chunk data.
-    pub fn attach_entity(&mut self, pos: ChunkKey, entity: Entity) {
+    pub fn attach_entity(&mut self, pos: IVec3, entity: Entity) {
         self.0.insert(pos, entity);
     }
 
     /// Detaches the specified entity to the chunk data.
-    pub fn detach_entity(&mut self, pos: ChunkKey) -> Option<Entity> {
+    pub fn detach_entity(&mut self, pos: IVec3) -> Option<Entity> {
         self.0.remove(&pos)
     }
 
     /// Returns an iterator iterating over the loaded chunk keys.
-    pub fn iter_keys(&self) -> impl Iterator<Item = &ChunkKey> {
+    pub fn iter_keys(&self) -> impl Iterator<Item = &IVec3> {
         self.0.keys()
     }
 
@@ -176,15 +177,15 @@ impl ChunkEntities {
 
 /// Holds the dirty chunk for the current frame.
 #[derive(Default)]
-pub struct DirtyChunks(HashSet<ChunkKey>);
+pub struct DirtyChunks(HashSet<IVec3>);
 
 #[allow(dead_code)]
 impl DirtyChunks {
-    pub fn mark_dirty(&mut self, chunk: ChunkKey) {
+    pub fn mark_dirty(&mut self, chunk: IVec3) {
         self.0.insert(chunk);
     }
 
-    pub fn iter_dirty(&self) -> impl Iterator<Item = &ChunkKey> {
+    pub fn iter_dirty(&self) -> impl Iterator<Item = &IVec3> {
         self.0.iter()
     }
 
@@ -208,12 +209,12 @@ pub struct ChunkLoadRadius {
 /// A queue tracking the creation / destroy commands for chunks.
 #[derive(Default)]
 pub struct ChunkCommandQueue {
-    create: Vec<ChunkKey>,
-    destroy: Vec<ChunkKey>,
+    create: Vec<IVec3>,
+    destroy: Vec<IVec3>,
 }
 
 impl ChunkCommandQueue {
-    pub fn queue_unload<'a>(&mut self, region: impl Iterator<Item = &'a ChunkKey>) {
+    pub fn queue_unload<'a>(&mut self, region: impl Iterator<Item = &'a IVec3>) {
         self.destroy.extend(region);
     }
 }

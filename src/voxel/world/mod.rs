@@ -1,10 +1,7 @@
-use bevy::prelude::{Component, Plugin};
+use bevy::{prelude::{Component, Plugin}, math::IVec3};
 use ndshape::ConstShape3u32;
 
-use super::{
-    storage::{VoxelMap, VoxelMapKey},
-    terraingen, Voxel,
-};
+use super::{storage::VoxelMap, terraingen, Voxel};
 
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
@@ -38,11 +35,10 @@ impl Plugin for VoxelWorldPlugin {
     }
 }
 
-pub type ChunkKey = VoxelMapKey;
 pub const CHUNK_LENGTH: u32 = 32;
 pub const CHUNK_LENGTH_U: usize = CHUNK_LENGTH as usize;
 pub type ChunkShape = ConstShape3u32<CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH>;
 
 // A component tagging an entity as a chunk.
 #[derive(Component)]
-pub struct Chunk(pub ChunkKey);
+pub struct Chunk(pub IVec3);

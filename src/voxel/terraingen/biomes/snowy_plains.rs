@@ -1,10 +1,11 @@
-use bevy::math::{UVec3, Vec2, Vec3Swizzles};
+use bevy::math::{IVec3, UVec3, Vec2, Vec3Swizzles};
 
 use crate::voxel::{
+    material::VoxelMaterial,
     materials::{Dirt, Grass, Snow, Wood},
     storage::VoxelBuffer,
     terraingen::{common::make_tree, noise},
-    ChunkKey, ChunkShape, Voxel, material::VoxelMaterial,
+    ChunkShape, Voxel,
 };
 
 use super::LayeredBiomeTerrainGenerator;
@@ -22,7 +23,7 @@ impl LayeredBiomeTerrainGenerator for BasicSnowyPlainsBiomeTerrainGenerator {
 
     fn place_decoration(
         &self,
-        key: ChunkKey,
+        key: IVec3,
         pos: UVec3,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {

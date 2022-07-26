@@ -1,4 +1,4 @@
-use bevy::math::{UVec3, Vec2, Vec3, Vec3Swizzles};
+use bevy::math::{IVec3, UVec3, Vec2, Vec3, Vec3Swizzles};
 use ilattice::prelude::Extent;
 
 use crate::voxel::{
@@ -7,7 +7,7 @@ use crate::voxel::{
     sdf,
     storage::VoxelBuffer,
     terraingen::noise,
-    ChunkKey, ChunkShape, Voxel, CHUNK_LENGTH,
+    ChunkShape, Voxel, CHUNK_LENGTH,
 };
 
 use super::LayeredBiomeTerrainGenerator;
@@ -24,7 +24,7 @@ impl LayeredBiomeTerrainGenerator for BasicDesertBiomeTerrainGenerator {
 
     fn place_decoration(
         &self,
-        key: ChunkKey,
+        key: IVec3,
         pos: UVec3,
         buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     ) {
