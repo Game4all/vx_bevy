@@ -1,8 +1,10 @@
-use ilattice::morton::Morton3i32;
+use ilattice::{morton::Morton3i32, vector::Map};
 use std::{collections::BTreeMap, hash::Hash};
 
 use bevy::math::IVec3;
 use ndshape::Shape;
+
+use crate::voxel::CHUNK_LENGTH;
 
 use super::buffer::VoxelBuffer;
 
@@ -13,6 +15,7 @@ where
     S: Shape<3, Coord = u32> + Clone,
 {
     chunks: BTreeMap<Morton3i32, VoxelBuffer<V, S>>,
+    shape_mask: IVec3,
     shape: S,
 }
 
@@ -25,8 +28,25 @@ where
     pub fn new(chunk_shape: S) -> Self {
         Self {
             chunks: Default::default(),
+            shape_mask: !(IVec3::from(chunk_shape.as_array().map(|x| x as i32)) - IVec3::ONE),
             shape: chunk_shape,
         }
+    }
+
+    pub fn voxel_at(&self, pos: IVec3) -> Option<V> {
+        let chunk_minimum = pos & self.shape_mask;
+        let local_minimum = pos.map(|x| x.rem_euclid(CHUNK_LENGTH as i32)).as_uvec3();
+
+        self.buffer_at(chunk_minimum)
+            .and_then(|buffer| Some(buffer.voxel_at(local_minimum)))
+    }
+
+    pub fn voxel_at_mut(&mut self, pos: IVec3) -> Option<&mut V> {
+        let chunk_minimum = pos & self.shape_mask;
+        let local_minimum = pos.map(|x| x.rem_euclid(CHUNK_LENGTH as i32)).as_uvec3();
+
+        self.buffer_at_mut(chunk_minimum)
+            .and_then(|buffer| Some(buffer.voxel_at_mut(local_minimum)))
     }
 
     /// Checks whether there's a buffer at the specified minimum.
