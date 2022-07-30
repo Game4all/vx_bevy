@@ -93,4 +93,9 @@ where
     pub fn remove(&mut self, pos: IVec3) -> Option<VoxelBuffer<V, S>> {
         self.chunks.remove(&pos.into())
     }
+
+    #[inline]
+    pub fn shape_mask(&self) -> IVec3 {
+        self.shape_mask
+    }
 }
