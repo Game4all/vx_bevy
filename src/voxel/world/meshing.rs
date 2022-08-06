@@ -6,7 +6,7 @@ use super::{
 };
 use crate::voxel::{
     render::{mesh_buffer, MeshBuffers, VoxelTerrainMeshBundle},
-    storage::VoxelMap,
+    storage::ChunkMap,
 };
 use bevy::{
     prelude::*,
@@ -43,7 +43,7 @@ fn queue_mesh_tasks(
     mut commands: Commands,
     dirty_chunks: Res<DirtyChunks>,
     chunk_entities: Res<ChunkEntities>,
-    chunks: Res<VoxelMap<Voxel, ChunkShape>>,
+    chunks: Res<ChunkMap<Voxel, ChunkShape>>,
     task_pool: Res<AsyncComputeTaskPool>,
 ) {
     dirty_chunks

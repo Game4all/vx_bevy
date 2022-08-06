@@ -1,5 +1,5 @@
 mod buffer;
 pub use buffer::*;
 
-mod voxel_map;
-pub use voxel_map::*;
+mod chunk_map;
+pub use chunk_map::*;

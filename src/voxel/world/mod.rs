@@ -1,7 +1,7 @@
 use bevy::{prelude::{Component, Plugin}, math::IVec3};
 use ndshape::ConstShape3u32;
 
-use super::{storage::VoxelMap, terraingen, Voxel};
+use super::{storage::ChunkMap, terraingen, Voxel};
 
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
@@ -20,7 +20,7 @@ pub struct VoxelWorldPlugin;
 
 impl Plugin for VoxelWorldPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.insert_resource(VoxelMap::<Voxel, ChunkShape>::new(ChunkShape {}))
+        app.insert_resource(ChunkMap::<Voxel, ChunkShape>::new(ChunkShape {}))
             .add_plugin(chunks::VoxelWorldChunkingPlugin)
             .add_plugin(meshing::VoxelWorldMeshingPlugin)
             // ordering of plugin insertion matters here.

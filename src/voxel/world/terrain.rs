@@ -3,7 +3,7 @@ use super::{
     Chunk, ChunkShape,
 };
 use crate::voxel::{
-    storage::{VoxelBuffer, VoxelMap},
+    storage::{VoxelBuffer, ChunkMap},
     terraingen::TERRAIN_GENERATOR,
     Voxel,
 };
@@ -46,7 +46,7 @@ fn queue_terrain_gen(
 
 /// Polls for finished gen tasks and put back the generated terrain into the voxel map
 fn process_terrain_gen(
-    mut chunk_data: ResMut<VoxelMap<Voxel, ChunkShape>>,
+    mut chunk_data: ResMut<ChunkMap<Voxel, ChunkShape>>,
     mut commands: Commands,
     mut dirty_chunks: ResMut<DirtyChunks>,
     mut gen_chunks: Query<(Entity, &Chunk, &mut TerrainGenTask)>,

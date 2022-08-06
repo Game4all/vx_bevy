@@ -9,7 +9,7 @@ use crate::voxel::CHUNK_LENGTH;
 use super::buffer::VoxelBuffer;
 
 /// Provides an interface to query or modify voxel data for worlds or scenes split into multiple voxel data buffers of a same shape with no level of detail.
-pub struct VoxelMap<V, S>
+pub struct ChunkMap<V, S>
 where
     V: Clone + Copy + Default + PartialEq + Eq + Hash,
     S: Shape<3, Coord = u32> + Clone,
@@ -20,7 +20,7 @@ where
 }
 
 #[allow(dead_code)]
-impl<V, S> VoxelMap<V, S>
+impl<V, S> ChunkMap<V, S>
 where
     V: Clone + Copy + Default + PartialEq + Eq + Hash,
     S: Shape<3, Coord = u32> + Clone,

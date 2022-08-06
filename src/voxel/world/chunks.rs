@@ -10,7 +10,7 @@ use bevy::{
 use float_ord::FloatOrd;
 
 use super::{player::PlayerController, Chunk, ChunkShape, CHUNK_LENGTH};
-use crate::voxel::storage::VoxelMap;
+use crate::voxel::storage::ChunkMap;
 use crate::voxel::Voxel;
 
 /// Updates the current chunk position for the current player.
@@ -108,7 +108,7 @@ fn create_chunks(
 
 fn destroy_chunks(
     mut chunks_command_queue: ResMut<ChunkCommandQueue>,
-    mut chunks: ResMut<VoxelMap<Voxel, ChunkShape>>,
+    mut chunks: ResMut<ChunkMap<Voxel, ChunkShape>>,
     mut chunk_entities: ResMut<ChunkEntities>,
     mut cmds: Commands,
 ) {
