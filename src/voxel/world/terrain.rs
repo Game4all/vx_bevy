@@ -9,7 +9,7 @@ use crate::voxel::{
 };
 use bevy::{
     prelude::{
-        Added, Commands, Component, Entity, ParallelSystemDescriptorCoercion, Plugin, Query, Res,
+        Added, Commands, Component, Entity, ParallelSystemDescriptorCoercion, Plugin, Query,
         ResMut, StageLabel, SystemLabel, SystemStage,
     },
     tasks::{AsyncComputeTaskPool, Task},
@@ -20,8 +20,10 @@ use futures_lite::future;
 fn queue_terrain_gen(
     mut commands: Commands,
     new_chunks: Query<(Entity, &Chunk), Added<Chunk>>,
-    task_pool: Res<AsyncComputeTaskPool>,
 ) {
+
+    let task_pool = AsyncComputeTaskPool::get();
+
     new_chunks
         .iter()
         .filter(|(_, key)| key.0.y < 288)

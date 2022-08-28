@@ -19,7 +19,7 @@ fn update_player_pos(
     mut chunk_pos: ResMut<CurrentLocalPlayerChunk>,
 ) {
     if let Ok(ply) = player.get_single() {
-        let player_coords = ply.translation.as_ivec3();
+        let player_coords = ply.translation().as_ivec3();
         let nearest_chunk_origin = !IVec3::splat((CHUNK_LENGTH - 1) as i32) & player_coords;
 
         chunk_pos.world_pos = player_coords;

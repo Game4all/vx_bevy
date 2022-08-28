@@ -1,7 +1,7 @@
 use bevy::{
     diagnostic::{Diagnostics, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     ecs::schedule::ShouldRun,
-    input::{keyboard::KeyboardInput, ElementState},
+    input::{keyboard::KeyboardInput, ButtonState},
     prelude::{
         Color, CoreStage, EventReader, KeyCode, ParallelSystemDescriptorCoercion, Plugin, Res,
         ResMut, SystemSet, SystemStage,
@@ -91,10 +91,10 @@ fn toggle_debug_ui_displays(
 ) {
     for input in inputs.iter() {
         match input.key_code {
-            Some(key_code) if key_code == KeyCode::F3 && input.state == ElementState::Pressed => {
+            Some(key_code) if key_code == KeyCode::F3 && input.state == ButtonState::Pressed => {
                 ui_state.display_debug_info = !ui_state.display_debug_info;
             }
-            Some(key_code) if key_code == KeyCode::F7 && input.state == ElementState::Pressed => {
+            Some(key_code) if key_code == KeyCode::F7 && input.state == ButtonState::Pressed => {
                 ui_state.display_mat_debug = !ui_state.display_mat_debug;
             }
             _ => {}

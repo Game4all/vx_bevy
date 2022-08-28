@@ -44,8 +44,9 @@ fn queue_mesh_tasks(
     dirty_chunks: Res<DirtyChunks>,
     chunk_entities: Res<ChunkEntities>,
     chunks: Res<ChunkMap<Voxel, ChunkShape>>,
-    task_pool: Res<AsyncComputeTaskPool>,
 ) {
+    let task_pool = AsyncComputeTaskPool::get();
+    
     dirty_chunks
         .iter_dirty()
         .filter_map(|key| {
