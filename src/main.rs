@@ -16,13 +16,14 @@ fn main() {
 }
 
 fn setup(mut cmds: Commands) {
-    cmds.spawn_bundle(PerspectiveCameraBundle {
-        perspective_projection: PerspectiveProjection {
-            fov: PI / 2.0,
+    cmds.spawn_bundle(Camera3dBundle {
+        projection: bevy::render::camera::Projection::Perspective(PerspectiveProjection {
+            fov: PI / 2.,
             ..Default::default()
-        },
+        }),
         transform: Transform::from_xyz(2.0, 160.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     })
-    .insert(voxel::player::PlayerController::default());
+    .insert(voxel::player::PlayerController::default())
+    .insert(bevy_atmosphere::plugin::AtmosphereCamera(None));
 }

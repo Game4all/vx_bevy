@@ -1,35 +1,32 @@
 use bevy::{
-    core::Time,
     ecs::system::lifetimeless::SRes,
-    prelude::{Entity, FromWorld, Plugin, Res, ResMut},
+    prelude::{Commands, Entity, FromWorld, Plugin, Res, ResMut, info, Color},
     render::{
         render_phase::EntityRenderCommand,
         render_resource::{
-            std430::{AsStd430, Std430},
             BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
-            BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, Buffer, BufferDescriptor,
-            BufferSize, BufferUsages, ShaderStages,
+            BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, ShaderStages, ShaderType,
+            StorageBuffer, 
         },
         renderer::{RenderDevice, RenderQueue},
-        RenderApp, RenderStage, RenderWorld,
+        Extract, RenderApp, RenderStage,
     },
 };
 
 use crate::voxel::{material::VoxelMaterialRegistry, ChunkLoadRadius};
 
 /// A resource wrapping buffer references and bind groups for the different uniforms used for rendering terrains
-pub struct TerrainUniformsMeta {
+pub struct TerrainUniforms {
     pub bind_group_layout: BindGroupLayout,
-    pub materials_buffer: Buffer,
-    pub time_buffer: Buffer,
-    pub render_distance_buffer: Buffer,
+    materials_buffer: StorageBuffer<GpuTerrainMaterials>,
+    render_distance_params: StorageBuffer<GpuTerrainRenderSettings>,
     pub bind_group: Option<BindGroup>,
 }
 
-impl FromWorld for TerrainUniformsMeta {
+impl FromWorld for TerrainUniforms {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
         let render_device = world.get_resource::<RenderDevice>().unwrap();
-        TerrainUniformsMeta {
+        TerrainUniforms {
             bind_group_layout: render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                 label: Some("voxel_engine_material_array_layout"),
                 entries: &[
@@ -37,10 +34,8 @@ impl FromWorld for TerrainUniformsMeta {
                         binding: 0,
                         ty: BindingType::Buffer {
                             has_dynamic_offset: false,
-                            ty: bevy::render::render_resource::BufferBindingType::Uniform,
-                            min_binding_size: BufferSize::new(
-                                TerrainMaterialsUniform::std430_size_static() as u64,
-                            ),
+                            ty: bevy::render::render_resource::BufferBindingType::Storage { read_only: true },
+                            min_binding_size: None,
                         },
                         visibility: ShaderStages::VERTEX_FRAGMENT,
                         count: None,
@@ -49,46 +44,16 @@ impl FromWorld for TerrainUniformsMeta {
                         binding: 1,
                         ty: BindingType::Buffer {
                             has_dynamic_offset: false,
-                            ty: bevy::render::render_resource::BufferBindingType::Uniform,
-                            min_binding_size: BufferSize::new(
-                                TerrainTimeUniform::std430_size_static() as u64,
-                            ),
-                        },
-                        visibility: ShaderStages::VERTEX_FRAGMENT,
-                        count: None,
-                    },
-                    BindGroupLayoutEntry {
-                        binding: 2,
-                        ty: BindingType::Buffer {
-                            has_dynamic_offset: false,
-                            ty: bevy::render::render_resource::BufferBindingType::Uniform,
-                            min_binding_size: BufferSize::new(
-                                TerrainRenderSettingsUniform::std430_size_static() as u64,
-                            ),
+                            ty: bevy::render::render_resource::BufferBindingType::Storage { read_only: true },
+                            min_binding_size: Some(GpuTerrainRenderSettings::min_size()),
                         },
                         count: None,
                         visibility: ShaderStages::VERTEX_FRAGMENT,
                     },
                 ],
             }),
-            materials_buffer: render_device.create_buffer(&BufferDescriptor {
-                label: None,
-                usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
-                size: TerrainMaterialsUniform::std430_size_static() as u64,
-                mapped_at_creation: false,
-            }),
-            time_buffer: render_device.create_buffer(&BufferDescriptor {
-                label: None,
-                usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
-                size: TerrainTimeUniform::std430_size_static() as u64,
-                mapped_at_creation: false,
-            }),
-            render_distance_buffer: render_device.create_buffer(&BufferDescriptor {
-                label: None,
-                usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
-                size: TerrainRenderSettingsUniform::std430_size_static() as u64,
-                mapped_at_creation: false,
-            }),
+            materials_buffer: StorageBuffer::default(),
+            render_distance_params: StorageBuffer::default(),
             bind_group: None,
         }
     }
@@ -96,22 +61,18 @@ impl FromWorld for TerrainUniformsMeta {
 
 /// Prepares the the bind group
 fn prepare_terrain_uniforms(
-    mut terrain_uniforms: ResMut<TerrainUniformsMeta>,
+    mut terrain_uniforms: ResMut<TerrainUniforms>,
     render_device: Res<RenderDevice>,
 ) {
     let bind_group = render_device.create_bind_group(&BindGroupDescriptor {
         entries: &[
             BindGroupEntry {
                 binding: 0,
-                resource: terrain_uniforms.materials_buffer.as_entire_binding(),
+                resource: terrain_uniforms.materials_buffer.buffer().unwrap().as_entire_binding(),
             },
             BindGroupEntry {
                 binding: 1,
-                resource: terrain_uniforms.time_buffer.as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 2,
-                resource: terrain_uniforms.render_distance_buffer.as_entire_binding(),
+                resource: terrain_uniforms.render_distance_params.binding().unwrap(),
             },
         ],
         label: None,
@@ -123,34 +84,31 @@ fn prepare_terrain_uniforms(
 
 // Materials uniform
 
-#[derive(AsStd430, Clone, Copy)]
+#[derive(ShaderType, Clone, Copy, Default)]
 pub struct GpuVoxelMaterial {
-    pub base_color: [f32; 4],
+    pub base_color: Color,
     pub flags: u32,
-
-    //theres a problem with crevice and the struct alignment so these are needed to align the uniform buffer size
-    pub __padding1: u32,
-    pub __padding2: u32,
-    pub __padding3: u32,
 }
 
-#[derive(AsStd430)]
-struct TerrainMaterialsUniform {
+#[derive(ShaderType, Clone)]
+struct GpuTerrainMaterials {
     pub materials: [GpuVoxelMaterial; 256],
 }
 
-fn extract_voxel_materials(
-    mut render_world: ResMut<RenderWorld>,
-    materials: Res<VoxelMaterialRegistry>,
-) {
+impl Default for GpuTerrainMaterials {
+    fn default() -> Self {
+        Self {
+            materials: [Default::default(); 256],
+        }
+    }
+}
+
+fn extract_voxel_materials(mut commands: Commands, materials: Extract<Res<VoxelMaterialRegistry>>) {
     if materials.is_changed() {
-        let mut gpu_mats = TerrainMaterialsUniform {
+        let mut gpu_mats = GpuTerrainMaterials {
             materials: [GpuVoxelMaterial {
-                base_color: [0f32; 4],
+                base_color: Color::WHITE,
                 flags: 0,
-                __padding1: 0,
-                __padding2: 0,
-                __padding3: 0,
             }; 256],
         };
 
@@ -158,76 +116,56 @@ fn extract_voxel_materials(
             .iter_mats()
             .enumerate()
             .for_each(|(index, material)| {
-                gpu_mats.materials[index].base_color = material.base_color.as_rgba_f32();
+                gpu_mats.materials[index].base_color = material.base_color;
                 gpu_mats.materials[index].flags = material.flags.bits();
             });
 
-        render_world.insert_resource(gpu_mats);
+        commands.insert_resource(gpu_mats);
     }
 }
 
 fn upload_voxel_materials(
     render_queue: Res<RenderQueue>,
-    material_meta: Res<TerrainUniformsMeta>,
-    materials: Res<TerrainMaterialsUniform>,
+    render_device: Res<RenderDevice>,
+    mut material_meta: ResMut<TerrainUniforms>,
+    materials: Res<GpuTerrainMaterials>,
 ) {
     if materials.is_changed() {
-        render_queue.write_buffer(
-            &material_meta.materials_buffer,
-            0,
-            materials.as_std430().as_bytes(),
-        );
+        material_meta.materials_buffer.set(materials.clone());
+        material_meta
+            .materials_buffer
+            .write_buffer(&render_device, &render_queue);
     }
 }
 
-// time uniform
-#[derive(AsStd430)]
-pub struct TerrainTimeUniform {
-    pub time: f32,
-}
-
-fn extract_time(mut render_world: ResMut<RenderWorld>, time: Res<Time>) {
-    render_world.insert_resource(TerrainTimeUniform {
-        time: time.seconds_since_startup() as f32,
-    })
-}
-
-fn upload_time_uniform(
-    render_queue: Res<RenderQueue>,
-    material_meta: Res<TerrainUniformsMeta>,
-    time: Res<TerrainTimeUniform>,
-) {
-    render_queue.write_buffer(&material_meta.time_buffer, 0, time.as_std430().as_bytes());
-}
-
 fn extract_terrain_render_settings_uniform(
-    mut render_world: ResMut<RenderWorld>,
-    render_distance: Res<ChunkLoadRadius>,
+    mut commands: Commands,
+    render_distance: Extract<Res<ChunkLoadRadius>>,
 ) {
     if render_distance.is_changed() {
-        render_world.insert_resource(TerrainRenderSettingsUniform {
+        commands.insert_resource(GpuTerrainRenderSettings {
             render_distance: render_distance.horizontal as u32,
         })
     }
 }
 
 fn upload_render_distance_uniform(
-    uniform: Res<TerrainRenderSettingsUniform>,
-    material_meta: Res<TerrainUniformsMeta>,
+    uniform: Res<GpuTerrainRenderSettings>,
+    mut material_meta: ResMut<TerrainUniforms>,
     render_queue: Res<RenderQueue>,
+    render_device: Res<RenderDevice>,
 ) {
     if uniform.is_changed() {
-        render_queue.write_buffer(
-            &material_meta.render_distance_buffer,
-            0u64,
-            uniform.as_std430().as_bytes(),
-        );
+        material_meta.render_distance_params.set(uniform.clone());
+        material_meta
+            .render_distance_params
+            .write_buffer(&render_device, &render_queue);
     }
 }
 
 // terrain render settings uniform
-#[derive(AsStd430)]
-struct TerrainRenderSettingsUniform {
+#[derive(ShaderType, Default, Clone)]
+struct GpuTerrainRenderSettings {
     // current render distance radius
     pub render_distance: u32,
 }
@@ -235,7 +173,7 @@ struct TerrainRenderSettingsUniform {
 /// Binds the terrain uniforms for use in shaders.
 pub struct SetTerrainUniformsBindGroup<const I: usize>;
 impl<const I: usize> EntityRenderCommand for SetTerrainUniformsBindGroup<I> {
-    type Param = SRes<TerrainUniformsMeta>;
+    type Param = SRes<TerrainUniforms>;
 
     fn render<'w>(
         _view: Entity,
@@ -254,16 +192,17 @@ pub struct VoxelTerrainUniformsPlugin;
 impl Plugin for VoxelTerrainUniformsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.sub_app_mut(RenderApp)
-            .init_resource::<TerrainUniformsMeta>()
+            .init_resource::<TerrainUniforms>()
             .add_system_to_stage(RenderStage::Extract, extract_voxel_materials)
-            .add_system_to_stage(RenderStage::Extract, extract_time)
-            .add_system_to_stage(RenderStage::Prepare, prepare_terrain_uniforms)
+            .add_system_to_stage(RenderStage::Queue, prepare_terrain_uniforms)
             .add_system_to_stage(RenderStage::Prepare, upload_voxel_materials)
-            .add_system_to_stage(RenderStage::Prepare, upload_time_uniform)
+            .add_system_to_stage(RenderStage::Prepare, upload_render_distance_uniform)
             .add_system_to_stage(
                 RenderStage::Extract,
                 extract_terrain_render_settings_uniform,
-            )
-            .add_system_to_stage(RenderStage::Prepare, upload_render_distance_uniform);
+            );
+
+        info!("type size: {}", GpuVoxelMaterial::min_size().get() * 256);
     }
 }
+

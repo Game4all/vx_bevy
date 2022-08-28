@@ -1,5 +1,5 @@
 use bevy::{
-    core::Time,
+    time::Time,
     prelude::{
         Added, Changed, Commands, Component, Entity, Plugin, Query, Res, Transform, Visibility,
         With,

@@ -1,4 +1,4 @@
-use bevy::{input::mouse::MouseMotion, math::const_vec3, prelude::*};
+use bevy::{input::mouse::MouseMotion, prelude::*};
 use std::f32::consts::FRAC_PI_2;
 
 // Reusing the player controller impl for now.
@@ -61,7 +61,7 @@ pub fn handle_player_input(
 
     let mut direction = Vec3::ZERO;
 
-    let forward = transform.rotation.mul_vec3(Vec3::Z).normalize() * const_vec3!([1.0, 0., 1.0]);
+    let forward = transform.rotation.mul_vec3(Vec3::Z).normalize() * Vec3::new(1.0, 0., 1.0);
     let right = transform.rotation.mul_vec3(Vec3::X).normalize();
 
     let mut acceleration = 1.0f32;

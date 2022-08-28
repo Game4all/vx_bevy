@@ -1,4 +1,4 @@
-use bevy::core_pipeline::AlphaMask3d;
+use bevy::core_pipeline::core_3d::AlphaMask3d;
 use bevy::pbr::{DrawMesh, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup};
 use bevy::prelude::{
     Bundle, ComputedVisibility, Entity, GlobalTransform, Mesh, Msaa, Query, Res, ResMut, Transform,
@@ -23,12 +23,12 @@ use bevy::{
     pbr::MeshPipeline,
     prelude::{AssetServer, Component, FromWorld, Handle, Plugin, Shader},
     render::{
-        render_component::{ExtractComponent, ExtractComponentPlugin},
+        extract_component::{ExtractComponent, ExtractComponentPlugin},
         RenderApp,
     },
 };
 
-use super::terrain_uniforms::{self, SetTerrainUniformsBindGroup, TerrainUniformsMeta};
+use super::terrain_uniforms::{self, SetTerrainUniformsBindGroup, TerrainUniforms};
 
 #[derive(Component, Clone, Default)]
 /// A marker component for voxel meshes.
@@ -65,7 +65,7 @@ impl FromWorld for VoxelTerrainRenderPipeline {
                 .unwrap()
                 .load("shaders/terrain_pipeline.wgsl") as Handle<Shader>,
             material_array_layout: world
-                .get_resource::<TerrainUniformsMeta>()
+                .get_resource::<TerrainUniforms>()
                 .unwrap()
                 .bind_group_layout
                 .clone(),
@@ -96,11 +96,11 @@ impl SpecializedMeshPipeline for VoxelTerrainRenderPipeline {
                 shader: self.shader.clone(),
                 shader_defs: Vec::new(),
                 entry_point: "fragment".into(),
-                targets: vec![ColorTargetState {
+                targets: vec![Some(ColorTargetState {
                     format: TextureFormat::bevy_default(),
                     blend: Some(BlendState::REPLACE),
                     write_mask: ColorWrites::ALL,
-                }],
+                })],
             }),
             layout: Some(vec![
                 self.mesh_pipeline.view_layout.clone(),
