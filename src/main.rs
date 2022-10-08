@@ -19,6 +19,7 @@ fn setup(mut cmds: Commands) {
     cmds.spawn_bundle(Camera3dBundle {
         projection: bevy::render::camera::Projection::Perspective(PerspectiveProjection {
             fov: PI / 2.,
+            far: 2048.0,
             ..Default::default()
         }),
         transform: Transform::from_xyz(2.0, 160.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
