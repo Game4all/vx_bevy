@@ -16,6 +16,7 @@ voxel_material!(Bedrock, 8);
 voxel_material!(Cactus, 9);
 voxel_material!(Wood, 10);
 voxel_material!(Leaves, 11);
+voxel_material!(PineLeaves, 12);
 
 pub struct VoxelWorldBaseMaterialsPlugin;
 
@@ -89,6 +90,12 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         registry.register_material::<Leaves>(MaterialRegistryInfo {
             base_color: Color::rgb_u8(90, 186, 69),
             name: Leaves::NAME,
+            flags: VoxelMaterialFlags::SOLID,
+        });
+
+        registry.register_material::<PineLeaves>(MaterialRegistryInfo {
+            base_color: Color::rgb_u8(135, 201, 167),
+            name: PineLeaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
         });
     }

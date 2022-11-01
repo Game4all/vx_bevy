@@ -34,3 +34,12 @@ pub fn sdf_v_capsule(p: Vec3, h: f32, r: f32) -> f32 {
     pp.y -= p.y.clamp(0.0, h);
     pp.length() - r
 }
+
+pub fn sdf_vcone(p: Vec3, r: f32, h: f32) -> f32 {
+    let slope = -h / r;
+    let ratio = (1.0 / slope * slope + 1.0).sqrt();
+    let t = vec2(p.xz().length(), p.y);
+    let v = slope * t.x + h - t.y;
+    let p = v * ratio;
+    -p.min(t.y)
+}

@@ -49,6 +49,36 @@ pub fn terrain_carve_heightmap(
         });
 }
 
+pub fn make_pine_tree<T: VoxelMaterial, L: VoxelMaterial>(
+    buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+    origin: UVec3,
+) {
+    Extent::from_min_and_shape(UVec3::ZERO, UVec3::splat(CHUNK_LENGTH)) //may want to calculate an extent encompassing the tree instead of iterating over the complete 32^3 volume
+        .iter3()
+        .map(|position| {
+            let trunk_distance = sdf::sdf_capped_cylinder(
+                position.as_vec3() - (origin.as_vec3() + 2.0 * Vec3::Y),
+                1.5,
+                8.0,
+            ) < 0.;
+            let leaves_distance = sdf::sdf_vcone(
+                position.as_vec3() - (origin.as_vec3() + 6.0 * Vec3::Y),
+                7.0,
+                17.0,
+            ) < 0.;
+            (trunk_distance, leaves_distance, position)
+        })
+        .for_each(|(trunk_distance, leaves_distance, position)| {
+            if trunk_distance {
+                *buffer.voxel_at_mut(position) = T::into_voxel()
+            }
+
+            if leaves_distance {
+                *buffer.voxel_at_mut(position) = L::into_voxel()
+            }
+        })
+}
+
 /// Make a tree using SDF functions
 pub fn make_tree<T: VoxelMaterial, L: VoxelMaterial>(
     buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
