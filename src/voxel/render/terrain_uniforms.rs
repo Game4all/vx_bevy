@@ -1,12 +1,14 @@
+use std::default;
+
 use bevy::{
     ecs::system::lifetimeless::SRes,
-    prelude::{Commands, Entity, FromWorld, Plugin, Res, ResMut, info, Color},
+    prelude::{info, Color, Commands, Entity, FromWorld, Plugin, Res, ResMut},
     render::{
         render_phase::EntityRenderCommand,
         render_resource::{
             BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
             BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, ShaderStages, ShaderType,
-            StorageBuffer, 
+            StorageBuffer,
         },
         renderer::{RenderDevice, RenderQueue},
         Extract, RenderApp, RenderStage,
@@ -34,7 +36,9 @@ impl FromWorld for TerrainUniforms {
                         binding: 0,
                         ty: BindingType::Buffer {
                             has_dynamic_offset: false,
-                            ty: bevy::render::render_resource::BufferBindingType::Storage { read_only: true },
+                            ty: bevy::render::render_resource::BufferBindingType::Storage {
+                                read_only: true,
+                            },
                             min_binding_size: None,
                         },
                         visibility: ShaderStages::VERTEX_FRAGMENT,
@@ -44,7 +48,9 @@ impl FromWorld for TerrainUniforms {
                         binding: 1,
                         ty: BindingType::Buffer {
                             has_dynamic_offset: false,
-                            ty: bevy::render::render_resource::BufferBindingType::Storage { read_only: true },
+                            ty: bevy::render::render_resource::BufferBindingType::Storage {
+                                read_only: true,
+                            },
                             min_binding_size: Some(GpuTerrainRenderSettings::min_size()),
                         },
                         count: None,
@@ -68,7 +74,11 @@ fn prepare_terrain_uniforms(
         entries: &[
             BindGroupEntry {
                 binding: 0,
-                resource: terrain_uniforms.materials_buffer.buffer().unwrap().as_entire_binding(),
+                resource: terrain_uniforms
+                    .materials_buffer
+                    .buffer()
+                    .unwrap()
+                    .as_entire_binding(),
             },
             BindGroupEntry {
                 binding: 1,
@@ -88,6 +98,10 @@ fn prepare_terrain_uniforms(
 pub struct GpuVoxelMaterial {
     pub base_color: Color,
     pub flags: u32,
+    pub emissive: Color,
+    pub perceptual_roughness: f32,
+    pub metallic: f32,
+    pub reflectance: f32,
 }
 
 #[derive(ShaderType, Clone)]
@@ -109,6 +123,7 @@ fn extract_voxel_materials(mut commands: Commands, materials: Extract<Res<VoxelM
             materials: [GpuVoxelMaterial {
                 base_color: Color::WHITE,
                 flags: 0,
+                ..Default::default()
             }; 256],
         };
 
@@ -205,4 +220,3 @@ impl Plugin for VoxelTerrainUniformsPlugin {
         info!("type size: {}", GpuVoxelMaterial::min_size().get() * 256);
     }
 }
-

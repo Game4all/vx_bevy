@@ -5,6 +5,10 @@ let TERRAIN_CHUNK_LENGTH: u32 = 32u;
 struct VoxelMat {
     base_color: vec4<f32>,
     flags: u32,
+    emissive: vec4<f32>,
+    perceptual_roughness: f32,
+    metallic: f32,
+    reflectance: f32,
 };
 
 // A GPU-suited representation of voxel materials.

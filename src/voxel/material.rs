@@ -10,10 +10,15 @@ use super::Voxel;
 //todo: rewrite this in a way which allows constifying stuff.
 
 // Registry info about a voxel material
+#[derive(Default)]
 pub struct MaterialRegistryInfo {
     pub name: &'static str,
     pub base_color: Color,
     pub flags: VoxelMaterialFlags,
+    pub emissive: Color,
+    pub perceptual_roughness: f32,
+    pub metallic: f32,
+    pub reflectance: f32,
 }
 
 /// Helper / marker trait for voxel materials.
@@ -43,6 +48,12 @@ bitflags! {
         const SOLID = 0 << 0;
         const LIQUID = 1 << 1;
         const UNBREAKABLE = 1 << 2;
+    }
+}
+
+impl Default for VoxelMaterialFlags {
+    fn default() -> Self {
+        VoxelMaterialFlags::SOLID
     }
 }
 
@@ -100,6 +111,7 @@ impl Default for VoxelMaterialRegistry {
             base_color: Color::BLACK,
             name: "Void",
             flags: VoxelMaterialFlags::SOLID,
+            ..Default::default()
         });
 
         registry
