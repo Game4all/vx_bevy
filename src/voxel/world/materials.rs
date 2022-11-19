@@ -32,6 +32,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::rgb_u8(112, 97, 92),
             name: Dirt::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -39,6 +40,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::rgb_u8(228, 219, 148),
             name: Sand::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
+            
             ..Default::default()
         });
 
@@ -46,6 +49,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::LIME_GREEN,
             name: Grass::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -53,6 +57,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::GRAY,
             name: Rock::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -60,6 +65,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::WHITE,
             name: Snow::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -67,6 +73,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: *Color::rgb_u8(78, 167, 215).set_a(0.4),
             name: Water::NAME,
             flags: VoxelMaterialFlags::LIQUID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -74,6 +81,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::rgb_u8(198, 192, 144),
             name: Sandstone::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -81,6 +89,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::DARK_GRAY,
             name: Bedrock::NAME,
             flags: VoxelMaterialFlags::UNBREAKABLE,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -88,6 +97,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::rgb_u8(0, 96, 0),
             name: Cactus::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -95,6 +105,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::rgb_u8(188, 147, 97),
             name: Wood::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -102,6 +113,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::rgb_u8(90, 186, 69),
             name: Leaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -109,6 +121,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::rgb_u8(135, 201, 167),
             name: PineLeaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
 
@@ -116,6 +129,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             base_color: Color::rgb_u8(174, 155, 126),
             name: PineWood::NAME,
             flags: VoxelMaterialFlags::SOLID,
+            emissive: Color::BLACK,
             ..Default::default()
         });
     }

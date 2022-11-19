@@ -119,6 +119,7 @@ impl Default for GpuTerrainMaterials {
 
 fn extract_voxel_materials(mut commands: Commands, materials: Extract<Res<VoxelMaterialRegistry>>) {
     if materials.is_changed() {
+
         let mut gpu_mats = GpuTerrainMaterials {
             materials: [GpuVoxelMaterial {
                 base_color: Color::WHITE,
@@ -133,6 +134,10 @@ fn extract_voxel_materials(mut commands: Commands, materials: Extract<Res<VoxelM
             .for_each(|(index, material)| {
                 gpu_mats.materials[index].base_color = material.base_color;
                 gpu_mats.materials[index].flags = material.flags.bits();
+                gpu_mats.materials[index].emissive = material.emissive;
+                gpu_mats.materials[index].perceptual_roughness = material.perceptual_roughness;
+                gpu_mats.materials[index].metallic = material.metallic;
+                gpu_mats.materials[index].reflectance = material.reflectance;
             });
 
         commands.insert_resource(gpu_mats);

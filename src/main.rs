@@ -1,4 +1,3 @@
-#![feature(map_first_last)]
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
@@ -27,4 +26,9 @@ fn setup(mut cmds: Commands) {
     })
     .insert(voxel::player::PlayerController::default())
     .insert(bevy_atmosphere::plugin::AtmosphereCamera(None));
+
+    cmds.insert_resource(AmbientLight {
+        color: Color::WHITE,
+        brightness: 1.0,
+    });
 }
