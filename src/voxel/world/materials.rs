@@ -41,7 +41,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Sand::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
-            
+
             ..Default::default()
         });
 

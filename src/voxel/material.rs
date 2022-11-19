@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{info, Color, Plugin},
+    prelude::{info, Color, Plugin, Resource},
     utils::HashMap,
 };
 use bitflags::bitflags;
@@ -59,6 +59,7 @@ impl Default for VoxelMaterialFlags {
 
 /// A registry for voxel material types.
 /// This stores the voxel materials along their material id used to refer them in voxel data
+#[derive(Resource)]
 pub struct VoxelMaterialRegistry {
     materials: Vec<MaterialRegistryInfo>,
     mat_ids: HashMap<TypeId, usize>,

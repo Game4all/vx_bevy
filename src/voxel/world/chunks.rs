@@ -2,8 +2,8 @@ use bevy::{
     ecs::schedule::ShouldRun,
     math::IVec3,
     prelude::{
-        Changed, Commands, CoreStage, Entity, GlobalTransform, ParallelSystemDescriptorCoercion,
-        Plugin, Query, Res, ResMut, StageLabel, SystemLabel, SystemStage, With,
+        Changed, Commands, CoreStage, Entity, GlobalTransform, IntoSystemDescriptor, Plugin, Query,
+        Res, ResMut, Resource, StageLabel, SystemLabel, SystemStage, With,
     },
     utils::{HashMap, HashSet},
 };
@@ -101,9 +101,10 @@ fn create_chunks(
     mut chunk_entities: ResMut<ChunkEntities>,
     mut cmds: Commands,
 ) {
-    chunks_command_queue.create.drain(..).for_each(|request| {
-        chunk_entities.attach_entity(request, cmds.spawn().insert(Chunk(request)).id())
-    });
+    chunks_command_queue
+        .create
+        .drain(..)
+        .for_each(|request| chunk_entities.attach_entity(request, cmds.spawn(Chunk(request)).id()));
 }
 
 fn destroy_chunks(
@@ -145,7 +146,7 @@ pub enum ChunkLoadingSystem {
 pub struct VoxelWorldChunkingPlugin;
 
 /// Stores the Entity <-> Chunk voxel data buffer mapping
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct ChunkEntities(HashMap<IVec3, Entity>);
 
 impl ChunkEntities {
@@ -176,7 +177,7 @@ impl ChunkEntities {
 }
 
 /// Holds the dirty chunk for the current frame.
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct DirtyChunks(HashSet<IVec3>);
 
 #[allow(dead_code)]
@@ -195,19 +196,21 @@ impl DirtyChunks {
 }
 
 /// Resource storing the current chunk the player is in as well as its current coords.
+#[derive(Resource)]
 pub struct CurrentLocalPlayerChunk {
     pub chunk_min: IVec3,
     pub world_pos: IVec3,
 }
 
 // Resource holding the view distance.
+#[derive(Resource)]
 pub struct ChunkLoadRadius {
     pub horizontal: i32,
     pub vertical: i32,
 }
 
 /// A queue tracking the creation / destroy commands for chunks.
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct ChunkCommandQueue {
     create: Vec<IVec3>,
     destroy: Vec<IVec3>,

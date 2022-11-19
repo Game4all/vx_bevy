@@ -2,7 +2,7 @@ use std::default;
 
 use bevy::{
     ecs::system::lifetimeless::SRes,
-    prelude::{info, Color, Commands, Entity, FromWorld, Plugin, Res, ResMut},
+    prelude::{info, Color, Commands, Entity, FromWorld, Plugin, Res, ResMut, Resource},
     render::{
         render_phase::EntityRenderCommand,
         render_resource::{
@@ -18,6 +18,7 @@ use bevy::{
 use crate::voxel::{material::VoxelMaterialRegistry, ChunkLoadRadius};
 
 /// A resource wrapping buffer references and bind groups for the different uniforms used for rendering terrains
+#[derive(Resource)]
 pub struct TerrainUniforms {
     pub bind_group_layout: BindGroupLayout,
     materials_buffer: StorageBuffer<GpuTerrainMaterials>,
@@ -104,7 +105,7 @@ pub struct GpuVoxelMaterial {
     pub reflectance: f32,
 }
 
-#[derive(ShaderType, Clone)]
+#[derive(ShaderType, Clone, Resource)]
 struct GpuTerrainMaterials {
     pub materials: [GpuVoxelMaterial; 256],
 }
@@ -119,7 +120,6 @@ impl Default for GpuTerrainMaterials {
 
 fn extract_voxel_materials(mut commands: Commands, materials: Extract<Res<VoxelMaterialRegistry>>) {
     if materials.is_changed() {
-
         let mut gpu_mats = GpuTerrainMaterials {
             materials: [GpuVoxelMaterial {
                 base_color: Color::WHITE,
@@ -184,7 +184,7 @@ fn upload_render_distance_uniform(
 }
 
 // terrain render settings uniform
-#[derive(ShaderType, Default, Clone)]
+#[derive(ShaderType, Default, Clone, Resource)]
 struct GpuTerrainRenderSettings {
     // current render distance radius
     pub render_distance: u32,

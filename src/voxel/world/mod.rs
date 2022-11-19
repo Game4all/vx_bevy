@@ -1,4 +1,7 @@
-use bevy::{prelude::{Component, Plugin}, math::IVec3};
+use bevy::{
+    math::IVec3,
+    prelude::{Component, Plugin},
+};
 use ndshape::ConstShape3u32;
 
 use super::{storage::ChunkMap, terraingen, Voxel};
@@ -30,7 +33,7 @@ impl Plugin for VoxelWorldPlugin {
             .add_plugin(super::material::VoxelMaterialPlugin)
             .add_plugin(materials::VoxelWorldBaseMaterialsPlugin)
             .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin)
-            .add_plugin(bevy_atmosphere::plugin::AtmospherePlugin)
+            // .add_plugin(bevy_atmosphere::plugin::AtmospherePlugin)
             .add_plugin(player::VoxelWorldPlayerControllerPlugin);
     }
 }
