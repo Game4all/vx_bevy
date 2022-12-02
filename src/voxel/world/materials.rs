@@ -117,6 +117,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Wood::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.7,
+            metallic: 0.46,
             ..Default::default()
         });
 
@@ -125,6 +127,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Leaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.73,
+            metallic: 1.0,
             ..Default::default()
         });
 
