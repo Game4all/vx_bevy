@@ -296,6 +296,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_atmosphere"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02d0fb49de99c783686315bace987bbee486204a5757b9b7963fd7d8f7874515"
+dependencies = [
+ "bevy",
+ "bevy_atmosphere_macros",
+ "cfg-if 1.0.0",
+]
+
+[[package]]
+name = "bevy_atmosphere_macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e84e7a73a93169b0a23952996c846faeca2e177f3badc1d2298bad030f62cd7"
+dependencies = [
+ "bevy_macro_utils",
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "bevy_audio"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3411,6 +3435,7 @@ name = "vx_bevy"
 version = "0.2.0"
 dependencies = [
  "bevy",
+ "bevy_atmosphere",
  "bevy_egui",
  "bitflags",
  "block-mesh",

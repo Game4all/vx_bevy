@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::{prelude::*, core_pipeline::{fxaa::Fxaa, bloom::BloomSettings}};
+use bevy::{core_pipeline::fxaa::Fxaa, prelude::*};
 
 mod debug;
 mod voxel;
@@ -25,8 +25,8 @@ fn setup(mut cmds: Commands) {
         ..Default::default()
     })
     .insert(voxel::player::PlayerController::default())
-    .insert(Fxaa::default());
-    // .insert(bevy_atmosphere::plugin::AtmosphereCamera(None));
+    .insert(Fxaa::default())
+    .insert(bevy_atmosphere::plugin::AtmosphereCamera::default());
 
     cmds.insert_resource(AmbientLight {
         color: Color::WHITE,
