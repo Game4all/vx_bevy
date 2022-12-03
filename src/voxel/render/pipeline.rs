@@ -1,8 +1,8 @@
 use bevy::core_pipeline::core_3d::AlphaMask3d;
 use bevy::pbr::{DrawMesh, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup};
 use bevy::prelude::{
-    Bundle, ComputedVisibility, Entity, GlobalTransform, Mesh, Msaa, Query, Res, ResMut, Transform,
-    Visibility, With,
+    Bundle, ComputedVisibility, Entity, GlobalTransform, Mesh, Msaa, Query, Res, ResMut, Resource,
+    Transform, Visibility, With,
 };
 use bevy::render::mesh::{MeshVertexAttribute, MeshVertexBufferLayout};
 
@@ -50,6 +50,7 @@ impl ExtractComponent for VoxelTerrainMesh {
 }
 
 /// A render pipeline for rendering voxel terrain meshes.
+#[derive(Resource)]
 pub struct VoxelTerrainRenderPipeline {
     mesh_pipeline: MeshPipeline,
     shader: Handle<Shader>,

@@ -3,8 +3,8 @@ use bevy::{
     ecs::schedule::ShouldRun,
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::{
-        Color, CoreStage, EventReader, KeyCode, ParallelSystemDescriptorCoercion, Plugin, Res,
-        ResMut, SystemSet, SystemStage,
+        Color, CoreStage, EventReader, IntoSystemDescriptor, KeyCode, Plugin, Res, ResMut,
+        Resource, SystemSet, SystemStage,
     },
 };
 use bevy_egui::{
@@ -198,7 +198,7 @@ impl Plugin for DebugUIPlugins {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 struct DebugUIState {
     display_debug_info: bool,
     display_mat_debug: bool,

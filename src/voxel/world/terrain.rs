@@ -3,25 +3,21 @@ use super::{
     Chunk, ChunkShape,
 };
 use crate::voxel::{
-    storage::{VoxelBuffer, ChunkMap},
+    storage::{ChunkMap, VoxelBuffer},
     terraingen::TERRAIN_GENERATOR,
     Voxel,
 };
 use bevy::{
     prelude::{
-        Added, Commands, Component, Entity, ParallelSystemDescriptorCoercion, Plugin, Query,
-        ResMut, StageLabel, SystemLabel, SystemStage,
+        Added, Commands, Component, Entity, IntoSystemDescriptor, Plugin, Query, ResMut,
+        StageLabel, SystemLabel, SystemStage,
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
 use futures_lite::future;
 
 /// Queues the terrain gen async tasks for the newly created chunks.
-fn queue_terrain_gen(
-    mut commands: Commands,
-    new_chunks: Query<(Entity, &Chunk), Added<Chunk>>,
-) {
-
+fn queue_terrain_gen(mut commands: Commands, new_chunks: Query<(Entity, &Chunk), Added<Chunk>>) {
     let task_pool = AsyncComputeTaskPool::get();
 
     new_chunks

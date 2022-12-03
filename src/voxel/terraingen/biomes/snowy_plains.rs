@@ -2,7 +2,7 @@ use bevy::math::{IVec3, UVec3, Vec2, Vec3Swizzles};
 
 use crate::voxel::{
     material::VoxelMaterial,
-    materials::{Dirt, Grass, PineLeaves, Snow, PineWood},
+    materials::{Dirt, Grass, PineLeaves, PineWood, Snow},
     storage::VoxelBuffer,
     terraingen::{common::make_pine_tree, noise},
     ChunkShape, Voxel,

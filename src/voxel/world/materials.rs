@@ -33,6 +33,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Dirt::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.75,
+            reflectance: 0.45,
             ..Default::default()
         });
 
@@ -41,7 +43,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Sand::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
-            
+            perceptual_roughness: 0.8,
+            reflectance: 1.0,
             ..Default::default()
         });
 
@@ -50,6 +53,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Grass::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.66,
+            reflectance: 0.3,
             ..Default::default()
         });
 
@@ -58,6 +63,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Rock::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.85,
+            metallic: 0.6,
             ..Default::default()
         });
 
@@ -74,6 +81,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Water::NAME,
             flags: VoxelMaterialFlags::LIQUID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.2,
+            metallic: 0.47,
             ..Default::default()
         });
 
@@ -90,6 +99,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Bedrock::NAME,
             flags: VoxelMaterialFlags::UNBREAKABLE,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.9,
+            metallic: 1.0,
             ..Default::default()
         });
 
@@ -106,6 +117,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Wood::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.7,
+            metallic: 0.46,
             ..Default::default()
         });
 
@@ -114,6 +127,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: Leaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.73,
+            metallic: 1.0,
             ..Default::default()
         });
 
@@ -122,6 +137,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: PineLeaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.73,
+            metallic: 1.0,
             ..Default::default()
         });
 
@@ -130,6 +147,8 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
             name: PineWood::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
+            perceptual_roughness: 0.7,
+            metallic: 0.46,
             ..Default::default()
         });
     }

@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use bevy::{core_pipeline::fxaa::Fxaa, prelude::*};
 
 mod debug;
 mod voxel;
@@ -15,7 +15,7 @@ fn main() {
 }
 
 fn setup(mut cmds: Commands) {
-    cmds.spawn_bundle(Camera3dBundle {
+    cmds.spawn(Camera3dBundle {
         projection: bevy::render::camera::Projection::Perspective(PerspectiveProjection {
             fov: PI / 2.,
             far: 2048.0,
@@ -25,7 +25,8 @@ fn setup(mut cmds: Commands) {
         ..Default::default()
     })
     .insert(voxel::player::PlayerController::default())
-    .insert(bevy_atmosphere::plugin::AtmosphereCamera(None));
+    .insert(Fxaa::default())
+    .insert(bevy_atmosphere::plugin::AtmosphereCamera::default());
 
     cmds.insert_resource(AmbientLight {
         color: Color::WHITE,

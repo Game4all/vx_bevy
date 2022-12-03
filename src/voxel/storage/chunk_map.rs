@@ -1,7 +1,7 @@
 use ilattice::{morton::Morton3i32, vector::Map as VecMap};
 use std::{collections::BTreeMap, hash::Hash};
 
-use bevy::math::IVec3;
+use bevy::{math::IVec3, prelude::Resource};
 use ndshape::Shape;
 
 use crate::voxel::CHUNK_LENGTH;
@@ -9,6 +9,7 @@ use crate::voxel::CHUNK_LENGTH;
 use super::buffer::VoxelBuffer;
 
 /// Provides an interface to query or modify voxel data for worlds or scenes split into multiple voxel data buffers of a same shape with no level of detail.
+#[derive(Resource)]
 pub struct ChunkMap<V, S>
 where
     V: Clone + Copy + Default + PartialEq + Eq + Hash,

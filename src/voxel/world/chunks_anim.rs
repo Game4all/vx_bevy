@@ -1,9 +1,9 @@
 use bevy::{
-    time::Time,
     prelude::{
         Added, Changed, Commands, Component, Entity, Plugin, Query, Res, Transform, Visibility,
         With,
     },
+    time::Time,
 };
 
 use crate::voxel::render::VoxelTerrainMesh;
@@ -25,7 +25,7 @@ fn attach_chunk_animation(
 ) {
     ready_chunks.for_each(|entity| {
         commands.entity(entity).insert(ChunkSpawnAnimation {
-            start_time: time.time_since_startup().as_secs_f32(),
+            start_time: time.elapsed_seconds(),
         });
     });
 }
@@ -37,8 +37,7 @@ fn step_chunk_animation(
     mut commands: Commands,
 ) {
     chunks.for_each_mut(|(entity, mut transform, _chunk, animation)| {
-        let delta = (time.time_since_startup().as_secs_f32() - animation.start_time)
-            .min(ANIMATION_DURATION);
+        let delta = (time.elapsed_seconds() - animation.start_time).min(ANIMATION_DURATION);
 
         let ytransform = _chunk.0.y as f32 - ANIMATION_HEIGHT
             + (1. - (1. - (delta / ANIMATION_DURATION)).powi(5)) * ANIMATION_HEIGHT;

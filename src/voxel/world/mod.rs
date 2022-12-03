@@ -1,4 +1,7 @@
-use bevy::{prelude::{Component, Plugin}, math::IVec3};
+use bevy::{
+    math::IVec3,
+    prelude::{Component, Plugin},
+};
 use ndshape::ConstShape3u32;
 
 use super::{storage::ChunkMap, terraingen, Voxel};
