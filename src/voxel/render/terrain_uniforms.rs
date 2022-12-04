@@ -1,5 +1,3 @@
-use std::default;
-
 use bevy::{
     ecs::system::lifetimeless::SRes,
     prelude::{info, Color, Commands, Entity, FromWorld, Plugin, Res, ResMut, Resource},

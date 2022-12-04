@@ -129,7 +129,7 @@ fn display_material_editor(
 
         ui.heading("Material properties");
 
-        /// base_color
+        // base_color
         ui.label("Base color");
 
         let mut selected_mat = materials.get_mut_by_id(ui_state.selected_mat).unwrap();

@@ -24,7 +24,7 @@ pub fn prepare_chunks(
     mut cmds: Commands,
 ) {
     for (chunk, chunk_key) in chunks.iter() {
-        cmds.entity(chunk).insert_bundle(VoxelTerrainMeshBundle {
+        cmds.entity(chunk).insert(VoxelTerrainMeshBundle {
             mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
             transform: Transform::from_translation(chunk_key.0.as_vec3()),
             visibility: Visibility { is_visible: false },

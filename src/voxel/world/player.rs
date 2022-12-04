@@ -28,9 +28,11 @@ pub fn handle_player_mouse_move(
 
     let first_win = window.get_primary_mut().unwrap();
     first_win.set_cursor_visibility(!controller.cursor_locked);
-    // if controller.cursor_locked {
-    //     first_win.set_cursor_position((first_win.width() / 2., first_win.height() / 2.).into());
-    // }
+    first_win.set_cursor_grab_mode(if controller.cursor_locked {
+        CursorGrabMode::Confined
+    } else {
+        CursorGrabMode::None
+    });
 
     if delta == Vec2::ZERO {
         return;
