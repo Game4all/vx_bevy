@@ -17,6 +17,7 @@ pub mod materials;
 mod meshing;
 pub mod player;
 mod terrain;
+mod sky;
 
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
 pub struct VoxelWorldPlugin;
@@ -34,7 +35,8 @@ impl Plugin for VoxelWorldPlugin {
             .add_plugin(materials::VoxelWorldBaseMaterialsPlugin)
             .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin)
             .add_plugin(bevy_atmosphere::plugin::AtmospherePlugin)
-            .add_plugin(player::VoxelWorldPlayerControllerPlugin);
+            .add_plugin(player::VoxelWorldPlayerControllerPlugin)
+            .add_plugin(sky::InteractiveSkyboxPlugin);
     }
 }
 
