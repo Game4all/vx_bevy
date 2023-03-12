@@ -1,5 +1,8 @@
 # `vx_bevy`
 
+> **Note**
+> This respository won't receive further updates to newer bevy versions. Thus current code may require modifications to port to newer bevy versions.
+
 
 A minecraft-esque voxel engine rendering prototype made using the Bevy game engine.
 
