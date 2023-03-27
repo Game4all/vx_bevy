@@ -23,7 +23,7 @@ fn queue_terrain_gen(mut commands: Commands, new_chunks: Query<(Entity, &Chunk),
     new_chunks
         .iter()
         .filter(|(_, key)| key.0.y < 288)
-        .map(|(entity, key)| (entity, key.0.clone()))
+        .map(|(entity, key)| (entity, key.0))
         .map(|(entity, key)| {
             (
                 entity,

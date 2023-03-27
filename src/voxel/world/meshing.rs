@@ -36,7 +36,7 @@ pub fn prepare_chunks(
 
 // a pool of mesh buffers shared between meshing tasks.
 static SHARED_MESH_BUFFERS: Lazy<ThreadLocal<RefCell<MeshBuffers<Voxel, ChunkShape>>>> =
-    Lazy::new(|| ThreadLocal::default());
+    Lazy::new(ThreadLocal::default);
 
 /// Queues meshing tasks for the chunks in need of a remesh.
 fn queue_mesh_tasks(
@@ -49,15 +49,11 @@ fn queue_mesh_tasks(
 
     dirty_chunks
         .iter_dirty()
-        .filter_map(|key| {
-            chunk_entities
-                .entity(*key)
-                .and_then(|entity| Some((key, entity)))
-        })
+        .filter_map(|key| chunk_entities.entity(*key).map(|entity| (key, entity)))
         .filter_map(|(key, entity)| {
             chunks
                 .buffer_at(*key)
-                .and_then(|buffer| Some((buffer.clone(), entity)))
+                .map(|buffer| (buffer.clone(), entity))
         })
         .map(|(buffer, entity)| {
             (

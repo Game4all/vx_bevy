@@ -110,10 +110,13 @@ fn display_material_editor(
     egui::Window::new("material editor").show(egui.ctx_mut(), |ui| {
         ui.heading("Select material");
         egui::containers::ComboBox::from_label("Material")
-            .selected_text(format!(
-                "{}",
-                materials.get_by_id(ui_state.selected_mat).unwrap().name
-            ))
+            .selected_text(
+                materials
+                    .get_by_id(ui_state.selected_mat)
+                    .unwrap()
+                    .name
+                    .to_string(),
+            )
             .show_ui(ui, |content| {
                 materials
                     .iter_mats()

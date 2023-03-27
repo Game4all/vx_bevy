@@ -45,11 +45,10 @@ fn update_light_position(
     )>,
 ) {
     let sky_light_entity = **sky_light_entity;
-    let player_translation = if let Ok(ply) = queries.p1().get_single() {
-        ply.translation
-    } else {
-        Default::default()
-    };
+    let player_translation = queries
+        .p1()
+        .get_single()
+        .map_or_else(|_| Default::default(), |ply| ply.translation);
 
     {
         let mut binding = queries.p0();

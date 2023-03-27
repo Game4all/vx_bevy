@@ -40,7 +40,7 @@ impl VoxelTerrainMesh {
 }
 
 impl ExtractComponent for VoxelTerrainMesh {
-    type Query = &'static VoxelTerrainMesh;
+    type Query = &'static Self;
 
     type Filter = ();
 
@@ -59,7 +59,7 @@ pub struct VoxelTerrainRenderPipeline {
 
 impl FromWorld for VoxelTerrainRenderPipeline {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
-        VoxelTerrainRenderPipeline {
+        Self {
             mesh_pipeline: world.get_resource::<MeshPipeline>().unwrap().clone(),
             shader: world
                 .get_resource::<AssetServer>()

@@ -39,7 +39,7 @@ where
         let local_minimum = pos.map(|x| x.rem_euclid(CHUNK_LENGTH as i32)).as_uvec3();
 
         self.buffer_at(chunk_minimum)
-            .and_then(|buffer| Some(buffer.voxel_at(local_minimum)))
+            .map(|buffer| buffer.voxel_at(local_minimum))
     }
 
     pub fn voxel_at_mut(&mut self, pos: IVec3) -> Option<&mut V> {
@@ -47,7 +47,7 @@ where
         let local_minimum = pos.map(|x| x.rem_euclid(CHUNK_LENGTH as i32)).as_uvec3();
 
         self.buffer_at_mut(chunk_minimum)
-            .and_then(|buffer| Some(buffer.voxel_at_mut(local_minimum)))
+            .map(|buffer| buffer.voxel_at_mut(local_minimum))
     }
 
     /// Checks whether there's a buffer at the specified minimum.
@@ -96,7 +96,7 @@ where
     }
 
     #[inline]
-    pub fn shape_mask(&self) -> IVec3 {
+    pub const fn shape_mask(&self) -> IVec3 {
         self.shape_mask
     }
 }
