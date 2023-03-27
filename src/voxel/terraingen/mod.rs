@@ -24,7 +24,7 @@ pub mod noise;
 pub mod common;
 
 // Terrain generator singleton.
-pub static TERRAIN_GENERATOR: Lazy<RwLock<TerrainGenerator>> = Lazy::new(|| Default::default());
+pub static TERRAIN_GENERATOR: Lazy<RwLock<TerrainGenerator>> = Lazy::new(Default::default);
 
 #[derive(Default)]
 pub struct TerrainGenerator {
@@ -42,6 +42,7 @@ impl TerrainGenerator {
     }
 
     //returns the biome with the closest temp / humidity
+    #[allow(clippy::borrowed_box)]
     fn biome_at(&self, chunk_key: IVec3) -> &Box<dyn BiomeTerrainGenerator> {
         const BIOME_INVSCALE: f32 = 0.001;
 

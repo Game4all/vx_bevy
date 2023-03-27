@@ -39,8 +39,8 @@ fn step_chunk_animation(
     chunks.for_each_mut(|(entity, mut transform, _chunk, animation)| {
         let delta = (time.elapsed_seconds() - animation.start_time).min(ANIMATION_DURATION);
 
-        let ytransform = _chunk.0.y as f32 - ANIMATION_HEIGHT
-            + (1. - (1. - (delta / ANIMATION_DURATION)).powi(5)) * ANIMATION_HEIGHT;
+        let ytransform = (1. - (1. - (delta / ANIMATION_DURATION)).powi(5))
+            .mul_add(ANIMATION_HEIGHT, _chunk.0.y as f32 - ANIMATION_HEIGHT);
 
         transform.translation.y = ytransform;
 

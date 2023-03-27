@@ -31,11 +31,9 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
             Vec2::new(12.989, 78.233),
         );
 
-        if spawn_chance > 0.981 {
-            if pos.y <= 13 {
-                // this is a stupid hack but a real fix would be to allow terrain decoration to work vertically
-                make_tree::<Wood, Leaves>(buffer, pos);
-            }
+        if spawn_chance > 0.981 && pos.y <= 13 {
+            // this is a stupid hack but a real fix would be to allow terrain decoration to work vertically
+            make_tree::<Wood, Leaves>(buffer, pos);
         }
     }
 }

@@ -21,7 +21,7 @@ where
     #[inline]
     pub fn new(shape: S, initial_val: V) -> Self {
         Self {
-            data: vec![initial_val.clone(); shape.size() as usize].into_boxed_slice(),
+            data: vec![initial_val; shape.size() as usize].into_boxed_slice(),
             shape,
         }
     }
@@ -47,7 +47,7 @@ where
     }
 
     #[inline]
-    pub fn slice(&self) -> &[V] {
+    pub const fn slice(&self) -> &[V] {
         &self.data
     }
 
@@ -57,7 +57,7 @@ where
     }
 
     #[inline]
-    pub fn shape(&self) -> &S {
+    pub const fn shape(&self) -> &S {
         &self.shape
     }
 

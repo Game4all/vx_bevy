@@ -37,7 +37,7 @@ macro_rules! voxel_material {
         impl $types {
             pub const NAME: &'static str = stringify!($types);
         }
-        impl crate::voxel::material::VoxelMaterial for $types {
+        impl $crate::voxel::material::VoxelMaterial for $types {
             const ID: u8 = $id;
         }
     };
@@ -45,7 +45,7 @@ macro_rules! voxel_material {
 
 bitflags! {
     pub struct VoxelMaterialFlags : u32 {
-        const SOLID = 0 << 0;
+        const SOLID = 0;
         const LIQUID = 1 << 1;
         const UNBREAKABLE = 1 << 2;
     }
@@ -53,7 +53,7 @@ bitflags! {
 
 impl Default for VoxelMaterialFlags {
     fn default() -> Self {
-        VoxelMaterialFlags::SOLID
+        Self::SOLID
     }
 }
 

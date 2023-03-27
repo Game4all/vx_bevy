@@ -89,13 +89,13 @@ pub fn mesh_buffer<T, S>(
         .quads
         .groups
         .as_ref()
-        .into_iter()
-        .zip(RIGHT_HANDED_Y_UP_CONFIG.faces.into_iter())
+        .iter()
+        .zip(RIGHT_HANDED_Y_UP_CONFIG.faces.iter())
         .enumerate()
     {
-        for quad in group.into_iter() {
+        for quad in group.iter() {
             indices.extend_from_slice(&face.quad_mesh_indices(positions.len() as u32));
-            positions.extend_from_slice(&face.quad_mesh_positions(&quad, scale));
+            positions.extend_from_slice(&face.quad_mesh_positions(quad, scale));
             data.extend_from_slice(
                 &[(block_face_normal_index as u32) << 8u32
                     | buffer
