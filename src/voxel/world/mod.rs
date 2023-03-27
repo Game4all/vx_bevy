@@ -16,8 +16,8 @@ mod chunks_anim;
 pub mod materials;
 mod meshing;
 pub mod player;
-mod terrain;
 mod sky;
+mod terrain;
 
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
 pub struct VoxelWorldPlugin;

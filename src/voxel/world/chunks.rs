@@ -24,8 +24,8 @@ fn update_player_pos(
 
         chunk_pos.world_pos = player_coords;
 
-        if chunk_pos.chunk_min != nearest_chunk_origin.into() {
-            chunk_pos.chunk_min = nearest_chunk_origin.into();
+        if chunk_pos.chunk_min != nearest_chunk_origin {
+            chunk_pos.chunk_min = nearest_chunk_origin;
         }
     }
 }
@@ -81,6 +81,9 @@ fn update_view_chunks(
     // quick n dirty circular chunk !loading.
     for loaded_chunk in chunk_entities.0.keys() {
         let delta: IVec3 = *loaded_chunk - player_pos.chunk_min;
+
+        // Compiler complains that this is a bug
+        #[allow(clippy::suspicious_operation_groupings)]
         if delta.x.pow(2) + delta.z.pow(2)
             > view_radius.horizontal.pow(2) * (CHUNK_LENGTH as i32).pow(2)
             || delta.y.pow(2) > view_radius.vertical.pow(2) * (CHUNK_LENGTH as i32).pow(2)
@@ -152,7 +155,7 @@ pub struct ChunkEntities(HashMap<IVec3, Entity>);
 impl ChunkEntities {
     /// Returns the entity attached to the chunk.
     pub fn entity(&self, pos: IVec3) -> Option<Entity> {
-        self.0.get(&pos).map(|x| x.clone())
+        self.0.get(&pos).copied()
     }
 
     /// Attaches the specified entity to the chunk data.
@@ -230,7 +233,7 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkEntities>()
         .insert_resource(CurrentLocalPlayerChunk {
-            chunk_min: IVec3::ZERO.into(),
+            chunk_min: IVec3::ZERO,
             world_pos: IVec3::ZERO,
         })
         .init_resource::<ChunkCommandQueue>()

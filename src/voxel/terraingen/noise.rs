@@ -3,7 +3,7 @@ use bevy::math::{IVec3, Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
 pub fn rand2to1(p: Vec2, dot: Vec2) -> f32 {
     let sp: Vec2 = p.to_array().map(|x| x.sin()).into();
     let random = sp.dot(dot);
-    return (random.sin() * 143758.5453).fract();
+    (random.sin() * 143_758.55).fract()
 }
 
 #[inline(always)]
@@ -17,7 +17,7 @@ pub fn rand2to2(p: Vec2) -> Vec2 {
 pub fn rand2to1i(vec: Vec2) -> f32 {
     let mut p3 = (vec.xyx() * 0.39).fract();
     p3 += p3.dot(p3.yzx());
-    return (p3.x + p3.y) * p3.z.fract();
+    (p3.x + p3.y) * p3.z.fract()
 }
 
 #[allow(dead_code)]
@@ -34,7 +34,7 @@ pub fn rand2to3(p: Vec2) -> Vec3 {
 #[inline(always)]
 pub fn rand1dto1d(p: f32, mutator: f32) -> f32 {
     let random = (p + mutator).sin();
-    return (random * 143758.5453).fract();
+    (random * 143_758.55).fract()
 }
 
 #[allow(dead_code)]
@@ -68,7 +68,7 @@ pub fn voronoi(p: Vec2) -> Vec2 {
         }
     }
 
-    return closest_point;
+    closest_point
 }
 
 pub fn generate_heightmap_data(key: IVec3, chunk_len: usize) -> Vec<f32> {
@@ -97,7 +97,7 @@ impl<'a, const W: usize, const H: usize> Heightmap<'a, W, H> {
 
     /// Constructs a view into a slice of noise values with W x H dimensions.
     #[inline]
-    pub fn from_slice(slice: &'a [f32]) -> Self {
+    pub const fn from_slice(slice: &'a [f32]) -> Self {
         Self { slice }
     }
 }

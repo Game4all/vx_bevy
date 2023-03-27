@@ -38,8 +38,8 @@ pub fn handle_player_mouse_move(
         return;
     }
 
-    let mut new_pitch = controller.pitch + delta.y * DEFAULT_CAMERA_SENS;
-    let new_yaw = controller.yaw - delta.x * DEFAULT_CAMERA_SENS;
+    let mut new_pitch = delta.y.mul_add(DEFAULT_CAMERA_SENS, controller.pitch);
+    let new_yaw = delta.x.mul_add(-DEFAULT_CAMERA_SENS, controller.yaw);
 
     new_pitch = new_pitch.clamp(-FRAC_PI_2, FRAC_PI_2);
 

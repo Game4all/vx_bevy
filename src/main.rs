@@ -1,3 +1,9 @@
+#![allow(
+    clippy::type_complexity,
+    clippy::manual_clamp,
+    clippy::module_inception
+)]
+
 use std::f32::consts::PI;
 
 use bevy::{core_pipeline::fxaa::Fxaa, prelude::*};

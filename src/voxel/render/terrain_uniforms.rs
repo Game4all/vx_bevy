@@ -27,7 +27,7 @@ pub struct TerrainUniforms {
 impl FromWorld for TerrainUniforms {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
         let render_device = world.get_resource::<RenderDevice>().unwrap();
-        TerrainUniforms {
+        Self {
             bind_group_layout: render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                 label: Some("voxel_engine_material_array_layout"),
                 entries: &[

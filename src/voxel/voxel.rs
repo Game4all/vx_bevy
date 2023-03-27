@@ -4,7 +4,7 @@ use block_mesh::{MergeVoxel, Voxel as MeshableVoxel};
 pub struct Voxel(pub u8);
 
 impl Voxel {
-    pub const EMPTY_VOXEL: Voxel = Voxel(0);
+    pub const EMPTY_VOXEL: Self = Self(0);
 }
 
 impl Default for Voxel {
