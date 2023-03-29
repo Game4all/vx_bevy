@@ -1,9 +1,8 @@
 use bevy::{
-    ecs::schedule::ShouldRun,
     math::IVec3,
     prelude::{
-        Changed, Commands, CoreStage, Entity, GlobalTransform, IntoSystemDescriptor, Plugin, Query,
-        Res, ResMut, Resource, StageLabel, SystemLabel, SystemStage, With,
+        Changed, Commands, CoreSet, DetectChanges, Entity, GlobalTransform, IntoSystemConfig,
+        IntoSystemSetConfigs, Plugin, Query, Res, ResMut, Resource, SystemSet, With,
     },
     utils::{HashMap, HashSet},
 };
@@ -34,12 +33,8 @@ fn update_player_pos(
 fn update_view_chunks_criteria(
     chunk_pos: Res<CurrentLocalPlayerChunk>,
     view_distance: Res<ChunkLoadRadius>,
-) -> ShouldRun {
-    if chunk_pos.is_changed() || view_distance.is_changed() {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
+) -> bool {
+    chunk_pos.is_changed() || view_distance.is_changed()
 }
 
 /// Checks for the loaded chunks around the player and schedules loading of new chunks in sight
@@ -128,10 +123,11 @@ fn clear_dirty_chunks(mut dirty_chunks: ResMut<DirtyChunks>) {
 }
 
 /// Label for the stage housing the chunk loading systems.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
+#[system_set(base)]
 pub struct ChunkLoadingStage;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
 /// Labels for the systems added by [`VoxelWorldChunkingPlugin`]
 pub enum ChunkLoadingSystem {
     /// Updates the player current chunk.
@@ -238,27 +234,23 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkCommandQueue>()
         .init_resource::<DirtyChunks>()
-        .add_stage_after(
-            CoreStage::Update,
-            ChunkLoadingStage,
-            SystemStage::parallel()
-                .with_system(update_player_pos.label(ChunkLoadingSystem::UpdatePlayerPos))
-                .with_system(
-                    update_view_chunks
-                        .label(ChunkLoadingSystem::UpdateViewChunks)
-                        .after(ChunkLoadingSystem::UpdatePlayerPos)
-                        .with_run_criteria(update_view_chunks_criteria),
-                )
-                .with_system(
-                    create_chunks
-                        .label(ChunkLoadingSystem::CreateChunks)
-                        .after(ChunkLoadingSystem::UpdateViewChunks),
-                ),
+        .configure_sets(
+            (
+                ChunkLoadingSystem::UpdatePlayerPos,
+                ChunkLoadingSystem::UpdateViewChunks,
+                ChunkLoadingSystem::CreateChunks,
+                ChunkLoadingSystem::ClearDirtyChunks,
+            )
+                .chain(),
         )
-        .add_system_to_stage(CoreStage::Last, destroy_chunks)
-        .add_system_to_stage(
-            CoreStage::Last,
-            clear_dirty_chunks.label(ChunkLoadingSystem::ClearDirtyChunks),
-        );
+        .add_systems((
+            update_player_pos.in_set(ChunkLoadingSystem::UpdatePlayerPos),
+            update_view_chunks
+                .in_set(ChunkLoadingSystem::UpdateViewChunks)
+                .run_if(update_view_chunks_criteria),
+            create_chunks.in_set(ChunkLoadingSystem::CreateChunks),
+            destroy_chunks.in_base_set(CoreSet::Last),
+            clear_dirty_chunks.in_set(ChunkLoadingSystem::ClearDirtyChunks),
+        ));
     }
 }

@@ -36,7 +36,9 @@ where
 
     pub fn voxel_at(&self, pos: IVec3) -> Option<V> {
         let chunk_minimum = pos & self.shape_mask;
-        let local_minimum = pos.map(|x| x.rem_euclid(CHUNK_LENGTH as i32)).as_uvec3();
+        let local_minimum = ilattice::glam::IVec3::from(pos.to_array())
+            .map(|x| x.rem_euclid(CHUNK_LENGTH as i32))
+            .as_uvec3();
 
         self.buffer_at(chunk_minimum)
             .map(|buffer| buffer.voxel_at(local_minimum))
@@ -44,7 +46,9 @@ where
 
     pub fn voxel_at_mut(&mut self, pos: IVec3) -> Option<&mut V> {
         let chunk_minimum = pos & self.shape_mask;
-        let local_minimum = pos.map(|x| x.rem_euclid(CHUNK_LENGTH as i32)).as_uvec3();
+        let local_minimum = ilattice::glam::IVec3::from(pos.to_array())
+            .map(|x| x.rem_euclid(CHUNK_LENGTH as i32))
+            .as_uvec3();
 
         self.buffer_at_mut(chunk_minimum)
             .map(|buffer| buffer.voxel_at_mut(local_minimum))
@@ -53,29 +57,35 @@ where
     /// Checks whether there's a buffer at the specified minimum.
     #[inline]
     pub fn exists(&self, minimum: IVec3) -> bool {
+        let minimum = ilattice::glam::IVec3::from(minimum.to_array());
         self.chunks.contains_key(&minimum.into())
     }
 
     /// Returns a reference to the [`VoxelBuffer<V, S>`] at the specified minimum if there's one.
     #[inline]
     pub fn buffer_at(&self, minimum: IVec3) -> Option<&VoxelBuffer<V, S>> {
+        let minimum = ilattice::glam::IVec3::from(minimum.to_array());
         self.chunks.get(&minimum.into())
     }
 
     /// Returns a mutable reference to the [`VoxelBuffer<V, S>`] at the specified minimum if there's one.
     #[inline]
     pub fn buffer_at_mut(&mut self, minimum: IVec3) -> Option<&mut VoxelBuffer<V, S>> {
+        let minimum = ilattice::glam::IVec3::from(minimum.to_array());
         self.chunks.get_mut(&minimum.into())
     }
 
     /// Inserts a new buffer at the specified minimum.
     pub fn insert(&mut self, minimum: IVec3, buffer: VoxelBuffer<V, S>) {
+        let minimum = ilattice::glam::IVec3::from(minimum.to_array());
+
         assert!(buffer.shape().as_array() == self.shape.as_array());
         self.chunks.insert(minimum.into(), buffer);
     }
 
     /// Inserts a new buffer inititalized with the default value of [`V`] at the specified minimum.
     pub fn insert_empty(&mut self, minimum: IVec3) {
+        let minimum = ilattice::glam::IVec3::from(minimum.to_array());
         self.chunks.insert(
             minimum.into(),
             VoxelBuffer::<V, S>::new_empty(self.shape.clone()),
@@ -92,6 +102,7 @@ where
 
     /// Removes the buffer at the specified minimum and returns it if it exists.
     pub fn remove(&mut self, pos: IVec3) -> Option<VoxelBuffer<V, S>> {
+        let pos = ilattice::glam::IVec3::from(pos.to_array());
         self.chunks.remove(&pos.into())
     }
 

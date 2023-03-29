@@ -1,8 +1,8 @@
 use bevy::core_pipeline::core_3d::AlphaMask3d;
 use bevy::pbr::{DrawMesh, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup};
 use bevy::prelude::{
-    Bundle, ComputedVisibility, Entity, GlobalTransform, Mesh, Msaa, Query, Res, ResMut, Resource,
-    Transform, Visibility, With,
+    Bundle, ComputedVisibility, Entity, GlobalTransform, IntoSystemConfig, Mesh, Msaa, Query, Res,
+    ResMut, Resource, Transform, Visibility, With,
 };
 use bevy::render::mesh::{MeshVertexAttribute, MeshVertexBufferLayout};
 
@@ -18,7 +18,7 @@ use bevy::render::render_resource::{
 };
 use bevy::render::texture::BevyDefault;
 use bevy::render::view::ExtractedView;
-use bevy::render::RenderStage;
+use bevy::render::RenderSet;
 use bevy::{
     pbr::MeshPipeline,
     prelude::{AssetServer, Component, FromWorld, Handle, Plugin, Shader},
@@ -41,11 +41,13 @@ impl VoxelTerrainMesh {
 
 impl ExtractComponent for VoxelTerrainMesh {
     type Query = &'static Self;
-
+    type Out = Self;
     type Filter = ();
 
-    fn extract_component(item: bevy::ecs::query::QueryItem<Self::Query>) -> Self {
-        item.clone()
+    fn extract_component(
+        item: bevy::ecs::query::QueryItem<Self::Query>,
+    ) -> std::option::Option<Self::Out> {
+        Some(item.clone())
     }
 }
 
@@ -103,11 +105,11 @@ impl SpecializedMeshPipeline for VoxelTerrainRenderPipeline {
                     write_mask: ColorWrites::ALL,
                 })],
             }),
-            layout: Some(vec![
+            layout: vec![
                 self.mesh_pipeline.view_layout.clone(),
                 self.mesh_pipeline.mesh_layout.clone(),
                 self.material_array_layout.clone(),
-            ]),
+            ],
             primitive: PrimitiveState {
                 front_face: FrontFace::Ccw,
                 cull_mode: Some(Face::Back),
@@ -139,6 +141,7 @@ impl SpecializedMeshPipeline for VoxelTerrainRenderPipeline {
                 alpha_to_coverage_enabled: false,
             },
             label: Some("voxel pipeline".into()),
+            push_constant_ranges: Vec::new(),
         })
     }
 }
@@ -148,14 +151,14 @@ fn queue_voxel_meshes(
     oq_draw_funcs: Res<DrawFunctions<AlphaMask3d>>,
     render_meshes: Res<RenderAssets<Mesh>>,
     voxel_pipeline: Res<VoxelTerrainRenderPipeline>,
-    mut pipeline_cache: ResMut<PipelineCache>,
+    pipeline_cache: ResMut<PipelineCache>,
     mut specialized_pipelines: ResMut<SpecializedMeshPipelines<VoxelTerrainRenderPipeline>>,
     msaa: Res<Msaa>,
     material_meshes: Query<(Entity, &Handle<Mesh>, &MeshUniform), With<VoxelTerrainMesh>>,
     mut views: Query<(&ExtractedView, &mut RenderPhase<AlphaMask3d>)>,
 ) {
     let draw_custom = oq_draw_funcs.read().get_id::<DrawVoxel>().unwrap();
-    let key = MeshPipelineKey::from_msaa_samples(msaa.samples);
+    let key = MeshPipelineKey::from_msaa_samples(msaa.samples());
     for (view, mut transparent_phase) in views.iter_mut() {
         let view_matrix = view.transform.compute_matrix();
         let view_row_2 = view_matrix.row(2);
@@ -165,7 +168,7 @@ fn queue_voxel_meshes(
                     entity,
                     pipeline: specialized_pipelines
                         .specialize(
-                            &mut pipeline_cache,
+                            &pipeline_cache,
                             &voxel_pipeline,
                             key | MeshPipelineKey::from_primitive_topology(mesh.primitive_topology),
                             &mesh.layout,
@@ -207,6 +210,6 @@ impl Plugin for VoxelMeshRenderPipelinePlugin {
             .add_render_command::<AlphaMask3d, DrawVoxel>()
             .init_resource::<VoxelTerrainRenderPipeline>()
             .init_resource::<SpecializedMeshPipelines<VoxelTerrainRenderPipeline>>()
-            .add_system_to_stage(RenderStage::Queue, queue_voxel_meshes);
+            .add_system(queue_voxel_meshes.in_set(RenderSet::Queue));
     }
 }

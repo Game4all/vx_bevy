@@ -53,20 +53,23 @@ pub fn make_pine_tree<T: VoxelMaterial, L: VoxelMaterial>(
     buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     origin: UVec3,
 ) {
+    let origin = Vec3::from(origin.as_vec3().to_array());
     Extent::from_min_and_shape(UVec3::ZERO, UVec3::splat(CHUNK_LENGTH)) //may want to calculate an extent encompassing the tree instead of iterating over the complete 32^3 volume
         .iter3()
+        .map(|x| Vec3::from_array(x.as_vec3().to_array()))
         .map(|position| {
-            let trunk_distance = sdf::sdf_capped_cylinder(
-                position.as_vec3() - (origin.as_vec3() + 2.0 * Vec3::Y),
-                1.5,
-                8.0,
-            ) < 0.;
-            let leaves_distance = sdf::sdf_vcone(
-                position.as_vec3() - (origin.as_vec3() + 6.0 * Vec3::Y),
-                7.0,
-                17.0,
-            ) < 0.;
+            let trunk_distance =
+                sdf::sdf_capped_cylinder(position - (origin + 2.0 * Vec3::Y), 1.5, 8.0) < 0.;
+            let leaves_distance =
+                sdf::sdf_vcone(position - (origin + 6.0 * Vec3::Y), 7.0, 17.0) < 0.;
             (trunk_distance, leaves_distance, position)
+        })
+        .map(|(trunk_distance, leaves_distance, position)| {
+            (
+                trunk_distance,
+                leaves_distance,
+                UVec3::from(position.as_uvec3().to_array()),
+            )
         })
         .for_each(|(trunk_distance, leaves_distance, position)| {
             if trunk_distance {
@@ -84,19 +87,22 @@ pub fn make_tree<T: VoxelMaterial, L: VoxelMaterial>(
     buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
     origin: UVec3,
 ) {
+    let origin = Vec3::from(origin.as_vec3().to_array());
     Extent::from_min_and_shape(UVec3::ZERO, UVec3::splat(CHUNK_LENGTH)) //may want to calculate an extent encompassing the tree instead of iterating over the complete 32^3 volume
         .iter3()
+        .map(|x| Vec3::from_array(x.as_vec3().to_array()))
         .map(|position| {
-            let trunk_distance = sdf::sdf_capped_cylinder(
-                position.as_vec3() - (origin.as_vec3() + 2.0 * Vec3::Y),
-                1.5,
-                8.0,
-            ) < 0.;
-            let leaves_distance = sdf::sdf_sphere(
-                position.as_vec3() - (origin.as_vec3() + 14.0 * Vec3::Y),
-                6.0,
-            ) < 0.;
+            let trunk_distance =
+                sdf::sdf_capped_cylinder(position - (origin + 2.0 * Vec3::Y), 1.5, 8.0) < 0.;
+            let leaves_distance = sdf::sdf_sphere(position - (origin + 14.0 * Vec3::Y), 6.0) < 0.;
             (trunk_distance, leaves_distance, position)
+        })
+        .map(|(trunk_distance, leaves_distance, position)| {
+            (
+                trunk_distance,
+                leaves_distance,
+                UVec3::from(position.as_uvec3().to_array()),
+            )
         })
         .for_each(|(trunk_distance, leaves_distance, position)| {
             if trunk_distance {
