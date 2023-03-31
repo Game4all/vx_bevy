@@ -104,9 +104,9 @@ fn process_mesh_tasks(
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
 pub struct ChunkMeshingPrepareStage;
 
-/// Label for the stage housing the chunk meshing systems.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
-pub struct ChunkMeshingStage;
+// /// Label for the stage housing the chunk meshing systems.
+// #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
+// pub struct ChunkMeshingStage;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
 pub enum ChunkRenderingSystem {
@@ -124,15 +124,14 @@ impl Plugin for VoxelWorldMeshingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.configure_sets(
             (
-                ChunkLoadingStage,
                 ChunkMeshingPrepareStage,
-                ChunkMeshingStage,
                 ChunkRenderingSystem::QueueMeshTasks,
                 ChunkRenderingSystem::ProcessMeshTasks,
             )
-                .chain(),
+                .chain()
+                .in_base_set(ChunkLoadingStage),
         )
-        .add_system(prepare_chunks)
+        .add_system(prepare_chunks.in_set(ChunkMeshingPrepareStage))
         .add_systems((
             queue_mesh_tasks.in_set(ChunkRenderingSystem::QueueMeshTasks),
             process_mesh_tasks.in_set(ChunkRenderingSystem::ProcessMeshTasks),

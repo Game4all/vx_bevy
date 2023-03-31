@@ -180,12 +180,10 @@ impl Plugin for DebugUIPlugins {
                 )
                     .in_base_set(CoreSet::PostUpdate),
             )
-            .add_systems((
-                display_debug_stats,
-                display_chunk_stats,
-            )
-                .in_base_set(CoreSet::PostUpdate)
-                .distributive_run_if(display_debug_ui_criteria)
+            .add_systems(
+                (display_debug_stats, display_chunk_stats)
+                    .in_base_set(CoreSet::PostUpdate)
+                    .distributive_run_if(display_debug_ui_criteria),
             )
             .init_resource::<DebugUIState>();
     }

@@ -30,25 +30,13 @@ use bevy::{
 
 use super::terrain_uniforms::{self, SetTerrainUniformsBindGroup, TerrainUniforms};
 
-#[derive(Component, Clone, Default)]
+#[derive(Component, Clone, Default, ExtractComponent)]
 /// A marker component for voxel meshes.
 pub struct VoxelTerrainMesh;
 
 impl VoxelTerrainMesh {
     pub const ATTRIBUTE_DATA: MeshVertexAttribute =
         MeshVertexAttribute::new("Vertex_Data", 1, VertexFormat::Uint32);
-}
-
-impl ExtractComponent for VoxelTerrainMesh {
-    type Query = &'static Self;
-    type Out = Self;
-    type Filter = ();
-
-    fn extract_component(
-        item: bevy::ecs::query::QueryItem<Self::Query>,
-    ) -> std::option::Option<Self::Out> {
-        Some(item.clone())
-    }
 }
 
 /// A render pipeline for rendering voxel terrain meshes.
@@ -151,7 +139,7 @@ fn queue_voxel_meshes(
     oq_draw_funcs: Res<DrawFunctions<AlphaMask3d>>,
     render_meshes: Res<RenderAssets<Mesh>>,
     voxel_pipeline: Res<VoxelTerrainRenderPipeline>,
-    pipeline_cache: ResMut<PipelineCache>,
+    pipeline_cache: Res<PipelineCache>, // Was ResMut
     mut specialized_pipelines: ResMut<SpecializedMeshPipelines<VoxelTerrainRenderPipeline>>,
     msaa: Res<Msaa>,
     material_meshes: Query<(Entity, &Handle<Mesh>, &MeshUniform), With<VoxelTerrainMesh>>,

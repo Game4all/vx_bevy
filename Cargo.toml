@@ -9,7 +9,7 @@ resolver = "2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.10"
+bevy = "0.10.1"
 ndshape = "0.3.0"
 block-mesh = "0.2.0"
 ndcopy = "0.3.0"

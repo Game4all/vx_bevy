@@ -9,8 +9,8 @@ use crate::voxel::{
 };
 use bevy::{
     prelude::{
-        Added, Commands, Component, Entity, IntoSystemConfig, IntoSystemSetConfig, Plugin, Query,
-        ResMut, SystemSet,
+        Added, Commands, Component, Entity, IntoSystemConfig, IntoSystemSetConfig,
+        IntoSystemSetConfigs, Plugin, Query, ResMut, SystemSet,
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
@@ -72,19 +72,24 @@ pub enum TerrainGenSystem {
 
 // we need to use a whole system stage for this in order to enable the usage of added component querries.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
+#[system_set(base)]
 struct TerrainGenStage;
 
 impl Plugin for VoxelWorldTerrainGenPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.configure_set(
-            ChunkLoadingStage
-                .after(TerrainGenSystem::QueueTerrainGen)
-                .before(TerrainGenSystem::ProcessTerrainGen),
-        )
-        .add_systems((
-            queue_terrain_gen.in_set(TerrainGenSystem::QueueTerrainGen),
-            process_terrain_gen.in_set(TerrainGenSystem::ProcessTerrainGen),
-        ));
+        app.configure_set(TerrainGenStage.after(ChunkLoadingStage))
+            .configure_sets(
+                (
+                    TerrainGenSystem::QueueTerrainGen,
+                    TerrainGenSystem::ProcessTerrainGen,
+                )
+                    .chain()
+                    .in_base_set(TerrainGenStage),
+            )
+            .add_systems((
+                queue_terrain_gen.in_set(TerrainGenSystem::QueueTerrainGen),
+                process_terrain_gen.in_set(TerrainGenSystem::ProcessTerrainGen),
+            ));
     }
 }
 

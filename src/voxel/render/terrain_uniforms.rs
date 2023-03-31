@@ -1,14 +1,11 @@
 use bevy::{
-    ecs::{
-        query::ROQueryItem,
-        system::{lifetimeless::SRes, SystemParamItem},
-    },
+    ecs::system::lifetimeless::SRes,
     prelude::{
-        info, Color, Commands, DetectChanges, FromWorld, IntoSystemConfig, Plugin, Res, ResMut,
-        Resource,
+        info, Color, Commands, DetectChanges, Entity, FromWorld, IntoSystemConfig, Plugin, Res,
+        ResMut, Resource,
     },
     render::{
-        render_phase::{PhaseItem, RenderCommand, TrackedRenderPass},
+        render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
         render_resource::{
             BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
             BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, ShaderStages, ShaderType,
@@ -198,21 +195,19 @@ struct GpuTerrainRenderSettings {
 pub struct SetTerrainUniformsBindGroup<const I: usize>;
 impl<P: PhaseItem, const I: usize> RenderCommand<P> for SetTerrainUniformsBindGroup<I> {
     type Param = SRes<TerrainUniforms>;
+    type ViewWorldQuery = ();
+    type ItemWorldQuery = Entity;
 
     fn render<'w>(
         _item: &P,
-        _view: ROQueryItem<'w, Self::ViewWorldQuery>,
-        _entity: ROQueryItem<'w, Self::ItemWorldQuery>,
-        param: SystemParamItem<'w, '_, Self::Param>,
-        pass: &mut TrackedRenderPass<'w>,
-    ) -> bevy::render::render_phase::RenderCommandResult {
+        _view: (),
+        _entity: bevy::ecs::query::ROQueryItem<'w, Self::ItemWorldQuery>,
+        param: bevy::ecs::system::SystemParamItem<'w, '_, Self::Param>,
+        pass: &mut bevy::render::render_phase::TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
         pass.set_bind_group(I, param.into_inner().bind_group.as_ref().unwrap(), &[]);
         bevy::render::render_phase::RenderCommandResult::Success
     }
-
-    type ViewWorldQuery = ();
-
-    type ItemWorldQuery = ();
 }
 
 /// Handles the management of uniforms and bind groups for rendering terrain.
