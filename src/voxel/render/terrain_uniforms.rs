@@ -216,6 +216,8 @@ pub struct VoxelTerrainUniformsPlugin;
 impl Plugin for VoxelTerrainUniformsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.sub_app_mut(RenderApp)
+            .init_resource::<GpuTerrainMaterials>()
+            .init_resource::<GpuTerrainRenderSettings>()
             .init_resource::<TerrainUniforms>()
             .add_system(extract_voxel_materials.in_set(RenderSet::ExtractCommands))
             .add_system(prepare_terrain_uniforms.in_set(RenderSet::Queue))
