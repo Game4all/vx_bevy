@@ -2,7 +2,7 @@ use bevy::{
     ecs::system::lifetimeless::SRes,
     prelude::{
         info, Color, Commands, DetectChanges, Entity, FromWorld, IntoSystemConfig, Plugin, Res,
-        ResMut, Resource,
+        ResMut, Resource, IntoSystemAppConfig,
     },
     render::{
         render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
@@ -12,7 +12,7 @@ use bevy::{
             StorageBuffer,
         },
         renderer::{RenderDevice, RenderQueue},
-        Extract, RenderApp, RenderSet,
+        Extract, RenderApp, RenderSet, ExtractSchedule,
     },
 };
 
@@ -216,14 +216,12 @@ pub struct VoxelTerrainUniformsPlugin;
 impl Plugin for VoxelTerrainUniformsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.sub_app_mut(RenderApp)
-            .init_resource::<GpuTerrainMaterials>()
-            .init_resource::<GpuTerrainRenderSettings>()
             .init_resource::<TerrainUniforms>()
-            .add_system(extract_voxel_materials.in_set(RenderSet::ExtractCommands))
+            .add_system(extract_voxel_materials.in_set(RenderSet::ExtractCommands).in_schedule(ExtractSchedule))
+            .add_system(extract_terrain_render_settings_uniform.in_set(RenderSet::ExtractCommands).in_schedule(ExtractSchedule))
             .add_system(prepare_terrain_uniforms.in_set(RenderSet::Queue))
             .add_system(upload_voxel_materials.in_set(RenderSet::Prepare))
-            .add_system(upload_render_distance_uniform.in_set(RenderSet::Prepare))
-            .add_system(extract_terrain_render_settings_uniform.in_set(RenderSet::ExtractCommands));
+            .add_system(upload_render_distance_uniform.in_set(RenderSet::Prepare));
 
         info!("type size: {}", GpuVoxelMaterial::min_size().get() * 256);
     }
