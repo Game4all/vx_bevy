@@ -12,7 +12,7 @@ use bevy::render::render_phase::{AddRenderCommand, DrawFunctions, RenderPhase, S
 use bevy::render::render_resource::{
     BindGroupLayout, BlendState, ColorTargetState, ColorWrites, CompareFunction, DepthBiasState,
     DepthStencilState, Face, FragmentState, FrontFace, MultisampleState, PipelineCache,
-    PolygonMode, PrimitiveState, RenderPipelineDescriptor, SpecializedMeshPipeline,
+    PolygonMode, PrimitiveState, RenderPipelineDescriptor, ShaderDefVal, SpecializedMeshPipeline,
     SpecializedMeshPipelineError, SpecializedMeshPipelines, StencilFaceState, StencilState,
     TextureFormat, VertexFormat, VertexState,
 };
@@ -27,6 +27,8 @@ use bevy::{
         RenderApp,
     },
 };
+
+use crate::voxel::Voxel;
 
 use super::terrain_uniforms::{self, SetTerrainUniformsBindGroup, TerrainUniforms};
 
@@ -73,64 +75,84 @@ impl SpecializedMeshPipeline for VoxelTerrainRenderPipeline {
         layout: &MeshVertexBufferLayout,
     ) -> Result<bevy::render::render_resource::RenderPipelineDescriptor, SpecializedMeshPipelineError>
     {
-        Ok(RenderPipelineDescriptor {
-            vertex: VertexState {
-                shader: self.shader.clone(),
-                entry_point: "vertex".into(),
-                shader_defs: Vec::new(),
-                buffers: vec![layout.get_layout(&[
-                    Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
-                    VoxelTerrainMesh::ATTRIBUTE_DATA.at_shader_location(1),
-                ])?],
-            },
-            fragment: Some(FragmentState {
-                shader: self.shader.clone(),
-                shader_defs: Vec::new(),
-                entry_point: "fragment".into(),
-                targets: vec![Some(ColorTargetState {
-                    format: TextureFormat::bevy_default(),
-                    blend: Some(BlendState::REPLACE),
-                    write_mask: ColorWrites::ALL,
-                })],
-            }),
-            layout: vec![
-                self.mesh_pipeline.view_layout.clone(),
-                self.mesh_pipeline.mesh_layout.clone(),
-                self.material_array_layout.clone(),
-            ],
-            primitive: PrimitiveState {
-                front_face: FrontFace::Ccw,
-                cull_mode: Some(Face::Back),
-                unclipped_depth: false,
-                polygon_mode: PolygonMode::Fill,
-                conservative: false,
-                topology: key.primitive_topology(),
-                strip_index_format: None,
-            },
-            depth_stencil: Some(DepthStencilState {
-                format: TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: CompareFunction::Greater,
-                stencil: StencilState {
-                    front: StencilFaceState::IGNORE,
-                    back: StencilFaceState::IGNORE,
-                    read_mask: 0,
-                    write_mask: 0,
-                },
-                bias: DepthBiasState {
-                    constant: 0,
-                    slope_scale: 0.0,
-                    clamp: 0.0,
-                },
-            }),
-            multisample: MultisampleState {
-                count: key.msaa_samples(),
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            label: Some("voxel pipeline".into()),
-            push_constant_ranges: Vec::new(),
-        })
+        let mut descriptor = self.mesh_pipeline.specialize(key, layout)?;
+        descriptor.vertex.shader = self.shader.clone();
+        descriptor
+            .fragment
+            .as_mut()
+            .expect("Failed to get fragment shader from mesh pipeline")
+            .shader = self.shader.clone();
+        Ok(descriptor)
+
+        // let shader_defs = vec![ShaderDefVal::Int(
+        //     "MAX_CASCADES_PER_LIGHT".into(),
+        //     bevy::pbr::MAX_CASCADES_PER_LIGHT as i32,
+        // ),
+        // ShaderDefVal::Int(
+        //     "MAX_DIRECTIONAL_LIGHTS".into(),
+        //     bevy::pbr::MAX_DIRECTIONAL_LIGHTS as i32
+        // )];
+        // let vertex = VertexState {
+        //     shader: self.shader.clone(),
+        //     shader_defs: shader_defs.clone(),
+        //     entry_point: "vertex".into(),
+        //     buffers: vec![layout.get_layout(&[
+        //         Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
+        //         VoxelTerrainMesh::ATTRIBUTE_DATA.at_shader_location(1),
+        //     ])?],
+        // };
+        // let fragment = FragmentState {
+        //     shader: self.shader.clone(),
+        //     shader_defs,
+        //     entry_point: "fragment".into(),
+        //     targets: vec![Some(ColorTargetState {
+        //         format: TextureFormat::bevy_default(),
+        //         blend: Some(BlendState::REPLACE),
+        //         write_mask: ColorWrites::ALL,
+        //     })],
+        // };
+
+        // Ok(RenderPipelineDescriptor {
+        //     vertex,
+        //     fragment: Some(fragment),
+        //     layout: vec![
+        //         self.mesh_pipeline.view_layout.clone(),
+        //         self.mesh_pipeline.mesh_layout.clone(),
+        //         self.material_array_layout.clone(),
+        //     ],
+        //     primitive: PrimitiveState {
+        //         front_face: FrontFace::Ccw,
+        //         cull_mode: Some(Face::Back),
+        //         unclipped_depth: false,
+        //         polygon_mode: PolygonMode::Fill,
+        //         conservative: false,
+        //         topology: key.primitive_topology(),
+        //         strip_index_format: None,
+        //     },
+        //     depth_stencil: Some(DepthStencilState {
+        //         format: TextureFormat::Depth32Float,
+        //         depth_write_enabled: true,
+        //         depth_compare: CompareFunction::Greater,
+        //         stencil: StencilState {
+        //             front: StencilFaceState::IGNORE,
+        //             back: StencilFaceState::IGNORE,
+        //             read_mask: 0,
+        //             write_mask: 0,
+        //         },
+        //         bias: DepthBiasState {
+        //             constant: 0,
+        //             slope_scale: 0.0,
+        //             clamp: 0.0,
+        //         },
+        //     }),
+        //     multisample: MultisampleState {
+        //         count: key.msaa_samples(),
+        //         mask: !0,
+        //         alpha_to_coverage_enabled: false,
+        //     },
+        //     label: Some("voxel pipeline".into()),
+        //     push_constant_ranges: Vec::new(),
+        // })
     }
 }
 

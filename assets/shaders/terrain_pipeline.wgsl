@@ -1,5 +1,7 @@
 #import bevy_pbr::mesh_types
 #import bevy_pbr::mesh_view_bindings
+#import bevy_pbr::fog
+#import bevy_pbr::pbr_ambient
 
 #import "shaders/voxel_data.wgsl"
 #import "shaders/terrain_uniforms.wgsl"

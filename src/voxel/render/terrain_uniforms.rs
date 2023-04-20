@@ -1,8 +1,8 @@
 use bevy::{
     ecs::system::lifetimeless::SRes,
     prelude::{
-        info, Color, Commands, DetectChanges, Entity, FromWorld, IntoSystemConfig, Plugin, Res,
-        ResMut, Resource, IntoSystemAppConfig,
+        info, Color, Commands, DetectChanges, Entity, FromWorld, IntoSystemAppConfig,
+        IntoSystemConfig, Plugin, Res, ResMut, Resource,
     },
     render::{
         render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
@@ -12,7 +12,7 @@ use bevy::{
             StorageBuffer,
         },
         renderer::{RenderDevice, RenderQueue},
-        Extract, RenderApp, RenderSet, ExtractSchedule,
+        Extract, ExtractSchedule, RenderApp, RenderSet,
     },
 };
 
@@ -219,10 +219,18 @@ impl Plugin for VoxelTerrainUniformsPlugin {
             .init_resource::<TerrainUniforms>()
             .init_resource::<GpuTerrainMaterials>()
             .init_resource::<GpuTerrainRenderSettings>()
-            .add_system(extract_voxel_materials.in_set(RenderSet::ExtractCommands).in_schedule(ExtractSchedule))
+            .add_system(
+                extract_voxel_materials
+                    .in_set(RenderSet::ExtractCommands)
+                    .in_schedule(ExtractSchedule),
+            )
             .add_system(prepare_terrain_uniforms.in_set(RenderSet::Queue))
             .add_system(upload_voxel_materials.in_set(RenderSet::Prepare))
-            .add_system(extract_terrain_render_settings_uniform.in_set(RenderSet::ExtractCommands).in_schedule(ExtractSchedule))
+            .add_system(
+                extract_terrain_render_settings_uniform
+                    .in_set(RenderSet::ExtractCommands)
+                    .in_schedule(ExtractSchedule),
+            )
             .add_system(upload_render_distance_uniform.in_set(RenderSet::Prepare));
 
         info!("type size: {}", GpuVoxelMaterial::min_size().get() * 256);
