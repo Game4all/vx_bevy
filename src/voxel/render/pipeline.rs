@@ -10,8 +10,8 @@ use bevy::render::primitives::Aabb;
 use bevy::render::render_asset::RenderAssets;
 use bevy::render::render_phase::{AddRenderCommand, DrawFunctions, RenderPhase, SetItemPipeline};
 use bevy::render::render_resource::{
-    BindGroupLayout, PipelineCache, SpecializedMeshPipeline,
-    SpecializedMeshPipelineError, SpecializedMeshPipelines, VertexFormat,
+    BindGroupLayout, PipelineCache, SpecializedMeshPipeline, SpecializedMeshPipelineError,
+    SpecializedMeshPipelines, VertexFormat,
 };
 
 use bevy::render::view::ExtractedView;
@@ -24,8 +24,6 @@ use bevy::{
         RenderApp,
     },
 };
-
-
 
 use super::terrain_uniforms::{self, SetTerrainUniformsBindGroup, TerrainUniforms};
 
