@@ -178,11 +178,11 @@ impl Plugin for DebugUIPlugins {
                     toggle_debug_ui_displays,
                     display_material_editor.run_if(display_mat_debug_ui_criteria),
                 )
-                    .in_base_set(CoreSet::PostUpdate),
+                    .in_base_set(CoreSet::Update),
             )
             .add_systems(
                 (display_debug_stats, display_chunk_stats)
-                    .in_base_set(CoreSet::PostUpdate)
+                    .in_base_set(CoreSet::Update)
                     .distributive_run_if(display_debug_ui_criteria),
             )
             .init_resource::<DebugUIState>();
