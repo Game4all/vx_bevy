@@ -28,6 +28,7 @@ pub fn prepare_chunks(
             mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
             transform: Transform::from_translation(chunk_key.0.as_vec3()),
             visibility: Visibility::Hidden,
+            aabb: Aabb::from_min_max(Vec3::ZERO, Vec3::splat(CHUNK_LENGTH as f32)),
             ..Default::default()
         });
     }
