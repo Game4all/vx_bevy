@@ -28,7 +28,6 @@ pub fn prepare_chunks(
             mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
             transform: Transform::from_translation(chunk_key.0.as_vec3()),
             visibility: Visibility::Hidden,
-            aabb: Aabb::from_min_max(Vec3::ZERO, Vec3::splat(CHUNK_LENGTH as f32)),
             ..Default::default()
         });
     }
@@ -39,7 +38,7 @@ static SHARED_MESH_BUFFERS: Lazy<ThreadLocal<RefCell<MeshBuffers<Voxel, ChunkSha
     Lazy::new(ThreadLocal::default);
 
 /// Queues meshing tasks for the chunks in need of a remesh.
-fn queue_mesh_tasks(
+pub fn queue_mesh_tasks(
     mut commands: Commands,
     dirty_chunks: Res<DirtyChunks>,
     chunk_entities: Res<ChunkEntities>,

@@ -134,7 +134,6 @@ pub struct VoxelTerrainMeshBundle {
     pub global_transform: GlobalTransform,
     pub visibility: Visibility,
     pub computed_visibility: ComputedVisibility,
-    pub aabb: Aabb,
 }
 pub struct VoxelMeshRenderPipelinePlugin;
 

@@ -43,7 +43,7 @@ fn queue_terrain_gen(mut commands: Commands, new_chunks: Query<(Entity, &Chunk),
 }
 
 /// Polls for finished gen tasks and put back the generated terrain into the voxel map
-fn process_terrain_gen(
+pub fn process_terrain_gen(
     mut chunk_data: ResMut<ChunkMap<Voxel, ChunkShape>>,
     mut commands: Commands,
     mut dirty_chunks: ResMut<DirtyChunks>,
@@ -94,4 +94,4 @@ impl Plugin for VoxelWorldTerrainGenPlugin {
 }
 
 #[derive(Component)]
-struct TerrainGenTask(Task<VoxelBuffer<Voxel, ChunkShape>>);
+pub struct TerrainGenTask(Task<VoxelBuffer<Voxel, ChunkShape>>);
