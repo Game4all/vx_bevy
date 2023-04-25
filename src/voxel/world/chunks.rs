@@ -9,7 +9,10 @@ use bevy::{
 };
 use float_ord::FloatOrd;
 
-use super::{player::PlayerController, Chunk, ChunkShape, CHUNK_LENGTH, meshing::queue_mesh_tasks, terrain::process_terrain_gen};
+use super::{
+    meshing::queue_mesh_tasks, player::PlayerController, terrain::process_terrain_gen, Chunk,
+    ChunkShape, CHUNK_LENGTH,
+};
 use crate::voxel::storage::ChunkMap;
 use crate::voxel::Voxel;
 
@@ -256,9 +259,15 @@ impl Plugin for VoxelWorldChunkingPlugin {
                 .run_if(update_view_chunks_criteria)
                 .before(create_chunks)
                 .before(update_player_pos),
-            create_chunks.in_set(ChunkLoadingSystem::CreateChunks).before(queue_mesh_tasks),
-            destroy_chunks.in_base_set(CoreSet::Last).after(process_terrain_gen),
-            clear_dirty_chunks.in_set(ChunkLoadingSystem::ClearDirtyChunks).before(process_terrain_gen),
+            create_chunks
+                .in_set(ChunkLoadingSystem::CreateChunks)
+                .before(queue_mesh_tasks),
+            destroy_chunks
+                .in_base_set(CoreSet::Last)
+                .after(process_terrain_gen),
+            clear_dirty_chunks
+                .in_set(ChunkLoadingSystem::ClearDirtyChunks)
+                .before(process_terrain_gen),
         ));
     }
 }

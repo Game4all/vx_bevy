@@ -6,19 +6,13 @@
 
 use std::f32::consts::PI;
 
-use bevy::{core_pipeline::fxaa::Fxaa, prelude::*, ecs::schedule::ScheduleBuildSettings};
+use bevy::{core_pipeline::fxaa::Fxaa, prelude::*};
 
 mod debug;
 mod voxel;
 
 fn main() {
     let mut app = App::default();
-    // app.edit_schedule(CoreSchedule::Main, |schedule| {
-    //     schedule.set_build_settings(ScheduleBuildSettings {
-    //         ambiguity_detection: bevy::ecs::schedule::LogLevel::Error,
-    //         ..Default::default()
-    //     });
-    // });
     app.add_plugins(DefaultPlugins)
         .add_plugin(voxel::VoxelWorldPlugin)
         .add_plugin(debug::DebugUIPlugins)
