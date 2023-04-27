@@ -1,4 +1,5 @@
-use bevy::{input::mouse::MouseMotion, prelude::*, window::CursorGrabMode};
+use bevy::{input::mouse::MouseMotion, prelude::*, ui::UiSystem, window::CursorGrabMode};
+use bevy_egui::EguiSet;
 use std::f32::consts::FRAC_PI_2;
 
 // Reusing the player controller impl for now.
@@ -111,11 +112,25 @@ pub fn handle_player_input(
         + direction.y * Vec3::Y * acceleration;
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
+pub struct PlayerControllerSet;
+
 pub struct VoxelWorldPlayerControllerPlugin;
 
 impl Plugin for VoxelWorldPlayerControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(handle_player_mouse_move)
-            .add_system(handle_player_input);
+        app.add_systems(
+            (
+                handle_player_input,
+                handle_player_mouse_move.after(handle_player_input),
+            )
+                .in_set(PlayerControllerSet),
+        )
+        .configure_set(
+            PlayerControllerSet
+                .in_base_set(CoreSet::PreUpdate)
+                .after(UiSystem::Focus)
+                .after(EguiSet::ProcessInput),
+        );
     }
 }

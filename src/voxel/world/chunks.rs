@@ -125,17 +125,7 @@ fn clear_dirty_chunks(mut dirty_chunks: ResMut<DirtyChunks>) {
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
 /// Labels for the systems added by [`VoxelWorldChunkingPlugin`]
-pub enum ChunkLoadingSystem {
-    /// Updates the player current chunk.
-    /// The computed position is used for loading / meshing priority systems.
-    UpdatePlayerPos,
-    /// Runs chunk view distance calculations and queue events for chunk creations and deletions.
-    UpdateViewChunks,
-    /// Creates the voxel buffers to hold chunk data and attach them a chunk entity in the ECS world.
-    CreateChunks,
-    /// Clears the dirty chunks list.
-    ClearDirtyChunks,
-}
+pub struct ChunkLoadingSet;
 
 /// Handles dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 pub struct VoxelWorldChunkingPlugin;
@@ -230,20 +220,23 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkCommandQueue>()
         .init_resource::<DirtyChunks>()
-        .add_systems((
-            update_player_pos.in_set(ChunkLoadingSystem::UpdatePlayerPos),
-            update_view_chunks
-                .in_set(ChunkLoadingSystem::UpdateViewChunks)
-                .run_if(update_view_chunks_criteria),
-            create_chunks.in_set(ChunkLoadingSystem::CreateChunks),
-            clear_dirty_chunks.in_set(ChunkLoadingSystem::ClearDirtyChunks),
-        ))
-        .add_system(destroy_chunks.in_base_set(CoreSet::Last))
-        .configure_sets((
-            ChunkLoadingSystem::UpdatePlayerPos.before(ChunkLoadingSystem::UpdateViewChunks),
-            ChunkLoadingSystem::UpdateViewChunks.before(ChunkLoadingSystem::CreateChunks),
-            ChunkLoadingSystem::CreateChunks.before(ChunkLoadingSystem::ClearDirtyChunks),
-        ));
+        .add_systems(
+            (
+                update_player_pos,
+                update_view_chunks
+                    .run_if(update_view_chunks_criteria)
+                    .after(update_player_pos),
+                create_chunks.after(update_view_chunks),
+            )
+                .in_set(ChunkLoadingSet),
+        )
+        .add_system(destroy_chunks.in_base_set(CoreSet::PostUpdate))
+        .add_system(clear_dirty_chunks.in_base_set(CoreSet::Last))
+        .configure_set(
+            ChunkLoadingSet
+                .in_base_set(CoreSet::Update)
+                .after(bevy::scene::scene_spawner_system),
+        );
 
         // .add_stage_after(
         //     CoreStage::Update,

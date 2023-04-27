@@ -2,13 +2,13 @@ use bevy::{
     diagnostic::{Diagnostics, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::{
-        Color, CoreSet, EventReader, IntoSystemConfig, IntoSystemConfigs, KeyCode, Plugin, Res,
-        ResMut, Resource,
+        Color, CoreSet, EventReader, IntoSystemConfig, IntoSystemConfigs, IntoSystemSetConfig,
+        KeyCode, Plugin, Res, ResMut, Resource, SystemSet,
     },
 };
 use bevy_egui::{
     egui::{self, Rgba, Slider},
-    EguiContexts, EguiPlugin,
+    EguiContexts, EguiPlugin, EguiSet,
 };
 
 use crate::voxel::{
@@ -166,6 +166,9 @@ fn display_material_editor(
     });
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
+pub struct DebugSet;
+
 pub struct DebugUIPlugins;
 
 impl Plugin for DebugUIPlugins {
@@ -173,16 +176,29 @@ impl Plugin for DebugUIPlugins {
         app.add_plugin(EguiPlugin)
             .add_plugin(FrameTimeDiagnosticsPlugin)
             .add_plugin(EntityCountDiagnosticsPlugin)
-            .add_system(toggle_debug_ui_displays.in_base_set(CoreSet::PostUpdate))
+            .configure_set(
+                DebugSet
+                    .after(EguiSet::InitContexts)
+                    .after(bevy::scene::scene_spawner_system)
+                    .in_base_set(CoreSet::Update)
+                    .ambiguous_with(crate::voxel::ChunkLoadingSet)
+                    .ambiguous_with(crate::voxel::AsyncTerrainGenSet),
+            )
+            .add_system(toggle_debug_ui_displays.in_set(DebugSet))
             .add_systems(
-                (display_debug_stats, display_chunk_stats)
-                    .distributive_run_if(display_debug_ui_criteria)
-                    .in_base_set(CoreSet::PostUpdate),
+                (
+                    display_debug_stats.ambiguous_with(display_chunk_stats),
+                    display_chunk_stats,
+                )
+                    .in_set(DebugSet)
+                    .distributive_run_if(display_debug_ui_criteria),
             )
             .add_system(
                 display_material_editor
                     .run_if(display_mat_debug_ui_criteria)
-                    .in_base_set(CoreSet::PostUpdate),
+                    .in_set(DebugSet)
+                    .ambiguous_with(display_debug_stats)
+                    .ambiguous_with(display_chunk_stats),
             )
             .init_resource::<DebugUIState>();
     }

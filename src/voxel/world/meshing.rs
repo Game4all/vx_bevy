@@ -1,7 +1,8 @@
 use std::cell::RefCell;
 
 use super::{
-    chunks::{ChunkEntities, DirtyChunks},
+    chunks::{ChunkEntities, ChunkLoadingSet, DirtyChunks},
+    terrain::AsyncTerrainGenSet,
     Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::voxel::{
@@ -100,22 +101,30 @@ fn process_mesh_tasks(
     });
 }
 
-#[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, SystemSet)]
-pub enum ChunkSets {
-    Prepare,
-    Mesh,
-    Render,
-}
+#[derive(Debug, Hash, Eq, PartialEq, Clone, Copy, SystemSet)]
+pub struct AsyncChunkMeshSet;
 
 /// Handles the meshing of the chunks.
 pub struct VoxelWorldMeshingPlugin;
 
 impl Plugin for VoxelWorldMeshingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_system(prepare_chunks.in_set(ChunkSets::Prepare))
-            .add_systems((queue_mesh_tasks, process_mesh_tasks).in_set(ChunkSets::Mesh))
-            .configure_set(ChunkSets::Prepare.before(ChunkSets::Mesh))
-            .configure_set(ChunkSets::Mesh.before(ChunkSets::Render));
+        app.add_systems(
+            (
+                prepare_chunks,
+                queue_mesh_tasks,
+                process_mesh_tasks
+                    .after(prepare_chunks)
+                    .after(queue_mesh_tasks),
+            )
+                .in_set(AsyncChunkMeshSet),
+        )
+        .configure_set(
+            AsyncChunkMeshSet
+                .in_base_set(CoreSet::Update)
+                .after(AsyncTerrainGenSet)
+                .after(bevy::scene::scene_spawner_system),
+        );
     }
 }
 

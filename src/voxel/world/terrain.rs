@@ -1,4 +1,8 @@
-use super::{chunks::DirtyChunks, Chunk, ChunkShape};
+use super::{
+    chunks::{ChunkLoadingSet, DirtyChunks},
+    meshing::AsyncChunkMeshSet,
+    Chunk, ChunkShape,
+};
 use crate::voxel::{
     storage::{ChunkMap, VoxelBuffer},
     terraingen::TERRAIN_GENERATOR,
@@ -6,8 +10,8 @@ use crate::voxel::{
 };
 use bevy::{
     prelude::{
-        Added, Commands, Component, Entity, IntoSystemConfig, IntoSystemSetConfig, Plugin, Query,
-        ResMut, SystemSet,
+        Added, Commands, Component, CoreSet, Entity, IntoSystemConfig, IntoSystemConfigs,
+        IntoSystemSetConfig, Plugin, Query, ResMut, SystemSet,
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
@@ -59,21 +63,25 @@ fn process_terrain_gen(
 pub struct VoxelWorldTerrainGenPlugin;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
-/// Labels for the systems added by [`VoxelWorldTerrainGenPlugin`]
-pub enum TerrainGenSystem {
-    /// Queues the terrain gen async tasks for the newly created chunks.
-    QueueTerrainGen,
-    /// Polls for finished gen tasks and put back the generated terrain into the voxel map
-    ProcessTerrainGen,
-}
+/// Labels for the systems which asynchronously generate terrain.
+pub struct AsyncTerrainGenSet;
 
 impl Plugin for VoxelWorldTerrainGenPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_system(queue_terrain_gen.in_set(TerrainGenSystem::QueueTerrainGen))
-            .add_system(process_terrain_gen.in_set(TerrainGenSystem::ProcessTerrainGen))
-            .configure_set(
-                TerrainGenSystem::QueueTerrainGen.before(TerrainGenSystem::ProcessTerrainGen),
-            );
+        app.add_systems(
+            (
+                queue_terrain_gen,
+                process_terrain_gen.after(queue_terrain_gen),
+            )
+                .in_set(AsyncTerrainGenSet),
+        )
+        .configure_set(
+            AsyncTerrainGenSet
+                .in_base_set(CoreSet::Update)
+                .after(ChunkLoadingSet)
+                .after(bevy::scene::scene_spawner_system)
+                .ambiguous_with(AsyncChunkMeshSet),
+        );
     }
 }
 

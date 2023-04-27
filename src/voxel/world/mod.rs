@@ -9,7 +9,8 @@ use super::{storage::ChunkMap, terraingen, Voxel};
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
 pub use chunks::{
-    ChunkCommandQueue, ChunkEntities, ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks,
+    ChunkCommandQueue, ChunkEntities, ChunkLoadRadius, ChunkLoadingSet, CurrentLocalPlayerChunk,
+    DirtyChunks,
 };
 
 mod chunks_anim;
@@ -17,7 +18,9 @@ pub mod materials;
 mod meshing;
 pub mod player;
 mod sky;
+
 mod terrain;
+pub use terrain::AsyncTerrainGenSet;
 
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
 pub struct VoxelWorldPlugin;

@@ -1,7 +1,9 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::{
-    Color, Commands, Deref, DirectionalLight, DirectionalLightBundle, Entity, ParamSet, Plugin, Quat, Query, Res, Resource, Transform, With,
+    Color, Commands, CoreSet, Deref, DirectionalLight, DirectionalLightBundle, Entity,
+    IntoSystemConfig, IntoSystemSetConfig, ParamSet, Plugin, Quat, Query, Res, Resource, SystemSet,
+    Transform, With,
 };
 
 use super::player::PlayerController;
@@ -15,7 +17,7 @@ fn setup_sky_lighting(mut cmds: Commands) {
             transform: Transform::from_rotation(Quat::from_rotation_x(-PI / 4.0)),
             directional_light: DirectionalLight {
                 color: Color::WHITE,
-                shadows_enabled: true, 
+                shadows_enabled: true,
                 ..Default::default()
             },
             ..Default::default()
@@ -45,11 +47,20 @@ fn update_light_position(
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, SystemSet)]
+pub struct InteractiveSkyboxSet;
+
 pub struct InteractiveSkyboxPlugin;
 
 impl Plugin for InteractiveSkyboxPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_startup_system(setup_sky_lighting)
-            .add_system(update_light_position);
+            .add_system(
+                update_light_position
+                    .in_set(InteractiveSkyboxSet)
+                    .ambiguous_with_all(),
+                // @todo: update atmosphere library to add a set so that this is only ambiguous with that set
+            )
+            .configure_set(InteractiveSkyboxSet.in_base_set(CoreSet::Update));
     }
 }

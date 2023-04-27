@@ -1,14 +1,14 @@
 use bevy::{
     prelude::{
-        Added, Changed, Commands, Component, Entity, Plugin, Query, Res, Transform, Visibility,
-        With,
+        Added, Changed, Commands, Component, CoreSet, Entity, IntoSystemConfigs,
+        IntoSystemSetConfig, Plugin, Query, Res, SystemSet, Transform, Visibility, With,
     },
     time::Time,
 };
 
 use crate::voxel::render::VoxelTerrainMesh;
 
-use super::Chunk;
+use super::{chunks::ChunkLoadingSet, meshing::AsyncChunkMeshSet, Chunk};
 
 const ANIMATION_DURATION: f32 = 0.8;
 const ANIMATION_HEIGHT: f32 = 128.;
@@ -50,12 +50,21 @@ fn step_chunk_animation(
     });
 }
 
+#[derive(Eq, PartialEq, Hash, Debug, Clone, Copy, SystemSet)]
+pub struct ChunkAppearanceAnimatorSet;
+
 /// Animates the spawning of chunk entities that come into sight.
 pub struct ChunkAppearanceAnimatorPlugin;
 
 impl Plugin for ChunkAppearanceAnimatorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_system(step_chunk_animation)
-            .add_system(attach_chunk_animation);
+        app.add_systems(
+            (attach_chunk_animation, step_chunk_animation).in_set(ChunkAppearanceAnimatorSet),
+        )
+        .configure_set(
+            ChunkAppearanceAnimatorSet
+                .in_base_set(CoreSet::Update)
+                .after(AsyncChunkMeshSet),
+        );
     }
 }
