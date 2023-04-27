@@ -1,10 +1,14 @@
 use bevy::core_pipeline::core_3d::AlphaMask3d;
-use bevy::pbr::{DrawMesh, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup};
+use bevy::pbr::{
+    DrawMesh, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup,
+    MAX_CASCADES_PER_LIGHT, MAX_DIRECTIONAL_LIGHTS,
+};
 use bevy::prelude::{
-    Bundle, ComputedVisibility, Entity, GlobalTransform, Mesh, Msaa, Query, Res, ResMut, Resource,
-    Transform, Visibility, With,
+    Bundle, ComputedVisibility, Entity, GlobalTransform, IntoSystemConfig, Mesh, Msaa, Query, Res,
+    ResMut, Resource, Transform, Visibility, With,
 };
 use bevy::render::mesh::{MeshVertexAttribute, MeshVertexBufferLayout};
+use bevy::render::RenderSet;
 
 use bevy::render::primitives::Aabb;
 use bevy::render::render_asset::RenderAssets;
@@ -12,13 +16,12 @@ use bevy::render::render_phase::{AddRenderCommand, DrawFunctions, RenderPhase, S
 use bevy::render::render_resource::{
     BindGroupLayout, BlendState, ColorTargetState, ColorWrites, CompareFunction, DepthBiasState,
     DepthStencilState, Face, FragmentState, FrontFace, MultisampleState, PipelineCache,
-    PolygonMode, PrimitiveState, RenderPipelineDescriptor, SpecializedMeshPipeline,
+    PolygonMode, PrimitiveState, RenderPipelineDescriptor, ShaderDefVal, SpecializedMeshPipeline,
     SpecializedMeshPipelineError, SpecializedMeshPipelines, StencilFaceState, StencilState,
     TextureFormat, VertexFormat, VertexState,
 };
 use bevy::render::texture::BevyDefault;
 use bevy::render::view::ExtractedView;
-use bevy::render::RenderStage;
 use bevy::{
     pbr::MeshPipeline,
     prelude::{AssetServer, Component, FromWorld, Handle, Plugin, Shader},
@@ -27,6 +30,7 @@ use bevy::{
         RenderApp,
     },
 };
+use bevy_egui::egui::PlatformOutput;
 
 use super::terrain_uniforms::{self, SetTerrainUniformsBindGroup, TerrainUniforms};
 
@@ -41,11 +45,11 @@ impl VoxelTerrainMesh {
 
 impl ExtractComponent for VoxelTerrainMesh {
     type Query = &'static Self;
-
     type Filter = ();
+    type Out = Self;
 
-    fn extract_component(item: bevy::ecs::query::QueryItem<Self::Query>) -> Self {
-        item.clone()
+    fn extract_component(item: bevy::ecs::query::QueryItem<Self::Query>) -> Option<Self::Out> {
+        Some(item.clone())
     }
 }
 
@@ -83,11 +87,21 @@ impl SpecializedMeshPipeline for VoxelTerrainRenderPipeline {
         layout: &MeshVertexBufferLayout,
     ) -> Result<bevy::render::render_resource::RenderPipelineDescriptor, SpecializedMeshPipelineError>
     {
+        let mut descriptor = self.mesh_pipeline.specialize(key, layout)?;
+        descriptor.layout.push(self.material_array_layout.clone());
+        descriptor.vertex.shader = self.shader.clone();
+        descriptor.vertex.buffers = vec![layout.get_layout(&[
+            Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
+            VoxelTerrainMesh::ATTRIBUTE_DATA.at_shader_location(1),
+        ])?];
+        descriptor.fragment.as_mut().unwrap().shader = self.shader.clone();
+        Ok(descriptor)
+        /*
         Ok(RenderPipelineDescriptor {
             vertex: VertexState {
                 shader: self.shader.clone(),
                 entry_point: "vertex".into(),
-                shader_defs: Vec::new(),
+                shader_defs: defs.clone(),
                 buffers: vec![layout.get_layout(&[
                     Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
                     VoxelTerrainMesh::ATTRIBUTE_DATA.at_shader_location(1),
@@ -95,7 +109,7 @@ impl SpecializedMeshPipeline for VoxelTerrainRenderPipeline {
             },
             fragment: Some(FragmentState {
                 shader: self.shader.clone(),
-                shader_defs: Vec::new(),
+                shader_defs: defs,
                 entry_point: "fragment".into(),
                 targets: vec![Some(ColorTargetState {
                     format: TextureFormat::bevy_default(),
@@ -103,11 +117,11 @@ impl SpecializedMeshPipeline for VoxelTerrainRenderPipeline {
                     write_mask: ColorWrites::ALL,
                 })],
             }),
-            layout: Some(vec![
+            layout: vec![
                 self.mesh_pipeline.view_layout.clone(),
                 self.mesh_pipeline.mesh_layout.clone(),
-                self.material_array_layout.clone(),
-            ]),
+
+            ],
             primitive: PrimitiveState {
                 front_face: FrontFace::Ccw,
                 cull_mode: Some(Face::Back),
@@ -139,7 +153,9 @@ impl SpecializedMeshPipeline for VoxelTerrainRenderPipeline {
                 alpha_to_coverage_enabled: false,
             },
             label: Some("voxel pipeline".into()),
+            push_constant_ranges: vec![],
         })
+         */
     }
 }
 
@@ -155,7 +171,7 @@ fn queue_voxel_meshes(
     mut views: Query<(&ExtractedView, &mut RenderPhase<AlphaMask3d>)>,
 ) {
     let draw_custom = oq_draw_funcs.read().get_id::<DrawVoxel>().unwrap();
-    let key = MeshPipelineKey::from_msaa_samples(msaa.samples);
+    let key = MeshPipelineKey::from_msaa_samples(msaa.samples());
     for (view, mut transparent_phase) in views.iter_mut() {
         let view_matrix = view.transform.compute_matrix();
         let view_row_2 = view_matrix.row(2);
@@ -207,6 +223,6 @@ impl Plugin for VoxelMeshRenderPipelinePlugin {
             .add_render_command::<AlphaMask3d, DrawVoxel>()
             .init_resource::<VoxelTerrainRenderPipeline>()
             .init_resource::<SpecializedMeshPipelines<VoxelTerrainRenderPipeline>>()
-            .add_system_to_stage(RenderStage::Queue, queue_voxel_meshes);
+            .add_system(queue_voxel_meshes.in_set(RenderSet::Queue));
     }
 }

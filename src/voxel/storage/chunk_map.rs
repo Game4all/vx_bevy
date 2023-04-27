@@ -1,4 +1,5 @@
-use ilattice::{morton::Morton3i32, vector::Map as VecMap};
+use ilattice::{morton::Morton3i32};
+use ilattice::vector::Map as VecMap;
 use std::{collections::BTreeMap, hash::Hash};
 
 use bevy::{math::IVec3, prelude::Resource};

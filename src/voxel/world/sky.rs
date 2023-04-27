@@ -1,8 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::{
-    Color, Commands, Deref, DirectionalLight, DirectionalLightBundle, Entity,
-    OrthographicProjection, ParamSet, Plugin, Quat, Query, Res, Resource, Transform, With,
+    Color, Commands, Deref, DirectionalLight, DirectionalLightBundle, Entity, ParamSet, Plugin, Quat, Query, Res, Resource, Transform, With,
 };
 
 use super::player::PlayerController;
@@ -11,23 +10,12 @@ use super::player::PlayerController;
 struct SkyLightEntity(Entity);
 
 fn setup_sky_lighting(mut cmds: Commands) {
-    const SIZE: f32 = 200.0; //make this dynamic according to view distance???
-
     let sky_light_entity = cmds
         .spawn(DirectionalLightBundle {
             transform: Transform::from_rotation(Quat::from_rotation_x(-PI / 4.0)),
             directional_light: DirectionalLight {
                 color: Color::WHITE,
-                shadows_enabled: true,
-                shadow_projection: OrthographicProjection {
-                    left: -SIZE,
-                    right: SIZE,
-                    bottom: -SIZE,
-                    top: SIZE,
-                    near: -SIZE,
-                    far: SIZE,
-                    ..Default::default()
-                },
+                shadows_enabled: true, 
                 ..Default::default()
             },
             ..Default::default()

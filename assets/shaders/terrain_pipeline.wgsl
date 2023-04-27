@@ -1,22 +1,25 @@
 #import bevy_pbr::mesh_types
 #import bevy_pbr::mesh_view_bindings
 
+@group(1) @binding(0)
+var<uniform> mesh: Mesh;
+
+#import bevy_pbr::mesh_functions
+
 #import "shaders/voxel_data.wgsl"
 #import "shaders/terrain_uniforms.wgsl"
 #import "shaders/noise.wgsl"
 #import "shaders/fog.wgsl"
 
-@group(1) @binding(0)
-var<uniform> mesh: Mesh;
-
-#import bevy_pbr::mesh_functions
 
 #import bevy_pbr::pbr_types
 #import bevy_pbr::utils
 #import bevy_pbr::clustered_forward
 #import bevy_pbr::lighting
 #import bevy_pbr::shadows
+#import bevy_pbr::fog
 #import bevy_pbr::pbr_functions
+#import bevy_pbr::pbr_ambient
 
 struct Vertex {
     @location(0) position: vec3<f32>,

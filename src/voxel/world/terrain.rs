@@ -1,7 +1,4 @@
-use super::{
-    chunks::{ChunkLoadingStage, DirtyChunks},
-    Chunk, ChunkShape,
-};
+use super::{chunks::DirtyChunks, Chunk, ChunkShape};
 use crate::voxel::{
     storage::{ChunkMap, VoxelBuffer},
     terraingen::TERRAIN_GENERATOR,
@@ -9,8 +6,8 @@ use crate::voxel::{
 };
 use bevy::{
     prelude::{
-        Added, Commands, Component, Entity, IntoSystemDescriptor, Plugin, Query, ResMut,
-        StageLabel, SystemLabel, SystemStage,
+        Added, Commands, Component, Entity, IntoSystemConfig, IntoSystemSetConfig, Plugin, Query,
+        ResMut, SystemSet,
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
@@ -61,7 +58,7 @@ fn process_terrain_gen(
 /// Handles terrain generation.
 pub struct VoxelWorldTerrainGenPlugin;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
 /// Labels for the systems added by [`VoxelWorldTerrainGenPlugin`]
 pub enum TerrainGenSystem {
     /// Queues the terrain gen async tasks for the newly created chunks.
@@ -70,23 +67,13 @@ pub enum TerrainGenSystem {
     ProcessTerrainGen,
 }
 
-// we need to use a whole system stage for this in order to enable the usage of added component querries.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
-struct TerrainGenStage;
-
 impl Plugin for VoxelWorldTerrainGenPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_stage_after(
-            ChunkLoadingStage,
-            TerrainGenStage,
-            SystemStage::parallel()
-                .with_system(queue_terrain_gen.label(TerrainGenSystem::QueueTerrainGen))
-                .with_system(
-                    process_terrain_gen
-                        .label(TerrainGenSystem::ProcessTerrainGen)
-                        .after(TerrainGenSystem::QueueTerrainGen),
-                ),
-        );
+        app.add_system(queue_terrain_gen.in_set(TerrainGenSystem::QueueTerrainGen))
+            .add_system(process_terrain_gen.in_set(TerrainGenSystem::ProcessTerrainGen))
+            .configure_set(
+                TerrainGenSystem::QueueTerrainGen.before(TerrainGenSystem::ProcessTerrainGen),
+            );
     }
 }
 

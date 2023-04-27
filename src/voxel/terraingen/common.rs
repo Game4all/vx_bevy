@@ -1,6 +1,3 @@
-use bevy::math::{IVec3, Vec3};
-use ilattice::{glam::UVec2, glam::UVec3, prelude::Extent};
-
 use crate::voxel::{
     material::VoxelMaterial,
     materials::{Bedrock, Rock, Water},
@@ -8,6 +5,8 @@ use crate::voxel::{
     storage::VoxelBuffer,
     ChunkShape, Voxel, CHUNK_LENGTH, CHUNK_LENGTH_U,
 };
+use bevy::prelude::*;
+use ilattice::prelude::*;
 
 use super::noise::Heightmap;
 
