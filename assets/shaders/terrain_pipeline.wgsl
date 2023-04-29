@@ -82,6 +82,8 @@ fn fragment(frag: Fragment) -> @location(0) vec4<f32> {
     var pbr_input = prepare_pbr_input_from_voxel_mat(material, frag);
     let pbr_colour = tone_mapping(pbr(pbr_input));
 
+    // @todo: switch to bevy_pbr::fog
+
     //fragment distance from camera, used to determine amount of fog to apply.
     let fog_distance = distance(frag.world_position, view.world_position);
     return ffog_apply_fog(fog_distance, f32(render_distance) * f32(TERRAIN_CHUNK_LENGTH), f32(TERRAIN_CHUNK_LENGTH), pbr_colour);

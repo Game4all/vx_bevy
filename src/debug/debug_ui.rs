@@ -167,7 +167,10 @@ fn display_material_editor(
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
-pub struct DebugSet;
+pub enum DebugSet {
+    Toggle,
+    Display,
+}
 
 pub struct DebugUIPlugins;
 
@@ -176,30 +179,25 @@ impl Plugin for DebugUIPlugins {
         app.add_plugin(EguiPlugin)
             .add_plugin(FrameTimeDiagnosticsPlugin)
             .add_plugin(EntityCountDiagnosticsPlugin)
-            .configure_set(
-                DebugSet
-                    .after(EguiSet::InitContexts)
-                    .after(bevy::scene::scene_spawner_system)
-                    .in_base_set(CoreSet::Update)
-                    .ambiguous_with(crate::voxel::ChunkLoadingSet)
-                    .ambiguous_with(crate::voxel::TerrainGenSet),
-            )
-            .add_system(toggle_debug_ui_displays.in_set(DebugSet))
+            .add_system(toggle_debug_ui_displays.in_set(DebugSet::Toggle))
             .add_systems(
-                (
-                    display_debug_stats.ambiguous_with(display_chunk_stats),
-                    display_chunk_stats,
-                )
-                    .in_set(DebugSet)
-                    .distributive_run_if(display_debug_ui_criteria),
+                (display_debug_stats, display_chunk_stats)
+                    .distributive_run_if(display_debug_ui_criteria)
+                    .in_set(DebugSet::Display),
             )
             .add_system(
                 display_material_editor
                     .run_if(display_mat_debug_ui_criteria)
-                    .in_set(DebugSet)
-                    .ambiguous_with(display_debug_stats)
-                    .ambiguous_with(display_chunk_stats),
+                    .in_set(DebugSet::Display),
             )
+            .configure_sets((
+                DebugSet::Toggle
+                    .after(EguiSet::ProcessInput)
+                    .in_base_set(CoreSet::PreUpdate),
+                DebugSet::Display
+                    .in_base_set(CoreSet::Update)
+                    .ambiguous_with_all(), // perfectly fine to use data from previous frame
+            ))
             .init_resource::<DebugUIState>();
     }
 }

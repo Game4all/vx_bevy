@@ -1,4 +1,4 @@
-use bevy::{input::mouse::MouseMotion, prelude::*, ui::UiSystem, window::CursorGrabMode};
+use bevy::{input::mouse::MouseMotion, prelude::*, ui::UiSystem, window::CursorGrabMode, ecs::system::Insert};
 use bevy_egui::EguiSet;
 use std::f32::consts::FRAC_PI_2;
 
