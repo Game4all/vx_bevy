@@ -1,6 +1,6 @@
 use super::{
     chunks::{ChunkLoadingSet, DirtyChunks},
-    meshing::AsyncChunkMeshSet,
+    meshing::ChunkMeshingSet,
     Chunk, ChunkShape,
 };
 use crate::voxel::{
@@ -64,7 +64,7 @@ pub struct VoxelWorldTerrainGenPlugin;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
 /// Labels for the systems which asynchronously generate terrain.
-pub struct AsyncTerrainGenSet;
+pub struct TerrainGenSet;
 
 impl Plugin for VoxelWorldTerrainGenPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
@@ -73,14 +73,14 @@ impl Plugin for VoxelWorldTerrainGenPlugin {
                 queue_terrain_gen,
                 process_terrain_gen.after(queue_terrain_gen),
             )
-                .in_set(AsyncTerrainGenSet),
+                .in_set(TerrainGenSet),
         )
         .configure_set(
-            AsyncTerrainGenSet
+            TerrainGenSet
                 .in_base_set(CoreSet::Update)
                 .after(ChunkLoadingSet)
                 .after(bevy::scene::scene_spawner_system)
-                .ambiguous_with(AsyncChunkMeshSet),
+                .ambiguous_with(ChunkMeshingSet),
         );
     }
 }

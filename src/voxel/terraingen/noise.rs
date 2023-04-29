@@ -1,5 +1,8 @@
 use bevy::math::{IVec3, Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
-use noise::NoiseFn;
+use noise::{
+    utils::{NoiseMapBuilder, PlaneMapBuilder},
+    Fbm, MultiFractal, SuperSimplex,
+};
 
 pub fn rand2to1(p: Vec2, dot: Vec2) -> f32 {
     let sp: Vec2 = p.to_array().map(|x| x.sin()).into();
@@ -73,23 +76,32 @@ pub fn voronoi(p: Vec2) -> Vec2 {
 }
 
 pub fn generate_heightmap_data(key: IVec3, chunk_len: usize) -> Vec<f32> {
-    let noise = noise::Simplex::new(0);
+    /*
+    Use noise-rs instead of simdnoise because
+        (a) noise generation is not really a bottleneck
+        (b) the Rust/LLVM compiler is actually pretty good at vectorization
+        (c) simdnoise does not compile on macOS with an ARM processor :(
+    */
 
-    let mut result = vec![];
-    for x in 0..chunk_len {
-        for z in 0..chunk_len {
-            result.push(128.0);
-        }
-    }
+    // @todo tune these parameters
 
-    result
-    // simdnoise::NoiseBuilder::fbm_2d_offset(key.x as f32, chunk_len, key.z as f32, chunk_len)
-    //     .with_octaves(4)
-    //     .generate()
-    //     .0
-    //     .iter()
-    //     .map(|x| 128.0 + x * 5.0)
-    //     .collect()
+    let seed = 0; // @todo: make this a resource?
+
+    // simplex noise is buggy in noise-rs, use supersimplex for now.
+    let fbm = Fbm::<SuperSimplex>::new(seed)
+        .set_octaves(4)
+        .set_frequency(0.02)
+        .set_lacunarity(2.0)
+        .set_persistence(0.5);
+
+    PlaneMapBuilder::<_, 2>::new(fbm)
+        .set_size(chunk_len, chunk_len)
+        .set_x_bounds(key.x as f64, (key.x + chunk_len as i32) as f64)
+        .set_y_bounds(key.z as f64, (key.z + chunk_len as i32) as f64)
+        .build()
+        .into_iter()
+        .map(|x| 128.0 + 5.0 * x as f32)
+        .collect()
 }
 
 /// A view into a slice of noise values with W x H dimensions.

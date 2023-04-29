@@ -8,7 +8,7 @@ use bevy::{
 
 use crate::voxel::render::VoxelTerrainMesh;
 
-use super::{chunks::ChunkLoadingSet, meshing::AsyncChunkMeshSet, Chunk};
+use super::{meshing::ChunkMeshingSet, Chunk};
 
 const ANIMATION_DURATION: f32 = 0.8;
 const ANIMATION_HEIGHT: f32 = 128.;
@@ -64,7 +64,7 @@ impl Plugin for ChunkAppearanceAnimatorPlugin {
         .configure_set(
             ChunkAppearanceAnimatorSet
                 .in_base_set(CoreSet::Update)
-                .after(AsyncChunkMeshSet),
+                .after(ChunkMeshingSet),
         );
     }
 }

@@ -182,7 +182,7 @@ impl Plugin for DebugUIPlugins {
                     .after(bevy::scene::scene_spawner_system)
                     .in_base_set(CoreSet::Update)
                     .ambiguous_with(crate::voxel::ChunkLoadingSet)
-                    .ambiguous_with(crate::voxel::AsyncTerrainGenSet),
+                    .ambiguous_with(crate::voxel::TerrainGenSet),
             )
             .add_system(toggle_debug_ui_displays.in_set(DebugSet))
             .add_systems(

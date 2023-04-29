@@ -1,17 +1,17 @@
 use std::cell::RefCell;
 
 use super::{
-    chunks::{ChunkEntities, ChunkLoadingSet, DirtyChunks},
-    terrain::AsyncTerrainGenSet,
-    Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
+    chunks::{ChunkEntities, DirtyChunks},
+    terrain::TerrainGenSet,
+    Chunk, ChunkShape, Voxel,
 };
 use crate::voxel::{
-    render::{mesh_buffer, MeshBuffers, VoxelTerrainMeshBundle},
+    render::{mesh_buffer, ChunkMaterialSet, ChunkMaterialSingleton, MeshBuffers},
     storage::ChunkMap,
 };
 use bevy::{
     prelude::*,
-    render::{primitives::Aabb, render_resource::PrimitiveTopology},
+    render::render_resource::PrimitiveTopology,
     tasks::{AsyncComputeTaskPool, Task},
 };
 use futures_lite::future;
@@ -21,15 +21,14 @@ use thread_local::ThreadLocal;
 /// Attaches to the newly inserted chunk entities components required for rendering.
 pub fn prepare_chunks(
     chunks: Query<(Entity, &Chunk), Added<Chunk>>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    material: Res<ChunkMaterialSingleton>,
     mut cmds: Commands,
 ) {
     for (chunk, chunk_key) in chunks.iter() {
-        cmds.entity(chunk).insert(VoxelTerrainMeshBundle {
-            mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
+        cmds.entity(chunk).insert(MaterialMeshBundle {
             transform: Transform::from_translation(chunk_key.0.as_vec3()),
             visibility: Visibility::Hidden,
-            aabb: Aabb::from_min_max(Vec3::ZERO, Vec3::splat(CHUNK_LENGTH as f32)),
+            material: (**material).clone(),
             ..Default::default()
         });
     }
@@ -81,28 +80,23 @@ fn queue_mesh_tasks(
 /// Polls and process the generated chunk meshes
 fn process_mesh_tasks(
     mut meshes: ResMut<Assets<Mesh>>,
-    mut chunk_query: Query<
-        (
-            Entity,
-            &Handle<Mesh>,
-            &mut ChunkMeshingTask,
-            &mut Visibility,
-        ),
-        With<Chunk>,
-    >,
+    mut chunk_query: Query<(Entity, &mut ChunkMeshingTask, &mut Visibility), With<Chunk>>,
     mut commands: Commands,
 ) {
-    chunk_query.for_each_mut(|(entity, handle, mut mesh_task, mut visibility)| {
+    for (entity, mut mesh_task, mut visibility) in &mut chunk_query {
         if let Some(mesh) = future::block_on(future::poll_once(&mut mesh_task.0)) {
-            *meshes.get_mut(handle).unwrap() = mesh;
             *visibility = Visibility::Visible;
-            commands.entity(entity).remove::<ChunkMeshingTask>();
+            commands
+                .entity(entity)
+                .remove::<ChunkMeshingTask>()
+                .insert(meshes.add(mesh));
         }
-    });
+    }
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone, Copy, SystemSet)]
-pub struct AsyncChunkMeshSet;
+/// SystemSet for the systems which manage asynchronous chunk meshing.
+pub struct ChunkMeshingSet;
 
 /// Handles the meshing of the chunks.
 pub struct VoxelWorldMeshingPlugin;
@@ -117,12 +111,13 @@ impl Plugin for VoxelWorldMeshingPlugin {
                     .after(prepare_chunks)
                     .after(queue_mesh_tasks),
             )
-                .in_set(AsyncChunkMeshSet),
+                .in_set(ChunkMeshingSet),
         )
         .configure_set(
-            AsyncChunkMeshSet
+            ChunkMeshingSet
                 .in_base_set(CoreSet::Update)
-                .after(AsyncTerrainGenSet)
+                .after(TerrainGenSet)
+                .after(ChunkMaterialSet)
                 .after(bevy::scene::scene_spawner_system),
         );
     }

@@ -237,28 +237,5 @@ impl Plugin for VoxelWorldChunkingPlugin {
                 .in_base_set(CoreSet::Update)
                 .after(bevy::scene::scene_spawner_system),
         );
-
-        // .add_stage_after(
-        //     CoreStage::Update,
-        //     ChunkLoadingStage,
-        //     SystemStage::parallel()
-        //         .with_system(update_player_pos.label(ChunkLoadingSystem::UpdatePlayerPos))
-        //         .with_system(
-        //             update_view_chunks
-        //                 .label(ChunkLoadingSystem::UpdateViewChunks)
-        //                 .after(ChunkLoadingSystem::UpdatePlayerPos)
-        //                 .with_run_criteria(update_view_chunks_criteria),
-        //         )
-        //         .with_system(
-        //             create_chunks
-        //                 .label(ChunkLoadingSystem::CreateChunks)
-        //                 .after(ChunkLoadingSystem::UpdateViewChunks),
-        //         ),
-        // )
-        // .add_system_to_stage(CoreStage::Last, destroy_chunks)
-        // .add_system_to_stage(
-        //     CoreStage::Last,
-        //     clear_dirty_chunks.label(ChunkLoadingSystem::ClearDirtyChunks),
-        // );
     }
 }

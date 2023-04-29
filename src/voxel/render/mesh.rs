@@ -111,6 +111,7 @@ pub fn mesh_buffer<T, S>(
     );
 
     //todo: in the future we might want to encode all the information onto a single uint32
+    // note (@meyerzinn): there seems to be some minimum requirement for the amount of data sent per vertex. when I tried encoding position as well, naga was very unhappy. Warrants further investigation.
     render_mesh.insert_attribute(
         VoxelTerrainMesh::ATTRIBUTE_DATA,
         VertexAttributeValues::Uint32(data),

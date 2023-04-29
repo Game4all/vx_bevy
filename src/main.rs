@@ -50,6 +50,6 @@ fn setup(mut cmds: Commands) {
 
     cmds.insert_resource(AmbientLight {
         color: Color::WHITE,
-        brightness: 1.0,
+        brightness: 0.1,
     });
 }

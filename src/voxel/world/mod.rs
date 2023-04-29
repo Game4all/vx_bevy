@@ -20,7 +20,7 @@ pub mod player;
 mod sky;
 
 mod terrain;
-pub use terrain::AsyncTerrainGenSet;
+pub use terrain::TerrainGenSet;
 
 /// Registers all resources and systems for simulating and rendering an editable and interactive voxel world.
 pub struct VoxelWorldPlugin;
@@ -33,7 +33,7 @@ impl Plugin for VoxelWorldPlugin {
             // ordering of plugin insertion matters here.
             .add_plugin(terraingen::TerrainGeneratorPlugin)
             .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
-            .add_plugin(super::render::VoxelMeshRenderPipelinePlugin)
+            .add_plugin(super::render::ChunkMaterialPlugin)
             .add_plugin(super::material::VoxelMaterialPlugin)
             .add_plugin(materials::VoxelWorldBaseMaterialsPlugin)
             .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin)
