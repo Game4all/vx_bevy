@@ -1,18 +1,14 @@
 use bevy::{
     math::IVec3,
     prelude::{
-        Changed, Commands, CoreSet, DetectChanges, Entity, GlobalTransform, IntoSystemConfig,
-        IntoSystemSetConfig, IntoSystemSetConfigs, Plugin, Query, Res, ResMut, Resource, SystemSet,
-        With,
+        Changed, Commands, CoreSet, Entity, GlobalTransform, IntoSystemConfig, IntoSystemConfigs,
+        IntoSystemSetConfig, Plugin, Query, Res, ResMut, Resource, SystemSet, With,
     },
     utils::{HashMap, HashSet},
 };
 use float_ord::FloatOrd;
 
-use super::{
-    meshing::queue_mesh_tasks, player::PlayerController, terrain::process_terrain_gen, Chunk,
-    ChunkShape, CHUNK_LENGTH,
-};
+use super::{player::PlayerController, Chunk, ChunkShape, CHUNK_LENGTH};
 use crate::voxel::storage::ChunkMap;
 use crate::voxel::Voxel;
 
@@ -31,14 +27,6 @@ fn update_player_pos(
             chunk_pos.chunk_min = nearest_chunk_origin;
         }
     }
-}
-
-/// Run criteria for the [`update_view_chunks`] system
-fn update_view_chunks_criteria(
-    chunk_pos: Res<CurrentLocalPlayerChunk>,
-    view_distance: Res<ChunkLoadRadius>,
-) -> bool {
-    chunk_pos.is_changed() || view_distance.is_changed()
 }
 
 /// Checks for the loaded chunks around the player and schedules loading of new chunks in sight
@@ -128,22 +116,7 @@ fn clear_dirty_chunks(mut dirty_chunks: ResMut<DirtyChunks>) {
 
 /// Label for the stage housing the chunk loading systems.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
-#[system_set(base)]
-pub struct ChunkLoadingStage;
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
-/// Labels for the systems added by [`VoxelWorldChunkingPlugin`]
-pub enum ChunkLoadingSystem {
-    /// Updates the player current chunk.
-    /// The computed position is used for loading / meshing priority systems.
-    UpdatePlayerPos,
-    /// Runs chunk view distance calculations and queue events for chunk creations and deletions.
-    UpdateViewChunks,
-    /// Creates the voxel buffers to hold chunk data and attach them a chunk entity in the ECS world.
-    CreateChunks,
-    /// Clears the dirty chunks list.
-    ClearDirtyChunks,
-}
+pub struct ChunkLoadingSet;
 
 /// Handles dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 pub struct VoxelWorldChunkingPlugin;
@@ -238,36 +211,13 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkCommandQueue>()
         .init_resource::<DirtyChunks>()
-        .configure_set(
-            ChunkLoadingStage
-                .after(CoreSet::Update)
-                .before(CoreSet::Last),
+        .configure_set(ChunkLoadingSet.in_base_set(CoreSet::Update))
+        .add_systems(
+            (update_player_pos, update_view_chunks, create_chunks)
+                .chain()
+                .in_set(ChunkLoadingSet),
         )
-        .configure_set(ChunkLoadingSystem::ClearDirtyChunks.in_base_set(CoreSet::Last))
-        .configure_sets(
-            (
-                ChunkLoadingSystem::UpdatePlayerPos,
-                ChunkLoadingSystem::UpdateViewChunks,
-                ChunkLoadingSystem::CreateChunks,
-            )
-                .in_base_set(ChunkLoadingStage),
-        )
-        .add_systems((
-            update_player_pos.in_set(ChunkLoadingSystem::UpdatePlayerPos),
-            update_view_chunks
-                .in_set(ChunkLoadingSystem::UpdateViewChunks)
-                .run_if(update_view_chunks_criteria)
-                .before(create_chunks)
-                .before(update_player_pos),
-            create_chunks
-                .in_set(ChunkLoadingSystem::CreateChunks)
-                .before(queue_mesh_tasks),
-            destroy_chunks
-                .in_base_set(CoreSet::Last)
-                .after(process_terrain_gen),
-            clear_dirty_chunks
-                .in_set(ChunkLoadingSystem::ClearDirtyChunks)
-                .before(process_terrain_gen),
-        ));
+        .add_system(destroy_chunks.in_base_set(CoreSet::PostUpdate))
+        .add_system(clear_dirty_chunks.in_base_set(CoreSet::Last));
     }
 }

@@ -1,7 +1,8 @@
 use std::cell::RefCell;
 
 use super::{
-    chunks::{ChunkEntities, ChunkLoadingStage, DirtyChunks},
+    chunks::{ChunkEntities, ChunkLoadingSet, DirtyChunks},
+    terrain::TerrainGenSet,
     Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::voxel::{
@@ -39,7 +40,7 @@ static SHARED_MESH_BUFFERS: Lazy<ThreadLocal<RefCell<MeshBuffers<Voxel, ChunkSha
     Lazy::new(ThreadLocal::default);
 
 /// Queues meshing tasks for the chunks in need of a remesh.
-pub fn queue_mesh_tasks(
+fn queue_mesh_tasks(
     mut commands: Commands,
     dirty_chunks: Res<DirtyChunks>,
     chunk_entities: Res<ChunkEntities>,
@@ -100,42 +101,26 @@ fn process_mesh_tasks(
     });
 }
 
-/// A stage existing solely for enabling the use of change detection.
+/// The set of systems which asynchronusly mesh the chunks.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
-pub struct ChunkMeshingPrepareStage;
-
-// /// Label for the stage housing the chunk meshing systems.
-// #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
-// pub struct ChunkMeshingStage;
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
-pub enum ChunkRenderingSystem {
-    /// Queues meshing tasks for the chunks in need of a remesh.
-    QueueMeshTasks,
-
-    /// Polls and process the generated chunk meshes.
-    ProcessMeshTasks,
-}
+pub struct ChunkMeshingSet;
 
 /// Handles the meshing of the chunks.
 pub struct VoxelWorldMeshingPlugin;
 
 impl Plugin for VoxelWorldMeshingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.configure_sets(
-            (
-                ChunkMeshingPrepareStage,
-                ChunkRenderingSystem::QueueMeshTasks,
-                ChunkRenderingSystem::ProcessMeshTasks,
-            )
-                .chain()
-                .in_base_set(ChunkLoadingStage),
+        app.configure_set(
+            ChunkMeshingSet
+                .in_base_set(CoreSet::Update)
+                .after(TerrainGenSet)
+                .after(ChunkLoadingSet),
         )
-        .add_system(prepare_chunks.in_set(ChunkMeshingPrepareStage))
-        .add_systems((
-            queue_mesh_tasks.in_set(ChunkRenderingSystem::QueueMeshTasks),
-            process_mesh_tasks.in_set(ChunkRenderingSystem::ProcessMeshTasks),
-        ));
+        .add_systems(
+            (prepare_chunks, queue_mesh_tasks, process_mesh_tasks)
+                .chain()
+                .in_set(ChunkMeshingSet),
+        );
     }
 }
 
