@@ -1,8 +1,4 @@
 use bevy::math::{IVec3, Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
-use noise::{
-    utils::{NoiseMapBuilder, PlaneMapBuilder},
-    Fbm, MultiFractal, SuperSimplex,
-};
 
 pub fn rand2to1(p: Vec2, dot: Vec2) -> f32 {
     let sp: Vec2 = p.to_array().map(|x| x.sin()).into();
@@ -76,24 +72,12 @@ pub fn voronoi(p: Vec2) -> Vec2 {
 }
 
 pub fn generate_heightmap_data(key: IVec3, chunk_len: usize) -> Vec<f32> {
-    let seed = std::env::var("SEED")
-        .unwrap_or_else(|_| "0".to_string())
-        .parse::<u32>()
-        .unwrap_or(0);
-
-    let fbm = Fbm::<SuperSimplex>::new(seed)
-        .set_octaves(4)
-        .set_frequency(0.02)
-        .set_lacunarity(0.5)
-        .set_persistence(1.2);
-
-    PlaneMapBuilder::<_, 2>::new(fbm)
-        .set_size(chunk_len, chunk_len)
-        .set_x_bounds(key.x as f64, (key.x + chunk_len as i32) as f64)
-        .set_y_bounds(key.z as f64, (key.z + chunk_len as i32) as f64)
-        .build()
-        .into_iter()
-        .map(|x| 5.0f32.mul_add(x as f32, 128.0))
+    simdnoise::NoiseBuilder::fbm_2d_offset(key.x as f32, chunk_len, key.z as f32, chunk_len)
+        .with_octaves(4)
+        .generate()
+        .0
+        .iter()
+        .map(|x| 128.0 + x * 5.0)
         .collect()
 }
 
