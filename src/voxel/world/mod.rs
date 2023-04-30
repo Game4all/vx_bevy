@@ -30,8 +30,8 @@ impl Plugin for VoxelWorldPlugin {
             // ordering of plugin insertion matters here.
             .add_plugin(terraingen::TerrainGeneratorPlugin)
             .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
-            .add_plugin(super::render::VoxelMeshRenderPipelinePlugin)
             .add_plugin(super::material::VoxelMaterialPlugin)
+            .add_plugin(super::render::VoxelMeshRenderPipelinePlugin)
             .add_plugin(materials::VoxelWorldBaseMaterialsPlugin)
             .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin)
             .add_plugin(bevy_atmosphere::plugin::AtmospherePlugin)

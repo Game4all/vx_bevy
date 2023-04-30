@@ -1,15 +1,18 @@
 use bevy::{
     ecs::system::lifetimeless::SRes,
-    prelude::{info, Color, Commands, Entity, FromWorld, Plugin, Res, ResMut, Resource},
+    prelude::{
+        info, Color, Commands, DetectChanges, Entity, FromWorld, IntoSystemAppConfig,
+        IntoSystemConfig, Plugin, Res, ResMut, Resource,
+    },
     render::{
-        render_phase::EntityRenderCommand,
+        render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
         render_resource::{
             BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
             BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, ShaderStages, ShaderType,
             StorageBuffer,
         },
         renderer::{RenderDevice, RenderQueue},
-        Extract, RenderApp, RenderStage,
+        Extract, ExtractSchedule, RenderApp, RenderSet,
     },
 };
 
@@ -190,15 +193,18 @@ struct GpuTerrainRenderSettings {
 
 /// Binds the terrain uniforms for use in shaders.
 pub struct SetTerrainUniformsBindGroup<const I: usize>;
-impl<const I: usize> EntityRenderCommand for SetTerrainUniformsBindGroup<I> {
+impl<P: PhaseItem, const I: usize> RenderCommand<P> for SetTerrainUniformsBindGroup<I> {
     type Param = SRes<TerrainUniforms>;
+    type ViewWorldQuery = ();
+    type ItemWorldQuery = Entity;
 
     fn render<'w>(
-        _view: Entity,
-        _item: Entity,
+        _item: &P,
+        _view: (),
+        _entity: bevy::ecs::query::ROQueryItem<'w, Self::ItemWorldQuery>,
         param: bevy::ecs::system::SystemParamItem<'w, '_, Self::Param>,
         pass: &mut bevy::render::render_phase::TrackedRenderPass<'w>,
-    ) -> bevy::render::render_phase::RenderCommandResult {
+    ) -> RenderCommandResult {
         pass.set_bind_group(I, param.into_inner().bind_group.as_ref().unwrap(), &[]);
         bevy::render::render_phase::RenderCommandResult::Success
     }
@@ -211,14 +217,21 @@ impl Plugin for VoxelTerrainUniformsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.sub_app_mut(RenderApp)
             .init_resource::<TerrainUniforms>()
-            .add_system_to_stage(RenderStage::Extract, extract_voxel_materials)
-            .add_system_to_stage(RenderStage::Queue, prepare_terrain_uniforms)
-            .add_system_to_stage(RenderStage::Prepare, upload_voxel_materials)
-            .add_system_to_stage(RenderStage::Prepare, upload_render_distance_uniform)
-            .add_system_to_stage(
-                RenderStage::Extract,
-                extract_terrain_render_settings_uniform,
-            );
+            .init_resource::<GpuTerrainMaterials>()
+            .init_resource::<GpuTerrainRenderSettings>()
+            .add_system(
+                extract_voxel_materials
+                    .in_set(RenderSet::ExtractCommands)
+                    .in_schedule(ExtractSchedule),
+            )
+            .add_system(prepare_terrain_uniforms.in_set(RenderSet::Queue))
+            .add_system(upload_voxel_materials.in_set(RenderSet::Prepare))
+            .add_system(
+                extract_terrain_render_settings_uniform
+                    .in_set(RenderSet::ExtractCommands)
+                    .in_schedule(ExtractSchedule),
+            )
+            .add_system(upload_render_distance_uniform.in_set(RenderSet::Prepare));
 
         info!("type size: {}", GpuVoxelMaterial::min_size().get() * 256);
     }

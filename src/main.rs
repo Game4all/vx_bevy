@@ -12,8 +12,8 @@ mod debug;
 mod voxel;
 
 fn main() {
-    App::default()
-        .add_plugins(DefaultPlugins)
+    let mut app = App::default();
+    app.add_plugins(DefaultPlugins)
         .add_plugin(voxel::VoxelWorldPlugin)
         .add_plugin(debug::DebugUIPlugins)
         .add_startup_system(setup)

@@ -1,5 +1,5 @@
 use bevy::math::{IVec3, UVec3, Vec2, Vec3, Vec3Swizzles};
-use ilattice::prelude::Extent;
+use ilattice::prelude::{Extent, UVec3 as ILUVec3};
 
 use crate::voxel::{
     material::VoxelMaterial,
@@ -41,10 +41,16 @@ impl LayeredBiomeTerrainGenerator for BasicDesertBiomeTerrainGenerator {
 }
 
 fn make_cacti(buffer: &mut VoxelBuffer<Voxel, ChunkShape>, pos: UVec3, size: u32) {
-    Extent::from_min_and_shape(UVec3::ZERO, UVec3::splat(CHUNK_LENGTH))
+    Extent::from_min_and_shape(ILUVec3::ZERO, ILUVec3::splat(CHUNK_LENGTH))
         .iter3()
-        .filter(|x| {
-            sdf::sdf_v_capsule(x.as_vec3() - pos.as_vec3() - Vec3::Y, size as f32, 1.5) < 0.0
+        .map(|x| x.as_vec3())
+        .filter(|vec| {
+            sdf::sdf_v_capsule(
+                Vec3::from_array(vec.to_array()) - pos.as_vec3() - Vec3::Y,
+                size as f32,
+                1.5,
+            ) < 0.0
         })
+        .map(|x| ILUVec3::from(x.as_uvec3().to_array()))
         .for_each(|x| *buffer.voxel_at_mut(x) = Cactus::into_voxel());
 }

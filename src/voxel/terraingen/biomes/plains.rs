@@ -1,5 +1,3 @@
-use bevy::math::{IVec3, UVec3, Vec2, Vec3Swizzles};
-
 use crate::voxel::{
     material::VoxelMaterial,
     materials::{Dirt, Grass, Leaves, Wood},
@@ -7,6 +5,8 @@ use crate::voxel::{
     terraingen::{common::make_tree, noise},
     ChunkShape, Voxel,
 };
+use bevy::math::{IVec3, UVec3, Vec2, Vec3Swizzles};
+use ilattice::prelude::UVec3 as ILUVec3;
 
 use super::LayeredBiomeTerrainGenerator;
 
@@ -33,7 +33,7 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
 
         if spawn_chance > 0.981 && pos.y <= 13 {
             // this is a stupid hack but a real fix would be to allow terrain decoration to work vertically
-            make_tree::<Wood, Leaves>(buffer, pos);
+            make_tree::<Wood, Leaves>(buffer, ILUVec3::from(pos.to_array()));
         }
     }
 }

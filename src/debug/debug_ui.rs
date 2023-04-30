@@ -1,15 +1,14 @@
 use bevy::{
     diagnostic::{Diagnostics, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
-    ecs::schedule::ShouldRun,
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::{
-        Color, CoreStage, EventReader, IntoSystemDescriptor, KeyCode, Plugin, Res, ResMut,
-        Resource, SystemSet, SystemStage,
+        Color, CoreSet, EventReader, IntoSystemConfig, IntoSystemConfigs, KeyCode, Plugin, Res,
+        ResMut, Resource,
     },
 };
 use bevy_egui::{
     egui::{self, Rgba, Slider},
-    EguiContext, EguiPlugin,
+    EguiContexts, EguiPlugin,
 };
 
 use crate::voxel::{
@@ -17,7 +16,7 @@ use crate::voxel::{
     CurrentLocalPlayerChunk, DirtyChunks,
 };
 
-fn display_debug_stats(mut egui: ResMut<EguiContext>, diagnostics: Res<Diagnostics>) {
+fn display_debug_stats(mut egui: EguiContexts, diagnostics: Res<Diagnostics>) {
     egui::Window::new("performance stuff").show(egui.ctx_mut(), |ui| {
         ui.label(format!(
             "Avg. FPS: {:.02}",
@@ -39,7 +38,7 @@ fn display_debug_stats(mut egui: ResMut<EguiContext>, diagnostics: Res<Diagnosti
 }
 
 fn display_chunk_stats(
-    mut egui: ResMut<EguiContext>,
+    mut egui: EguiContexts,
     dirty_chunks: Res<DirtyChunks>,
     player_pos: Res<CurrentLocalPlayerChunk>,
     mut chunk_loading_radius: ResMut<ChunkLoadRadius>,
@@ -69,20 +68,12 @@ fn display_chunk_stats(
     });
 }
 
-fn display_debug_ui_criteria(ui_state: Res<DebugUIState>) -> ShouldRun {
-    if ui_state.display_debug_info {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
+fn display_debug_ui_criteria(ui_state: Res<DebugUIState>) -> bool {
+    ui_state.display_debug_info
 }
 
-fn display_mat_debug_ui_criteria(ui_state: Res<DebugUIState>) -> ShouldRun {
-    if ui_state.display_mat_debug {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
+fn display_mat_debug_ui_criteria(ui_state: Res<DebugUIState>) -> bool {
+    ui_state.display_mat_debug
 }
 
 fn toggle_debug_ui_displays(
@@ -103,7 +94,7 @@ fn toggle_debug_ui_displays(
 }
 
 fn display_material_editor(
-    mut egui: ResMut<EguiContext>,
+    mut egui: EguiContexts,
     mut ui_state: ResMut<DebugUIState>,
     mut materials: ResMut<VoxelMaterialRegistry>,
 ) {
@@ -182,20 +173,17 @@ impl Plugin for DebugUIPlugins {
         app.add_plugin(EguiPlugin)
             .add_plugin(FrameTimeDiagnosticsPlugin)
             .add_plugin(EntityCountDiagnosticsPlugin)
-            .add_stage_after(
-                CoreStage::PostUpdate,
-                "debug_ui_stage",
-                SystemStage::parallel()
-                    .with_system(toggle_debug_ui_displays)
-                    .with_system_set(
-                        SystemSet::new()
-                            .with_system(display_debug_stats)
-                            .with_system(display_chunk_stats)
-                            .with_run_criteria(display_debug_ui_criteria),
-                    )
-                    .with_system(
-                        display_material_editor.with_run_criteria(display_mat_debug_ui_criteria),
-                    ),
+            .add_systems(
+                (
+                    toggle_debug_ui_displays,
+                    display_material_editor.run_if(display_mat_debug_ui_criteria),
+                )
+                    .in_base_set(CoreSet::Update),
+            )
+            .add_systems(
+                (display_debug_stats, display_chunk_stats)
+                    .in_base_set(CoreSet::Update)
+                    .distributive_run_if(display_debug_ui_criteria),
             )
             .init_resource::<DebugUIState>();
     }

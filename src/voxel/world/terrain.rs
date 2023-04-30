@@ -1,5 +1,5 @@
 use super::{
-    chunks::{ChunkLoadingStage, DirtyChunks},
+    chunks::{ChunkLoadingSet, DirtyChunks},
     Chunk, ChunkShape,
 };
 use crate::voxel::{
@@ -9,8 +9,8 @@ use crate::voxel::{
 };
 use bevy::{
     prelude::{
-        Added, Commands, Component, Entity, IntoSystemDescriptor, Plugin, Query, ResMut,
-        StageLabel, SystemLabel, SystemStage,
+        Added, Commands, Component, CoreSet, Entity, IntoSystemConfigs, IntoSystemSetConfig,
+        Plugin, Query, ResMut, SystemSet,
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
@@ -43,7 +43,7 @@ fn queue_terrain_gen(mut commands: Commands, new_chunks: Query<(Entity, &Chunk),
 }
 
 /// Polls for finished gen tasks and put back the generated terrain into the voxel map
-fn process_terrain_gen(
+pub fn process_terrain_gen(
     mut chunk_data: ResMut<ChunkMap<Voxel, ChunkShape>>,
     mut commands: Commands,
     mut dirty_chunks: ResMut<DirtyChunks>,
@@ -61,34 +61,24 @@ fn process_terrain_gen(
 /// Handles terrain generation.
 pub struct VoxelWorldTerrainGenPlugin;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
-/// Labels for the systems added by [`VoxelWorldTerrainGenPlugin`]
-pub enum TerrainGenSystem {
-    /// Queues the terrain gen async tasks for the newly created chunks.
-    QueueTerrainGen,
-    /// Polls for finished gen tasks and put back the generated terrain into the voxel map
-    ProcessTerrainGen,
-}
-
 // we need to use a whole system stage for this in order to enable the usage of added component querries.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
-struct TerrainGenStage;
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
+pub struct TerrainGenSet;
 
 impl Plugin for VoxelWorldTerrainGenPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_stage_after(
-            ChunkLoadingStage,
-            TerrainGenStage,
-            SystemStage::parallel()
-                .with_system(queue_terrain_gen.label(TerrainGenSystem::QueueTerrainGen))
-                .with_system(
-                    process_terrain_gen
-                        .label(TerrainGenSystem::ProcessTerrainGen)
-                        .after(TerrainGenSystem::QueueTerrainGen),
-                ),
+        app.configure_set(
+            TerrainGenSet
+                .in_base_set(CoreSet::Update)
+                .after(ChunkLoadingSet),
+        )
+        .add_systems(
+            (queue_terrain_gen, process_terrain_gen)
+                .chain()
+                .in_set(TerrainGenSet),
         );
     }
 }
 
 #[derive(Component)]
-struct TerrainGenTask(Task<VoxelBuffer<Voxel, ChunkShape>>);
+pub struct TerrainGenTask(Task<VoxelBuffer<Voxel, ChunkShape>>);

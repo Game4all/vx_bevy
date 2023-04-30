@@ -1,9 +1,8 @@
 use bevy::{
-    ecs::schedule::ShouldRun,
     math::IVec3,
     prelude::{
-        Changed, Commands, CoreStage, Entity, GlobalTransform, IntoSystemDescriptor, Plugin, Query,
-        Res, ResMut, Resource, StageLabel, SystemLabel, SystemStage, With,
+        Changed, Commands, CoreSet, Entity, GlobalTransform, IntoSystemConfig, IntoSystemConfigs,
+        IntoSystemSetConfig, Plugin, Query, Res, ResMut, Resource, SystemSet, With,
     },
     utils::{HashMap, HashSet},
 };
@@ -27,18 +26,6 @@ fn update_player_pos(
         if chunk_pos.chunk_min != nearest_chunk_origin {
             chunk_pos.chunk_min = nearest_chunk_origin;
         }
-    }
-}
-
-/// Run criteria for the [`update_view_chunks`] system
-fn update_view_chunks_criteria(
-    chunk_pos: Res<CurrentLocalPlayerChunk>,
-    view_distance: Res<ChunkLoadRadius>,
-) -> ShouldRun {
-    if chunk_pos.is_changed() || view_distance.is_changed() {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
     }
 }
 
@@ -128,22 +115,8 @@ fn clear_dirty_chunks(mut dirty_chunks: ResMut<DirtyChunks>) {
 }
 
 /// Label for the stage housing the chunk loading systems.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
-pub struct ChunkLoadingStage;
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
-/// Labels for the systems added by [`VoxelWorldChunkingPlugin`]
-pub enum ChunkLoadingSystem {
-    /// Updates the player current chunk.
-    /// The computed position is used for loading / meshing priority systems.
-    UpdatePlayerPos,
-    /// Runs chunk view distance calculations and queue events for chunk creations and deletions.
-    UpdateViewChunks,
-    /// Creates the voxel buffers to hold chunk data and attach them a chunk entity in the ECS world.
-    CreateChunks,
-    /// Clears the dirty chunks list.
-    ClearDirtyChunks,
-}
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
+pub struct ChunkLoadingSet;
 
 /// Handles dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 pub struct VoxelWorldChunkingPlugin;
@@ -238,27 +211,13 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkCommandQueue>()
         .init_resource::<DirtyChunks>()
-        .add_stage_after(
-            CoreStage::Update,
-            ChunkLoadingStage,
-            SystemStage::parallel()
-                .with_system(update_player_pos.label(ChunkLoadingSystem::UpdatePlayerPos))
-                .with_system(
-                    update_view_chunks
-                        .label(ChunkLoadingSystem::UpdateViewChunks)
-                        .after(ChunkLoadingSystem::UpdatePlayerPos)
-                        .with_run_criteria(update_view_chunks_criteria),
-                )
-                .with_system(
-                    create_chunks
-                        .label(ChunkLoadingSystem::CreateChunks)
-                        .after(ChunkLoadingSystem::UpdateViewChunks),
-                ),
+        .configure_set(ChunkLoadingSet.in_base_set(CoreSet::Update))
+        .add_systems(
+            (update_player_pos, update_view_chunks, create_chunks)
+                .chain()
+                .in_set(ChunkLoadingSet),
         )
-        .add_system_to_stage(CoreStage::Last, destroy_chunks)
-        .add_system_to_stage(
-            CoreStage::Last,
-            clear_dirty_chunks.label(ChunkLoadingSystem::ClearDirtyChunks),
-        );
+        .add_system(destroy_chunks.in_base_set(CoreSet::PostUpdate))
+        .add_system(clear_dirty_chunks.in_base_set(CoreSet::Last));
     }
 }

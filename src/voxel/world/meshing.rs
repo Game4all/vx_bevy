@@ -1,7 +1,8 @@
 use std::cell::RefCell;
 
 use super::{
-    chunks::{ChunkEntities, ChunkLoadingStage, DirtyChunks},
+    chunks::{ChunkEntities, ChunkLoadingSet, DirtyChunks},
+    terrain::TerrainGenSet,
     Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::voxel::{
@@ -27,7 +28,7 @@ pub fn prepare_chunks(
         cmds.entity(chunk).insert(VoxelTerrainMeshBundle {
             mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
             transform: Transform::from_translation(chunk_key.0.as_vec3()),
-            visibility: Visibility { is_visible: false },
+            visibility: Visibility::Hidden,
             aabb: Aabb::from_min_max(Vec3::ZERO, Vec3::splat(CHUNK_LENGTH as f32)),
             ..Default::default()
         });
@@ -94,49 +95,31 @@ fn process_mesh_tasks(
     chunk_query.for_each_mut(|(entity, handle, mut mesh_task, mut visibility)| {
         if let Some(mesh) = future::block_on(future::poll_once(&mut mesh_task.0)) {
             *meshes.get_mut(handle).unwrap() = mesh;
-            visibility.is_visible = true;
+            *visibility = Visibility::Visible;
             commands.entity(entity).remove::<ChunkMeshingTask>();
         }
     });
 }
 
-/// A stage existing solely for enabling the use of change detection.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
-pub struct ChunkMeshingPrepareStage;
-
-/// Label for the stage housing the chunk meshing systems.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, StageLabel)]
-pub struct ChunkMeshingStage;
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemLabel)]
-pub enum ChunkRenderingSystem {
-    /// Queues meshing tasks for the chunks in need of a remesh.
-    QueueMeshTasks,
-
-    /// Polls and process the generated chunk meshes.
-    ProcessMeshTasks,
-}
+/// The set of systems which asynchronusly mesh the chunks.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, SystemSet)]
+pub struct ChunkMeshingSet;
 
 /// Handles the meshing of the chunks.
 pub struct VoxelWorldMeshingPlugin;
 
 impl Plugin for VoxelWorldMeshingPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_stage_after(
-            ChunkLoadingStage,
-            ChunkMeshingPrepareStage,
-            SystemStage::single(prepare_chunks),
+        app.configure_set(
+            ChunkMeshingSet
+                .in_base_set(CoreSet::Update)
+                .after(TerrainGenSet)
+                .after(ChunkLoadingSet),
         )
-        .add_stage_after(
-            ChunkMeshingPrepareStage,
-            ChunkMeshingStage,
-            SystemStage::parallel()
-                .with_system(queue_mesh_tasks.label(ChunkRenderingSystem::QueueMeshTasks))
-                .with_system(
-                    process_mesh_tasks
-                        .label(ChunkRenderingSystem::ProcessMeshTasks)
-                        .after(ChunkRenderingSystem::QueueMeshTasks),
-                ),
+        .add_systems(
+            (prepare_chunks, queue_mesh_tasks, process_mesh_tasks)
+                .chain()
+                .in_set(ChunkMeshingSet),
         );
     }
 }

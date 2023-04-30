@@ -1,4 +1,8 @@
-use bevy::{input::mouse::MouseMotion, prelude::*, window::CursorGrabMode};
+use bevy::{
+    input::mouse::MouseMotion,
+    prelude::*,
+    window::{CursorGrabMode, PrimaryWindow},
+};
 use std::f32::consts::FRAC_PI_2;
 
 // Reusing the player controller impl for now.
@@ -15,7 +19,7 @@ pub struct PlayerController {
 pub fn handle_player_mouse_move(
     mut query: Query<(&mut PlayerController, &mut Transform)>,
     mut mouse_motion_event_reader: EventReader<MouseMotion>,
-    mut window: ResMut<Windows>,
+    mut window: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     let (mut controller, mut transform) = query.single_mut();
     let mut delta = Vec2::ZERO;
@@ -26,13 +30,14 @@ pub fn handle_player_mouse_move(
         }
     }
 
-    let first_win = window.get_primary_mut().unwrap();
-    first_win.set_cursor_visibility(!controller.cursor_locked);
-    first_win.set_cursor_grab_mode(if controller.cursor_locked {
-        CursorGrabMode::Confined
-    } else {
-        CursorGrabMode::None
-    });
+    if let Ok(mut primary_window) = window.get_single_mut() {
+        primary_window.cursor.visible = !controller.cursor_locked;
+        primary_window.cursor.grab_mode = if controller.cursor_locked {
+            CursorGrabMode::Confined
+        } else {
+            CursorGrabMode::None
+        };
+    }
 
     if delta == Vec2::ZERO {
         return;
