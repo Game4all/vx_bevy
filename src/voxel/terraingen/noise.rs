@@ -85,7 +85,7 @@ pub fn generate_heightmap_data(key: IVec3, chunk_len: usize) -> Vec<f32> {
         .set_y_bounds(key.z as f64, (key.z + chunk_len as i32) as f64)
         .build()
         .into_iter()
-        .map(|x| 132.0 + 20.0 * (x as f32))
+        .map(|x| x.mul_add(20f64, 132f64) as f32)
         .collect()
 }
 
