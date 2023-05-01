@@ -1,9 +1,8 @@
-use bevy::{
-    input::mouse::MouseMotion,
-    prelude::*,
-    window::{CursorGrabMode, PrimaryWindow},
-};
+use bevy::{input::mouse::MouseMotion, prelude::*, window::CursorGrabMode};
+use bevy_egui::EguiContexts;
 use std::f32::consts::FRAC_PI_2;
+
+use crate::debug::DebugUISet;
 
 // Reusing the player controller impl for now.
 
@@ -19,7 +18,7 @@ pub struct PlayerController {
 pub fn handle_player_mouse_move(
     mut query: Query<(&mut PlayerController, &mut Transform)>,
     mut mouse_motion_event_reader: EventReader<MouseMotion>,
-    mut window: Query<&mut Window, With<PrimaryWindow>>,
+    mut window: Query<&mut Window>,
 ) {
     let (mut controller, mut transform) = query.single_mut();
     let mut delta = Vec2::ZERO;
@@ -30,14 +29,13 @@ pub fn handle_player_mouse_move(
         }
     }
 
-    if let Ok(mut primary_window) = window.get_single_mut() {
-        primary_window.cursor.visible = !controller.cursor_locked;
-        primary_window.cursor.grab_mode = if controller.cursor_locked {
-            CursorGrabMode::Confined
-        } else {
-            CursorGrabMode::None
-        };
-    }
+    let mut first_win = window.single_mut();
+    first_win.cursor.visible = !controller.cursor_locked;
+    first_win.cursor.grab_mode = if controller.cursor_locked {
+        CursorGrabMode::Locked
+    } else {
+        CursorGrabMode::None
+    };
 
     if delta == Vec2::ZERO {
         return;
@@ -56,15 +54,23 @@ pub fn handle_player_mouse_move(
 }
 
 pub fn handle_player_input(
+    mut egui: EguiContexts,
     mut query: Query<(&mut PlayerController, &mut Transform)>,
-    input: Res<Input<KeyCode>>,
+    keys: Res<Input<KeyCode>>,
+    btns: Res<Input<MouseButton>>,
 ) {
     let (mut controller, mut transform) = query.single_mut();
 
-    if input.just_pressed(KeyCode::Escape) {
-        controller.cursor_locked = !controller.cursor_locked;
+    // cursor grabbing
+    // @todo: this should prevent cursor grabbing when the user is interacting with a debug UI. Why doesn't this work?
+    if btns.just_pressed(MouseButton::Left) && !egui.ctx_mut().wants_pointer_input() {
+        controller.cursor_locked = true;
     }
 
+    // cursor ungrabbing
+    if keys.just_pressed(KeyCode::Escape) {
+        controller.cursor_locked = false;
+    }
     let mut direction = Vec3::ZERO;
 
     let forward = transform.rotation.mul_vec3(Vec3::Z).normalize() * Vec3::new(1.0, 0., 1.0);
@@ -72,31 +78,31 @@ pub fn handle_player_input(
 
     let mut acceleration = 1.0f32;
 
-    if input.pressed(KeyCode::W) {
+    if keys.pressed(KeyCode::W) {
         direction.z -= 1.0;
     }
 
-    if input.pressed(KeyCode::S) {
+    if keys.pressed(KeyCode::S) {
         direction.z += 1.0;
     }
 
-    if input.pressed(KeyCode::D) {
+    if keys.pressed(KeyCode::D) {
         direction.x += 1.0;
     }
 
-    if input.pressed(KeyCode::A) {
+    if keys.pressed(KeyCode::A) {
         direction.x -= 1.0;
     }
 
-    if input.pressed(KeyCode::Space) {
+    if keys.pressed(KeyCode::Space) {
         direction.y += 1.0;
     }
 
-    if input.pressed(KeyCode::LShift) {
+    if keys.pressed(KeyCode::LShift) {
         direction.y -= 1.0;
     }
 
-    if input.pressed(KeyCode::LControl) {
+    if keys.pressed(KeyCode::LControl) {
         acceleration *= 8.0;
     }
 
@@ -110,11 +116,19 @@ pub fn handle_player_input(
         + direction.y * Vec3::Y * acceleration;
 }
 
+#[derive(Hash, Copy, Clone, PartialEq, Eq, Debug, SystemSet)]
+/// Systems related to player controls.
+pub struct PlayerControllerSet;
+
 pub struct VoxelWorldPlayerControllerPlugin;
 
 impl Plugin for VoxelWorldPlayerControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(handle_player_mouse_move)
-            .add_system(handle_player_input);
+        app.add_systems(
+            (handle_player_input, handle_player_mouse_move)
+                .chain()
+                .in_base_set(CoreSet::Update)
+                .after(DebugUISet::Display),
+        );
     }
 }

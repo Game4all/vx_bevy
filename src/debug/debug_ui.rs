@@ -2,13 +2,13 @@ use bevy::{
     diagnostic::{Diagnostics, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::{
-        Color, CoreSet, EventReader, IntoSystemConfig, IntoSystemConfigs, KeyCode, Plugin, Res,
-        ResMut, Resource,
+        Color, CoreSet, EventReader, IntoSystemConfig, IntoSystemConfigs, IntoSystemSetConfigs,
+        KeyCode, Plugin, Res, ResMut, Resource, SystemSet,
     },
 };
 use bevy_egui::{
     egui::{self, Rgba, Slider},
-    EguiContexts, EguiPlugin,
+    EguiContexts, EguiPlugin, EguiSet,
 };
 
 use crate::voxel::{
@@ -166,6 +166,13 @@ fn display_material_editor(
     });
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, SystemSet)]
+/// Systems related to the debug UIs.
+pub enum DebugUISet {
+    Toggle,
+    Display,
+}
+
 pub struct DebugUIPlugins;
 
 impl Plugin for DebugUIPlugins {
@@ -173,17 +180,22 @@ impl Plugin for DebugUIPlugins {
         app.add_plugin(EguiPlugin)
             .add_plugin(FrameTimeDiagnosticsPlugin)
             .add_plugin(EntityCountDiagnosticsPlugin)
-            .add_systems(
-                (
-                    toggle_debug_ui_displays,
-                    display_material_editor.run_if(display_mat_debug_ui_criteria),
-                )
-                    .in_base_set(CoreSet::Update),
-            )
+            .add_systems((
+                toggle_debug_ui_displays.in_set(DebugUISet::Toggle),
+                display_material_editor
+                    .in_set(DebugUISet::Display)
+                    .run_if(display_mat_debug_ui_criteria),
+            ))
             .add_systems(
                 (display_debug_stats, display_chunk_stats)
-                    .in_base_set(CoreSet::Update)
+                    .in_set(DebugUISet::Display)
                     .distributive_run_if(display_debug_ui_criteria),
+            )
+            .configure_sets(
+                (DebugUISet::Toggle, DebugUISet::Display)
+                    .chain()
+                    .in_base_set(CoreSet::Update)
+                    .after(EguiSet::ProcessInput),
             )
             .init_resource::<DebugUIState>();
     }
