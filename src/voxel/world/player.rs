@@ -1,5 +1,8 @@
 use bevy::{input::mouse::MouseMotion, prelude::*, window::CursorGrabMode};
+use bevy_egui::EguiContexts;
 use std::f32::consts::FRAC_PI_2;
+
+use crate::debug::DebugUISet;
 
 // Reusing the player controller impl for now.
 
@@ -51,6 +54,7 @@ pub fn handle_player_mouse_move(
 }
 
 pub fn handle_player_input(
+    mut egui: EguiContexts,
     mut query: Query<(&mut PlayerController, &mut Transform)>,
     keys: Res<Input<KeyCode>>,
     btns: Res<Input<MouseButton>>,
@@ -58,7 +62,8 @@ pub fn handle_player_input(
     let (mut controller, mut transform) = query.single_mut();
 
     // cursor grabbing
-    if btns.just_pressed(MouseButton::Left) {
+    // @todo: this should prevent cursor grabbing when the user is interacting with a debug UI. Why doesn't this work?
+    if btns.just_pressed(MouseButton::Left) && !egui.ctx_mut().wants_pointer_input() {
         controller.cursor_locked = true;
     }
 
@@ -111,11 +116,19 @@ pub fn handle_player_input(
         + direction.y * Vec3::Y * acceleration;
 }
 
+#[derive(Hash, Copy, Clone, PartialEq, Eq, Debug, SystemSet)]
+/// Systems related to player controls.
+pub struct PlayerControllerSet;
+
 pub struct VoxelWorldPlayerControllerPlugin;
 
 impl Plugin for VoxelWorldPlayerControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(handle_player_mouse_move)
-            .add_system(handle_player_input);
+        app.add_systems(
+            (handle_player_input, handle_player_mouse_move)
+                .chain()
+                .in_base_set(CoreSet::Update)
+                .after(DebugUISet::Display),
+        );
     }
 }
