@@ -5,6 +5,10 @@ pub struct Voxel(pub u8);
 
 impl Voxel {
     pub const EMPTY_VOXEL: Self = Self(0);
+
+    pub fn collidable(self) -> bool {
+        !(self == Self::EMPTY_VOXEL)
+    }
 }
 
 impl Default for Voxel {

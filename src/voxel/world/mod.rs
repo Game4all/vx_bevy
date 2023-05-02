@@ -8,6 +8,7 @@ use super::{storage::ChunkMap, terraingen, Voxel};
 
 /// Systems for dynamically loading / unloading regions (aka chunks) of the world according to camera position.
 mod chunks;
+pub mod physics;
 pub use chunks::{
     ChunkCommandQueue, ChunkEntities, ChunkLoadRadius, CurrentLocalPlayerChunk, DirtyChunks,
 };
@@ -36,7 +37,8 @@ impl Plugin for VoxelWorldPlugin {
             .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin)
             .add_plugin(bevy_atmosphere::plugin::AtmospherePlugin)
             .add_plugin(player::VoxelWorldPlayerControllerPlugin)
-            .add_plugin(sky::InteractiveSkyboxPlugin);
+            .add_plugin(sky::InteractiveSkyboxPlugin)
+            .add_plugin(physics::VoxelWorldPhysicsPlugin);
     }
 }
 

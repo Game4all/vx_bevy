@@ -30,7 +30,7 @@ fn setup(mut cmds: Commands) {
         transform: Transform::from_xyz(2.0, 160.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     })
-    .insert(voxel::player::PlayerController::default())
+    .insert(voxel::player::PlayerBundle::default())
     .insert(Fxaa::default())
     .insert(bevy_atmosphere::plugin::AtmosphereCamera::default());
 
