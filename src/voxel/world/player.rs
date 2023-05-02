@@ -1,4 +1,7 @@
-use bevy::{input::mouse::MouseMotion, math::Vec3A, prelude::*, window::CursorGrabMode};
+use bevy::{
+    input::mouse::MouseMotion, math::Vec3A, prelude::*, render::primitives::Aabb,
+    window::CursorGrabMode,
+};
 use bevy_egui::EguiContexts;
 use std::f32::consts::FRAC_PI_2;
 
@@ -26,9 +29,12 @@ impl Default for PlayerBundle {
             velocity: Default::default(),
             acceleration: Default::default(),
             collider: Collider {
-                half_extents: Vec3A::new(0.25, 0.9, 0.25),
+                aabb: Aabb {
+                    center: Vec3A::new(0.0, -0.7, 0.0), // the collision center is ~0.6m below the eyes, which are ~0.2m below the top of the collision box
+                    half_extents: Vec3A::new(0.4, 0.9, 0.4),
+                },
             },
-            drag: Drag(0.99),
+            drag: Drag(0.98),
         }
     }
 }
@@ -135,7 +141,10 @@ pub fn handle_player_input(
     // transform.translation += direction.x * right * acceleration
     //     + direction.z * forward * acceleration
     //     + direction.y * Vec3::Y * acceleration;
-    **acceleration = (speed * direction.x * right + direction.z * forward * speed + direction.y * Vec3::Y * speed).into();
+    **acceleration = (speed * direction.x * right
+        + direction.z * forward * speed
+        + direction.y * Vec3::Y * speed)
+        .into();
 }
 
 #[derive(Hash, Copy, Clone, PartialEq, Eq, Debug, SystemSet)]

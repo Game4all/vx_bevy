@@ -8,7 +8,7 @@ use bevy::prelude::{
     SystemSet, Transform, Vec3,
 };
 use bevy::render::primitives::Aabb;
-use itertools::iproduct;
+use itertools::{iproduct, Itertools};
 use std::cmp::Ordering;
 use std::f32::{INFINITY, NEG_INFINITY};
 
@@ -33,7 +33,7 @@ const SIM_TIME: f32 = 1.0 / 20.0;
 #[derive(Component)]
 /// Marker component for entities that can collide with voxels.
 pub struct Collider {
-    pub half_extents: Vec3A,
+    pub aabb: Aabb,
 }
 
 #[derive(Debug)]
@@ -128,24 +128,41 @@ fn step(
         }
 
         let mut displacement = **velocity * SIM_TIME;
-        if let Some(&Collider { half_extents }) = collider {
+        if let Some(&Collider { aabb }) = collider {
             let aabb = Aabb {
-                center: transform.translation.into(),
-                half_extents,
+                center: Vec3A::from(transform.translation) + aabb.center,
+                ..aabb
             };
-
             let start = (Vec3A::min(aabb.min(), aabb.min() + displacement).floor()).as_ivec3()
                 + IVec3::NEG_Y;
             let end = Vec3A::max(aabb.max(), aabb.max() + displacement)
                 .floor()
                 .as_ivec3();
 
+            println!(
+                "pos: {}, start: {}, end: {}",
+                aabb.center, start, end
+            );
+
             assert!(start.cmple(end).all());
 
-            if let Some(collision) = iproduct!(start.x..end.x, start.y..end.y, start.z..end.z)
+            let all_voxels = iproduct!(start.x..end.x, start.y..end.y, start.z..end.z)
                 .map(|(x, y, z)| IVec3::new(x, y, z))
-                .filter(|voxel| voxels.voxel_at(*voxel).is_some_and(Voxel::collidable))
-                .map(|voxel| swept_voxel_collision(aabb, displacement, voxel_aabb(voxel)))
+                .collect_vec();
+
+            let interesting_voxels = all_voxels
+                .iter()
+                .filter(|voxel| voxels.voxel_at(**voxel).is_some_and(Voxel::collidable))
+                .collect_vec();
+
+            // println!(
+            //     "pos: {}, voxels: {:?}, interesting voxels: {:?}",
+            //     transform.translation, all_voxels, interesting_voxels
+            // );
+
+            if let Some(collision) = interesting_voxels
+                .into_iter()
+                .map(|voxel| swept_voxel_collision(aabb, displacement, voxel_aabb(*voxel)))
                 .flatten()
                 .min_by(|a, b| {
                     if a.time < b.time {
@@ -158,7 +175,7 @@ fn step(
                 println!("resolving collision!");
 
                 // clip the displacement to avoid overlap
-                displacement = **velocity * collision.time;
+                displacement = **velocity * collision.time * SIM_TIME;
 
                 let previous_velocity = **velocity;
                 // cancel velocity in the normal direction
