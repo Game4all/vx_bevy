@@ -159,8 +159,7 @@ fn step(
 
             if let Some(collision) = interesting_voxels
                 .into_iter()
-                .map(|voxel| swept_voxel_collision(aabb, displacement, voxel_aabb(*voxel)))
-                .flatten()
+                .flat_map(|voxel| swept_voxel_collision(aabb, displacement, voxel_aabb(*voxel)))
                 .min_by(|a, b| {
                     if a.time < b.time {
                         Ordering::Less
