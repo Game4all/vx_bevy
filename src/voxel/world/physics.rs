@@ -139,14 +139,11 @@ fn step(
                 .floor()
                 .as_ivec3();
 
-            println!(
-                "pos: {}, start: {}, end: {}",
-                aabb.center, start, end
-            );
+            // println!("pos: {}, start: {}, end: {}", aabb.center, start, end);
 
             assert!(start.cmple(end).all());
 
-            let all_voxels = iproduct!(start.x..end.x, start.y..end.y, start.z..end.z)
+            let all_voxels = iproduct!(start.x..=end.x, start.y..=end.y, start.z..=end.z)
                 .map(|(x, y, z)| IVec3::new(x, y, z))
                 .collect_vec();
 
@@ -156,8 +153,8 @@ fn step(
                 .collect_vec();
 
             // println!(
-            //     "pos: {}, voxels: {:?}, interesting voxels: {:?}",
-            //     transform.translation, all_voxels, interesting_voxels
+            //     "voxels: {:?}, interesting voxels: {:?}",
+            //     all_voxels, interesting_voxels
             // );
 
             if let Some(collision) = interesting_voxels
