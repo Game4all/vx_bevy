@@ -1,5 +1,6 @@
 use bevy::prelude::{
-    Color, Commands, Deref, DirectionalLight, DirectionalLightBundle, Entity, ParamSet, Plugin, Query, Res, Resource, Transform, Vec3, With,
+    Color, Commands, Deref, DirectionalLight, DirectionalLightBundle, Entity, ParamSet, Plugin,
+    Query, Res, Resource, Transform, Vec3, With,
 };
 
 use super::player::PlayerController;
