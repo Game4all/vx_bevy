@@ -23,7 +23,7 @@ pub enum CameraMode {
 }
 
 impl CameraMode {
-    fn next(self) -> Self {
+    const fn next(self) -> Self {
         match self {
             Self::FirstPerson => Self::ThirdPersonForward,
             Self::ThirdPersonForward => Self::FirstPerson,
