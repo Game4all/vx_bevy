@@ -8,13 +8,13 @@ use bevy::{
 };
 use float_ord::FloatOrd;
 
-use super::{player::PlayerController, Chunk, ChunkShape, CHUNK_LENGTH};
+use super::{player, Chunk, ChunkShape, CHUNK_LENGTH};
 use crate::voxel::storage::ChunkMap;
 use crate::voxel::Voxel;
 
 /// Updates the current chunk position for the current player.
 fn update_player_pos(
-    player: Query<&GlobalTransform, (With<PlayerController>, Changed<GlobalTransform>)>,
+    player: Query<&GlobalTransform, (With<player::Body>, Changed<GlobalTransform>)>,
     mut chunk_pos: ResMut<CurrentLocalPlayerChunk>,
 ) {
     if let Ok(ply) = player.get_single() {
