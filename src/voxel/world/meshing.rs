@@ -6,7 +6,7 @@ use super::{
     Chunk, ChunkShape, Voxel, CHUNK_LENGTH,
 };
 use crate::voxel::{
-    render::{mesh_buffer, MeshBuffers, VoxelTerrainMeshBundle},
+    render::{mesh_buffer, ChunkMaterialSingleton, MeshBuffers},
     storage::ChunkMap,
 };
 use bevy::{
@@ -22,16 +22,20 @@ use thread_local::ThreadLocal;
 pub fn prepare_chunks(
     chunks: Query<(Entity, &Chunk), Added<Chunk>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    material: Res<ChunkMaterialSingleton>,
     mut cmds: Commands,
 ) {
     for (chunk, chunk_key) in chunks.iter() {
-        cmds.entity(chunk).insert(VoxelTerrainMeshBundle {
-            mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
-            transform: Transform::from_translation(chunk_key.0.as_vec3()),
-            visibility: Visibility::Hidden,
-            aabb: Aabb::from_min_max(Vec3::ZERO, Vec3::splat(CHUNK_LENGTH as f32)),
-            ..Default::default()
-        });
+        cmds.entity(chunk).insert((
+            MaterialMeshBundle {
+                material: (**material).clone(),
+                mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
+                transform: Transform::from_translation(chunk_key.0.as_vec3()),
+                visibility: Visibility::Hidden,
+                ..Default::default()
+            },
+            Aabb::from_min_max(Vec3::ZERO, Vec3::splat(CHUNK_LENGTH as f32)),
+        ));
     }
 }
 

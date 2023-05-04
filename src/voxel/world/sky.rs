@@ -1,8 +1,6 @@
-use std::f32::consts::PI;
-
 use bevy::prelude::{
     Color, Commands, Deref, DirectionalLight, DirectionalLightBundle, Entity, ParamSet, Plugin,
-    Quat, Query, Res, Resource, Transform, With,
+    Query, Res, Resource, Transform, Vec3, With,
 };
 
 use super::player::PlayerController;
@@ -15,7 +13,7 @@ fn setup_sky_lighting(mut cmds: Commands) {
 
     let sky_light_entity = cmds
         .spawn(DirectionalLightBundle {
-            transform: Transform::from_rotation(Quat::from_rotation_x(-PI / 4.0)),
+            transform: Transform::IDENTITY.looking_to(Vec3::new(-1.0, -0.6, -1.0), Vec3::Y),
             directional_light: DirectionalLight {
                 color: Color::WHITE,
                 shadows_enabled: true,
