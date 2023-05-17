@@ -4,13 +4,24 @@ use std::f32::consts::FRAC_PI_2;
 
 use crate::debug::DebugUISet;
 
+use super::chunks::LoadChunksAround;
+
 const BODY_ROTATION_SLERP: f32 = 0.5;
 
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Bundle, Default)]
+pub struct BodyBundle<M: Material> {
+    pub material_mesh_bundle: MaterialMeshBundle<M>,
+
+    // defaults are fine for these:
+    pub body: Body,
+    pub load_chunks_around: LoadChunksAround,
+}
+
 /// Marker component for player body.
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Body;
 
 #[derive(Component)]
