@@ -31,6 +31,19 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
             Vec2::new(12.989, 78.233),
         );
 
+        let grass_blade_height = ((noise::rand2to1(
+            (pos.xz().as_vec2() + key.xz().as_vec2()) * 0.1,
+            Vec2::new(42.4782, 8472.2437),
+        ) * 100.) as u32)
+            .rem_euclid(4);
+
+        if grass_blade_height > 1 && pos.y <= 29 {
+            for y in 0..grass_blade_height {
+                let position = ILUVec3::from_array(pos.to_array()) + ILUVec3::new(0, y, 0);
+                *buffer.voxel_at_mut(position) = Grass::into_voxel();
+            }
+        }
+
         if spawn_chance > 0.981 && pos.y <= 13 {
             // this is a stupid hack but a real fix would be to allow terrain decoration to work vertically
             make_tree::<Wood, Leaves>(buffer, ILUVec3::from(pos.to_array()));

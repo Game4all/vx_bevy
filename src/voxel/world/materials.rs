@@ -123,7 +123,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Leaves>(MaterialRegistryInfo {
-            base_color: Color::rgb_u8(90, 186, 69),
+            base_color: Color::rgb_u8(109, 177, 56),
             name: Leaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
