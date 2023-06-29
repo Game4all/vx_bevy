@@ -55,6 +55,8 @@ fn display_chunk_stats(
         ui.separator();
         ui.label("Horizontal chunk loading radius");
         ui.add(Slider::new(&mut chunk_loading_radius.horizontal, 8..=32));
+        ui.label("Vertical chunk loading radius");
+        ui.add(Slider::new(&mut chunk_loading_radius.vertical, 2..=10));
         ui.separator();
 
         if ui.button("Clear loaded chunks").clicked() {
