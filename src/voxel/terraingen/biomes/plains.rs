@@ -1,8 +1,11 @@
 use crate::voxel::{
     material::VoxelMaterial,
-    materials::{Dirt, Grass, Leaves, Wood},
+    materials::{Dirt, Grass, Leaves, Wood, Rock},
     storage::VoxelBuffer,
-    terraingen::{common::make_tree, noise},
+    terraingen::{
+        common::{make_rock, make_tree},
+        noise,
+    },
     ChunkShape, Voxel,
 };
 use bevy::math::{IVec3, UVec3, Vec2, Vec3Swizzles};
@@ -42,6 +45,18 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
                 let position = ILUVec3::from_array(pos.to_array()) + ILUVec3::new(0, y, 0);
                 *buffer.voxel_at_mut(position) = Grass::into_voxel();
             }
+        }
+
+
+        // Let's put some rock boulders in the plains to populate a lil bit
+        let rock_spawn_chance = noise::rand2to1(
+            (pos.xz().as_vec2() + key.xz().as_vec2()) * 0.1,
+            Vec2::new(72845.4782, 8472.2437),
+        );
+
+        if rock_spawn_chance > 0.995 {
+            let rock_size = (1.0f32 - rock_spawn_chance) * 1000.0;
+            make_rock::<Rock>(buffer, ILUVec3::from(pos.to_array()), rock_size);
         }
 
         if spawn_chance > 0.981 && pos.y <= 13 {

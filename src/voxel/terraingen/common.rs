@@ -114,3 +114,26 @@ pub fn make_tree<T: VoxelMaterial, L: VoxelMaterial>(
             }
         });
 }
+
+pub fn make_rock<V: VoxelMaterial>(
+    buffer: &mut VoxelBuffer<Voxel, ChunkShape>,
+    origin: UVec3,
+    size: f32,
+) {
+    let origin = Vec3::from(origin.as_vec3().to_array());
+    Extent::from_min_and_shape(UVec3::ZERO, UVec3::splat(CHUNK_LENGTH)) //may want to calculate an extent encompassing the tree instead of iterating over the complete 32^3 volume
+        .iter3()
+        .map(|x| Vec3::from_array(x.as_vec3().to_array()))
+        .map(|position| {
+            let trunk_distance = sdf::sdf_sphere(position - origin, size) < 0.;
+            (trunk_distance, position)
+        })
+        .map(|(rock_distance, position)| {
+            (rock_distance, UVec3::from(position.as_uvec3().to_array()))
+        })
+        .for_each(|(rock, position)| {
+            if rock {
+                *buffer.voxel_at_mut(position) = V::into_voxel()
+            }
+        });
+}
