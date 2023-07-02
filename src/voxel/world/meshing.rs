@@ -10,6 +10,7 @@ use crate::voxel::{
     storage::ChunkMap,
 };
 use bevy::{
+    pbr::NotShadowCaster,
     prelude::*,
     render::{primitives::Aabb, render_resource::PrimitiveTopology},
     tasks::{AsyncComputeTaskPool, Task},
@@ -26,7 +27,8 @@ pub fn prepare_chunks(
     mut cmds: Commands,
 ) {
     for (chunk, chunk_key) in chunks.iter() {
-        cmds.entity(chunk).insert((
+        let mut entity_commands = cmds.entity(chunk);
+        entity_commands.insert((
             MaterialMeshBundle {
                 material: (**material).clone(),
                 mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
@@ -36,6 +38,10 @@ pub fn prepare_chunks(
             },
             Aabb::from_min_max(Vec3::ZERO, Vec3::splat(CHUNK_LENGTH as f32)),
         ));
+        // There is no need to cast shadows for chunks below the surface.
+        if chunk_key.0.y <= 64 {
+            entity_commands.insert(NotShadowCaster);
+        }
     }
 }
 
