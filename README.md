@@ -16,13 +16,9 @@ Also don't go under the world.
 
 ## Screenshots
 
-![assets/screenshots/screenshot_5.png](assets/screenshots/screenshot_5.png)
-![assets/screenshots/screenshot.png](assets/screenshots/screenshot.png)
-![assets/screenshots/screenshot2.png](assets/screenshots/screenshot2.png)
-![assets/screenshots/screenshot_4.png](assets/screenshots/screenshot_4.png)
-
-
-https://user-images.githubusercontent.com/20256717/180202640-6135373b-4c58-482c-820f-3660a8755e2d.mp4
+![assets/screenshots/vx_bevy_0.jpg](assets/screenshots/vx_bevy_0.jpg)
+![assets/screenshots/vx_bevy_1.jpg](assets/screenshots/vx_bevy_1.jpg)
+![assets/screenshots/vx_bevy_2.jpg](assets/screenshots/vx_bevy_2.jpg)
 
 
 ## Acknowledgments
