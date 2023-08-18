@@ -1086,7 +1086,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c0345520b5aa77d7d154bd578a18e7a974350931b5f41f641a7844e951b978f"
 dependencies = [
- "ilattice",
+ "ilattice 0.1.0",
  "ndcopy",
  "ndshape",
 ]
@@ -1751,9 +1751,9 @@ checksum = "ad0a93d233ebf96623465aad4046a8d3aa4da22d4f4beba5388838c8a434bbb4"
 
 [[package]]
 name = "glam"
-version = "0.22.0"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12f597d56c1bd55a811a1be189459e8fad2bbc272616375602443bdfb37fa774"
+checksum = "2b8509e6791516e81c1a630d0bd7fbac36d2fa8712a9da8662e716b52d5051ca"
 
 [[package]]
 name = "glam"
@@ -1946,9 +1946,19 @@ dependencies = [
 [[package]]
 name = "ilattice"
 version = "0.1.0"
-source = "git+https://github.com/Game4all/ilattice-rs?branch=update-glam#5ef558ffc2724e9e0ad3c8e6a29540378f72d415"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3db9046391c0e0658a18e23877706d16e48cc8b4711702b9f703776410c2b84"
 dependencies = [
- "glam 0.22.0",
+ "glam 0.19.0",
+]
+
+[[package]]
+name = "ilattice"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e8d9f732ea4ec84c5abdc73b70e0b55fa8c2e96d74e7193a4a138ba3ca33254"
+dependencies = [
+ "glam 0.23.0",
  "morton-encoding",
 ]
 
@@ -2027,9 +2037,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.10.5"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
 dependencies = [
  "either",
 ]
@@ -3490,7 +3500,7 @@ dependencies = [
  "block-mesh",
  "float-ord",
  "futures-lite",
- "ilattice",
+ "ilattice 0.3.0",
  "itertools",
  "ndcopy",
  "ndshape",
