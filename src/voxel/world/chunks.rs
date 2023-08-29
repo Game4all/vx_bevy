@@ -1,20 +1,26 @@
 use bevy::{
     math::IVec3,
     prelude::{
-        Changed, Commands, CoreSet, Entity, GlobalTransform, IntoSystemConfig, IntoSystemConfigs,
-        IntoSystemSetConfig, Plugin, Query, Res, ResMut, Resource, SystemSet, With,
+        Changed, Commands, Component, CoreSet, Entity, GlobalTransform, IntoSystemConfig,
+        IntoSystemConfigs, IntoSystemSetConfig, Plugin, Query, Res, ResMut, Resource, SystemSet,
+        With,
     },
     utils::{HashMap, HashSet},
 };
 use float_ord::FloatOrd;
 
-use super::{player::PlayerController, Chunk, ChunkShape, CHUNK_LENGTH};
+use super::{Chunk, ChunkShape, CHUNK_LENGTH};
 use crate::voxel::storage::ChunkMap;
 use crate::voxel::Voxel;
 
+// @todo: should this contain a radius so that different entities could cause chunk loading in different ranges?
+#[derive(Component, Default)]
+/// Marker component for entities with a [GlobalTransform] which are tracked for the purpose of loading terrain.
+pub struct LoadChunksAround;
+
 /// Updates the current chunk position for the current player.
 fn update_player_pos(
-    player: Query<&GlobalTransform, (With<PlayerController>, Changed<GlobalTransform>)>,
+    player: Query<&GlobalTransform, (With<LoadChunksAround>, Changed<GlobalTransform>)>,
     mut chunk_pos: ResMut<CurrentLocalPlayerChunk>,
 ) {
     if let Ok(ply) = player.get_single() {

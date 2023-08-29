@@ -3,7 +3,7 @@ use bevy::prelude::{
     Query, Res, Resource, Transform, Vec3, With,
 };
 
-use super::player::PlayerController;
+use super::player::CameraMode;
 
 #[derive(Resource, Deref)]
 struct SkyLightEntity(Entity);
@@ -17,15 +17,6 @@ fn setup_sky_lighting(mut cmds: Commands) {
             directional_light: DirectionalLight {
                 color: Color::WHITE,
                 shadows_enabled: true,
-                // shadow_projection: OrthographicProjection {
-                //     // left: -SIZE,
-                //     // right: SIZE,
-                //     // bottom: -SIZE,
-                //     // top: SIZE,
-                //     near: -SIZE,
-                //     far: SIZE,
-                //     ..Default::default()
-                // },
                 ..Default::default()
             },
             ..Default::default()
@@ -37,10 +28,7 @@ fn setup_sky_lighting(mut cmds: Commands) {
 
 fn update_light_position(
     sky_light_entity: Res<SkyLightEntity>,
-    mut queries: ParamSet<(
-        Query<&mut Transform>,
-        Query<&Transform, With<PlayerController>>,
-    )>,
+    mut queries: ParamSet<(Query<&mut Transform>, Query<&Transform, With<CameraMode>>)>,
 ) {
     let sky_light_entity = **sky_light_entity;
     let player_translation = queries
