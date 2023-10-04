@@ -1,7 +1,7 @@
 use crate::voxel::material::VoxelMaterialRegistry;
 use bevy::{
     prelude::*,
-    reflect::TypeUuid,
+    reflect::{TypePath, TypeUuid},
     render::{
         extract_component::ExtractComponent,
         mesh::MeshVertexAttribute,
@@ -28,7 +28,7 @@ pub struct GpuVoxelMaterial {
     reflectance: f32,
 }
 
-#[derive(AsBindGroup, ShaderType, Clone, TypeUuid)]
+#[derive(AsBindGroup, ShaderType, Clone, TypePath, TypeUuid)]
 #[uuid = "1e31e29e-73d8-419c-8293-876ae81d2636"]
 pub struct GpuTerrainUniforms {
     #[uniform(0)]
@@ -127,13 +127,13 @@ pub struct ChunkMaterialPlugin;
 impl Plugin for ChunkMaterialPlugin {
     fn build(&self, app: &mut App) {
         // @todo: figure out race conditions w/ other systems
-        app.add_plugin(MaterialPlugin::<GpuTerrainUniforms>::default())
+        app.add_plugins(MaterialPlugin::<GpuTerrainUniforms>::default())
             .init_resource::<ChunkMaterialSingleton>()
-            .add_system(
+            .add_systems(
+                Update,
                 update_chunk_material_singleton
                     .run_if(resource_changed::<VoxelMaterialRegistry>())
-                    .in_set(ChunkMaterialSet)
-                    .in_base_set(CoreSet::Update),
+                    .in_set(ChunkMaterialSet),
             );
     }
 }

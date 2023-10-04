@@ -1,6 +1,6 @@
 use crate::voxel::{
     material::VoxelMaterial,
-    materials::{Dirt, Grass, Leaves, Wood, Rock},
+    materials::{Dirt, Grass, Leaves, Rock, Wood},
     storage::VoxelBuffer,
     terraingen::{
         common::{make_rock, make_tree},
@@ -46,7 +46,6 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
                 *buffer.voxel_at_mut(position) = Grass::into_voxel();
             }
         }
-
 
         // Let's put some rock boulders in the plains to populate a lil bit
         let rock_spawn_chance = noise::rand2to1(
