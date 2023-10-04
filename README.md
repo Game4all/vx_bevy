@@ -25,4 +25,6 @@ Also don't go under the world.
 
 This was ported to bevy 0.10.0 thanks to the efforts of [@naomijub](https://github.com/naomijub) with help from [@hans-pistor](https://github.com/hans-pistor).
 
+Ported to bevy 0.11.3 thanks to [@juliohq](https://github.com/juliohq).
+
 This uses the awesome [block-mesh](https://github.com/bonsairobo/block-mesh-rs) crate which handles greedy meshing.
