@@ -1,6 +1,6 @@
 use crate::voxel::{
     material::VoxelMaterial,
-    materials::{Dirt, Grass, Leaves, Wood, Rock},
+    materials::{Dirt, Grass, Leaves, Rock, Wood},
     storage::VoxelBuffer,
     terraingen::{
         common::{make_rock, make_tree},
@@ -36,7 +36,7 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
 
         let grass_blade_height = ((noise::rand2to1(
             (pos.xz().as_vec2() + key.xz().as_vec2()) * 0.1,
-            Vec2::new(42.4782, 8472.2437),
+            Vec2::new(42.478_2, 8_472.243),
         ) * 100.) as u32)
             .rem_euclid(4);
 
@@ -47,11 +47,10 @@ impl LayeredBiomeTerrainGenerator for BasicPlainsBiomeTerrainGenerator {
             }
         }
 
-
         // Let's put some rock boulders in the plains to populate a lil bit
         let rock_spawn_chance = noise::rand2to1(
             (pos.xz().as_vec2() + key.xz().as_vec2()) * 0.1,
-            Vec2::new(72845.4782, 8472.2437),
+            Vec2::new(72_845.48, 8_472.243),
         );
 
         if rock_spawn_chance > 0.995 {

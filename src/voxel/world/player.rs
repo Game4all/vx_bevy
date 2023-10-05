@@ -98,11 +98,11 @@ pub fn handle_player_input(
         direction.y += 1.0;
     }
 
-    if keys.pressed(KeyCode::LShift) {
+    if keys.pressed(KeyCode::ShiftLeft) {
         direction.y -= 1.0;
     }
 
-    if keys.pressed(KeyCode::LControl) {
+    if keys.pressed(KeyCode::ControlLeft) {
         acceleration *= 8.0;
     }
 
@@ -125,9 +125,9 @@ pub struct VoxelWorldPlayerControllerPlugin;
 impl Plugin for VoxelWorldPlayerControllerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
+            Update,
             (handle_player_input, handle_player_mouse_move)
                 .chain()
-                .in_base_set(CoreSet::Update)
                 .after(DebugUISet::Display),
         );
     }

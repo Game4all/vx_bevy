@@ -1,6 +1,6 @@
 use bevy::prelude::{
     Color, Commands, Deref, DirectionalLight, DirectionalLightBundle, Entity, ParamSet, Plugin,
-    Query, Res, Resource, Transform, Vec3, With,
+    Query, Res, Resource, Startup, Transform, Update, Vec3, With,
 };
 
 use super::player::PlayerController;
@@ -59,7 +59,7 @@ pub struct InteractiveSkyboxPlugin;
 
 impl Plugin for InteractiveSkyboxPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_startup_system(setup_sky_lighting)
-            .add_system(update_light_position);
+        app.add_systems(Startup, setup_sky_lighting)
+            .add_systems(Update, update_light_position);
     }
 }

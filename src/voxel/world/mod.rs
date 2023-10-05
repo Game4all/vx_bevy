@@ -25,18 +25,18 @@ pub struct VoxelWorldPlugin;
 impl Plugin for VoxelWorldPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(ChunkMap::<Voxel, ChunkShape>::new(ChunkShape {}))
-            .add_plugin(chunks::VoxelWorldChunkingPlugin)
-            .add_plugin(meshing::VoxelWorldMeshingPlugin)
+            .add_plugins(chunks::VoxelWorldChunkingPlugin)
+            .add_plugins(meshing::VoxelWorldMeshingPlugin)
             // ordering of plugin insertion matters here.
-            .add_plugin(terraingen::TerrainGeneratorPlugin)
-            .add_plugin(terrain::VoxelWorldTerrainGenPlugin)
-            .add_plugin(super::material::VoxelMaterialPlugin)
-            .add_plugin(super::render::ChunkMaterialPlugin)
-            .add_plugin(materials::VoxelWorldBaseMaterialsPlugin)
-            .add_plugin(chunks_anim::ChunkAppearanceAnimatorPlugin)
-            .add_plugin(bevy_atmosphere::plugin::AtmospherePlugin)
-            .add_plugin(player::VoxelWorldPlayerControllerPlugin)
-            .add_plugin(sky::InteractiveSkyboxPlugin);
+            .add_plugins(terraingen::TerrainGeneratorPlugin)
+            .add_plugins(terrain::VoxelWorldTerrainGenPlugin)
+            .add_plugins(super::material::VoxelMaterialPlugin)
+            .add_plugins(super::render::ChunkMaterialPlugin)
+            .add_plugins(materials::VoxelWorldBaseMaterialsPlugin)
+            .add_plugins(chunks_anim::ChunkAppearanceAnimatorPlugin)
+            .add_plugins(bevy_atmosphere::plugin::AtmospherePlugin)
+            .add_plugins(player::VoxelWorldPlayerControllerPlugin)
+            .add_plugins(sky::InteractiveSkyboxPlugin);
     }
 }
 

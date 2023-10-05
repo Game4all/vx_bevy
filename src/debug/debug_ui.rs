@@ -1,11 +1,12 @@
 use bevy::{
-    diagnostic::{Diagnostics, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
+    diagnostic::{DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::{
-        Color, CoreSet, EventReader, IntoSystemConfig, IntoSystemConfigs, IntoSystemSetConfigs,
-        KeyCode, Plugin, Res, ResMut, Resource, SystemSet,
+        Color, EventReader, IntoSystemConfigs, IntoSystemSetConfigs, KeyCode, Plugin, Res, ResMut,
+        Resource, SystemSet, Update,
     },
 };
+
 use bevy_egui::{
     egui::{self, Rgba, Slider},
     EguiContexts, EguiPlugin, EguiSet,
@@ -16,7 +17,7 @@ use crate::voxel::{
     CurrentLocalPlayerChunk, DirtyChunks,
 };
 
-fn display_debug_stats(mut egui: EguiContexts, diagnostics: Res<Diagnostics>) {
+fn display_debug_stats(mut egui: EguiContexts, diagnostics: Res<DiagnosticsStore>) {
     egui::Window::new("performance stuff").show(egui.ctx_mut(), |ui| {
         ui.label(format!(
             "Avg. FPS: {:.02}",
@@ -128,7 +129,7 @@ fn display_material_editor(
         // base_color
         ui.label("Base color");
 
-        let mut selected_mat = materials.get_mut_by_id(ui_state.selected_mat).unwrap();
+        let selected_mat = materials.get_mut_by_id(ui_state.selected_mat).unwrap();
 
         let mut editable_color = Rgba::from_rgba_unmultiplied(
             selected_mat.base_color.r(),
@@ -179,24 +180,28 @@ pub struct DebugUIPlugins;
 
 impl Plugin for DebugUIPlugins {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugin(EguiPlugin)
-            .add_plugin(FrameTimeDiagnosticsPlugin)
-            .add_plugin(EntityCountDiagnosticsPlugin)
-            .add_systems((
-                toggle_debug_ui_displays.in_set(DebugUISet::Toggle),
-                display_material_editor
-                    .in_set(DebugUISet::Display)
-                    .run_if(display_mat_debug_ui_criteria),
-            ))
+        app.add_plugins(EguiPlugin)
+            .add_plugins(FrameTimeDiagnosticsPlugin)
+            .add_plugins(EntityCountDiagnosticsPlugin)
             .add_systems(
+                Update,
+                (
+                    toggle_debug_ui_displays.in_set(DebugUISet::Toggle),
+                    display_material_editor
+                        .in_set(DebugUISet::Display)
+                        .run_if(display_mat_debug_ui_criteria),
+                ),
+            )
+            .add_systems(
+                Update,
                 (display_debug_stats, display_chunk_stats)
                     .in_set(DebugUISet::Display)
                     .distributive_run_if(display_debug_ui_criteria),
             )
             .configure_sets(
+                Update,
                 (DebugUISet::Toggle, DebugUISet::Display)
                     .chain()
-                    .in_base_set(CoreSet::Update)
                     .after(EguiSet::ProcessInput),
             )
             .init_resource::<DebugUIState>();

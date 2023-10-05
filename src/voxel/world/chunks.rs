@@ -1,8 +1,8 @@
 use bevy::{
     math::IVec3,
     prelude::{
-        Changed, Commands, CoreSet, Entity, GlobalTransform, IntoSystemConfig, IntoSystemConfigs,
-        IntoSystemSetConfig, Plugin, Query, Res, ResMut, Resource, SystemSet, With,
+        Changed, Commands, Entity, GlobalTransform, IntoSystemConfigs, Last, Plugin, PostUpdate,
+        Query, Res, ResMut, Resource, SystemSet, Update, With,
     },
     utils::{HashMap, HashSet},
 };
@@ -211,13 +211,14 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkCommandQueue>()
         .init_resource::<DirtyChunks>()
-        .configure_set(ChunkLoadingSet.in_base_set(CoreSet::Update))
+        .configure_set(Update, ChunkLoadingSet)
         .add_systems(
+            Update,
             (update_player_pos, update_view_chunks, create_chunks)
                 .chain()
                 .in_set(ChunkLoadingSet),
         )
-        .add_system(destroy_chunks.in_base_set(CoreSet::PostUpdate))
-        .add_system(clear_dirty_chunks.in_base_set(CoreSet::Last));
+        .add_systems(PostUpdate, destroy_chunks)
+        .add_systems(Last, clear_dirty_chunks);
     }
 }
