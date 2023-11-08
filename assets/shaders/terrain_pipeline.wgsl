@@ -1,24 +1,23 @@
-#import bevy_pbr::mesh_view_bindings
-#import bevy_pbr::pbr_bindings
-#import bevy_pbr::mesh_bindings
-#import bevy_pbr::mesh_functions
-#import bevy_pbr::view_transformations
+#import bevy_pbr::{
+    clustered_forward,
+    fog,
+    lighting,
+    mesh_bindings::mesh,
+    mesh_view_bindings::view,
+    mesh_functions,
+    pbr_bindings,
+    pbr_functions::{calculate_view, apply_pbr_lighting},
+    pbr_types::{PbrInput, pbr_input_new},
+    shadows,
+    utils,
+    view_transformations
+}
+#import bevy_core_pipeline::tonemapping::tone_mapping
 
-#import bevy_pbr::utils
-#import bevy_pbr::clustered_forward
-#import bevy_pbr::lighting
-#import bevy_pbr::shadows
-#import bevy_pbr::fog
-#import bevy_pbr::pbr_functions calculate_view, apply_pbr_lighting
-#import bevy_pbr::pbr_types PbrInput, pbr_input_new
-#import bevy_pbr::mesh_bindings mesh
-#import bevy_pbr::mesh_view_bindings view
-#import bevy_core_pipeline::tonemapping tone_mapping
-
-#import "shaders/voxel_data.wgsl" voxel_data_extract_normal, voxel_data_extract_material_index
-#import "shaders/terrain_uniforms.wgsl" VoxelMat, voxel_materials, render_distance, TERRAIN_CHUNK_LENGTH
-#import "shaders/noise.wgsl" hash
-#import "shaders/fog.wgsl" ffog_apply_fog
+#import "shaders/voxel_data.wgsl"::{voxel_data_extract_normal, voxel_data_extract_material_index}
+#import "shaders/terrain_uniforms.wgsl"::{VoxelMat, voxel_materials, render_distance, TERRAIN_CHUNK_LENGTH}
+#import "shaders/noise.wgsl"::hash
+#import "shaders/fog.wgsl"::ffog_apply_fog
 
 struct Vertex {
     @builtin(instance_index) instance_index: u32,
