@@ -2,6 +2,7 @@
 #import bevy_pbr::pbr_bindings
 #import bevy_pbr::mesh_bindings
 #import bevy_pbr::mesh_functions
+#import bevy_pbr::view_transformations
 
 #import bevy_pbr::utils
 #import bevy_pbr::clustered_forward
@@ -19,6 +20,7 @@
 #import "shaders/fog.wgsl" ffog_apply_fog
 
 struct Vertex {
+    @builtin(instance_index) instance_index: u32,
     @location(0) position: vec3<f32>,
     @location(1) voxel_data: u32,
 };
@@ -32,10 +34,11 @@ struct VertexOutput {
 
 @vertex
 fn vertex(vertex: Vertex) -> VertexOutput {
-    let world_position = bevy_pbr::mesh_functions::mesh_position_local_to_world(mesh.model, vec4<f32>(vertex.position, 1.0));
+    let model = mesh_functions::get_model_matrix(vertex.instance_index);
+    let world_position = bevy_pbr::mesh_functions::mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
 
     var out: VertexOutput;
-    out.clip_position = bevy_pbr::mesh_functions::mesh_position_world_to_clip(world_position);
+    out.clip_position = view_transformations::position_world_to_clip(world_position);
     out.voxel_normal = voxel_data_extract_normal(vertex.voxel_data);
     out.voxel_data = vertex.voxel_data;
     out.world_position = world_position.xyz;

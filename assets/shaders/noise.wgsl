@@ -3,7 +3,7 @@
 // See https://github.com/veloren/veloren
 
 fn hash(p: vec4<f32>) -> f32 {
-    var p: vec4<f32> = fract(p * 0.3183099 + 0.1) - fract(p + 23.22121);
-    p = p * 17.0;
-    return (fract(p.x * p.y * (1.0 - p.z) * p.w * (p.x + p.y + p.z + p.w)) - 0.5) * 2.0;
+    var n: vec4<f32> = fract(p * 0.3183099 + 0.1) - fract(p + 23.22121);
+    n = n * 17.0;
+    return (fract(n.x * n.y * (1.0 - n.z) * n.w * (n.x + n.y + n.z + n.w)) - 0.5) * 2.0;
 }
