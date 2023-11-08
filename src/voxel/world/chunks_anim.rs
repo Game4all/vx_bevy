@@ -1,6 +1,6 @@
 use bevy::{
     prelude::{
-        Commands, Component, Entity, IntoSystemConfigs, IntoSystemSetConfig, Plugin, PostUpdate,
+        Commands, Component, Entity, IntoSystemConfigs, IntoSystemSetConfigs, Plugin, PostUpdate,
         Query, RemovedComponents, Res, SystemSet, Transform, Update, Visibility,
     },
     time::Time,

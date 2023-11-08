@@ -9,7 +9,7 @@ use crate::voxel::{
 };
 use bevy::{
     prelude::{
-        Added, Commands, Component, Entity, IntoSystemConfigs, IntoSystemSetConfig, Plugin, Query,
+        Added, Commands, Component, Entity, IntoSystemConfigs, IntoSystemSetConfigs, Plugin, Query,
         ResMut, SystemSet, Update,
     },
     tasks::{AsyncComputeTaskPool, Task},
