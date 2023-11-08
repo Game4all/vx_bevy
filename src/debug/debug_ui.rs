@@ -83,7 +83,7 @@ fn toggle_debug_ui_displays(
     mut inputs: EventReader<KeyboardInput>,
     mut ui_state: ResMut<DebugUIState>,
 ) {
-    for input in inputs.iter() {
+    for input in inputs.read() {
         match input.key_code {
             Some(key_code) if key_code == KeyCode::F3 && input.state == ButtonState::Pressed => {
                 ui_state.display_debug_info = !ui_state.display_debug_info;

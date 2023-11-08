@@ -24,7 +24,7 @@ pub fn handle_player_mouse_move(
     let mut delta = Vec2::ZERO;
 
     if controller.cursor_locked {
-        for mouse_move in mouse_motion_event_reader.iter() {
+        for mouse_move in mouse_motion_event_reader.read() {
             delta += mouse_move.delta;
         }
     }

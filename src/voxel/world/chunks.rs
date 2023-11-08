@@ -211,7 +211,7 @@ impl Plugin for VoxelWorldChunkingPlugin {
         })
         .init_resource::<ChunkCommandQueue>()
         .init_resource::<DirtyChunks>()
-        .configure_set(Update, ChunkLoadingSet)
+        .configure_sets(Update, ChunkLoadingSet)
         .add_systems(
             Update,
             (update_player_pos, update_view_chunks, create_chunks)
