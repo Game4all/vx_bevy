@@ -9,7 +9,8 @@
 #import bevy_pbr::lighting
 #import bevy_pbr::shadows
 #import bevy_pbr::fog
-#import bevy_pbr::pbr_functions PbrInput, pbr_input_new, calculate_view, pbr
+#import bevy_pbr::pbr_functions calculate_view, apply_pbr_lighting
+#import bevy_pbr::pbr_types PbrInput, pbr_input_new
 #import bevy_pbr::mesh_bindings mesh
 #import bevy_pbr::mesh_view_bindings view
 #import bevy_core_pipeline::tonemapping tone_mapping
@@ -30,6 +31,7 @@ struct VertexOutput {
     @location(0) voxel_normal: vec3<f32>,
     @location(1) voxel_data: u32,
     @location(2) world_position: vec3<f32>,
+    @location(3) voxel_world_normal: vec3<f32>,
 };
 
 @vertex
@@ -38,8 +40,11 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     let world_position = bevy_pbr::mesh_functions::mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
 
     var out: VertexOutput;
-    out.clip_position = view_transformations::position_world_to_clip(world_position);
-    out.voxel_normal = voxel_data_extract_normal(vertex.voxel_data);
+    let voxel_normal = voxel_data_extract_normal(vertex.voxel_data);
+    out.clip_position = view_transformations::position_world_to_clip(world_position.xyz);
+    out.voxel_normal = voxel_normal;
+    out.voxel_world_normal = bevy_pbr::mesh_functions::mesh_normal_local_to_world(voxel_normal, vertex.instance_index);
+
     out.voxel_data = vertex.voxel_data;
     out.world_position = world_position.xyz;
 
@@ -55,6 +60,7 @@ struct Fragment {
     @location(1) voxel_data: u32,
     /// The world position of the voxel vertex.
     @location(2) world_position: vec3<f32>,
+    @location(3) voxel_world_normal: vec3<f32>,
 };
 
 fn prepare_pbr_input_from_voxel_mat(voxel_mat: VoxelMat, frag: Fragment) -> PbrInput {
@@ -70,12 +76,12 @@ fn prepare_pbr_input_from_voxel_mat(voxel_mat: VoxelMat, frag: Fragment) -> PbrI
 
     pbr_input.frag_coord = frag.frag_coord;
     pbr_input.world_position = vec4<f32>(frag.world_position, 1.0);
-    pbr_input.world_normal = (f32(frag.front_facing) * 2.0 - 1.0) * bevy_pbr::mesh_functions::mesh_normal_local_to_world(frag.voxel_normal);
-    
+    pbr_input.world_normal = (f32(frag.front_facing) * 2.0 - 1.0) * frag.voxel_world_normal;
+
     pbr_input.is_orthographic = view.projection[3].w == 1.0;
-    pbr_input.N = normalize(bevy_pbr::mesh_functions::mesh_normal_local_to_world(frag.voxel_normal));
+    pbr_input.N = normalize(frag.voxel_world_normal);
     pbr_input.V = calculate_view(vec4<f32>(frag.world_position, 1.0), pbr_input.is_orthographic);
-    pbr_input.flags = mesh.flags;
+
     return pbr_input;
 }
 
@@ -85,7 +91,7 @@ fn fragment(frag: Fragment) -> @location(0) vec4<f32> {
 
     /// PBR lighting input data preparation
     var pbr_input = prepare_pbr_input_from_voxel_mat(material, frag);
-    let pbr_colour = tone_mapping(pbr(pbr_input), view.color_grading);
+    let pbr_colour = tone_mapping(apply_pbr_lighting(pbr_input), view.color_grading);
 
     // @todo: switch to bevy_pbr::fog
 
