@@ -30,8 +30,7 @@ struct VertexOutput {
     @location(0) voxel_normal: vec3<f32>,
     @location(1) voxel_data: u32,
     @location(2) world_position: vec3<f32>,
-    @location(3) voxel_world_normal: vec3<f32>,
-    @location(4) instance_index: u32,
+    @location(3) instance_index: u32,
 };
 
 @vertex
@@ -43,8 +42,6 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     let voxel_normal = voxel_data_extract_normal(vertex.voxel_data);
     out.clip_position = view_transformations::position_world_to_clip(world_position.xyz);
     out.voxel_normal = voxel_normal;
-    out.voxel_world_normal = bevy_pbr::mesh_functions::mesh_normal_local_to_world(voxel_normal, vertex.instance_index);
-
     out.voxel_data = vertex.voxel_data;
     out.world_position = world_position.xyz;
     out.instance_index = vertex.instance_index;
@@ -61,13 +58,14 @@ struct Fragment {
     @location(1) voxel_data: u32,
     /// The world position of the voxel vertex.
     @location(2) world_position: vec3<f32>,
-    @location(3) voxel_world_normal: vec3<f32>,
-    @location(4) instance_index: u32,
+    @location(3) instance_index: u32,
 };
 
 fn prepare_pbr_input_from_voxel_mat(voxel_mat: VoxelMat, frag: Fragment) -> PbrInput {
     var base_color: vec4<f32> = voxel_mat.base_color;
     base_color = base_color + hash(vec4<f32>(floor(frag.world_position - frag.voxel_normal * 0.5), 1.0)) * 0.0226;
+
+    let voxel_world_normal = bevy_pbr::mesh_functions::mesh_normal_local_to_world(frag.voxel_normal, frag.instance_index);
 
     var pbr_input: PbrInput = pbr_input_new();
     pbr_input.material.metallic = voxel_mat.metallic;
@@ -78,10 +76,10 @@ fn prepare_pbr_input_from_voxel_mat(voxel_mat: VoxelMat, frag: Fragment) -> PbrI
 
     pbr_input.frag_coord = frag.frag_coord;
     pbr_input.world_position = vec4<f32>(frag.world_position, 1.0);
-    pbr_input.world_normal = (f32(frag.front_facing) * 2.0 - 1.0) * frag.voxel_world_normal;
+    pbr_input.world_normal = (f32(frag.front_facing) * 2.0 - 1.0) * voxel_world_normal;
 
     pbr_input.is_orthographic = view.projection[3].w == 1.0;
-    pbr_input.N = normalize(frag.voxel_world_normal);
+    pbr_input.N = normalize(voxel_world_normal);
     pbr_input.V = calculate_view(vec4<f32>(frag.world_position, 1.0), pbr_input.is_orthographic);
     pbr_input.flags = mesh[frag.instance_index].flags;
 
