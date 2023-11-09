@@ -31,6 +31,7 @@ struct VertexOutput {
     @location(1) voxel_data: u32,
     @location(2) world_position: vec3<f32>,
     @location(3) voxel_world_normal: vec3<f32>,
+    @location(4) instance_index: u32,
 };
 
 @vertex
@@ -46,6 +47,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 
     out.voxel_data = vertex.voxel_data;
     out.world_position = world_position.xyz;
+    out.instance_index = vertex.instance_index;
 
     return out;
 }
@@ -60,6 +62,7 @@ struct Fragment {
     /// The world position of the voxel vertex.
     @location(2) world_position: vec3<f32>,
     @location(3) voxel_world_normal: vec3<f32>,
+    @location(4) instance_index: u32,
 };
 
 fn prepare_pbr_input_from_voxel_mat(voxel_mat: VoxelMat, frag: Fragment) -> PbrInput {
@@ -80,6 +83,7 @@ fn prepare_pbr_input_from_voxel_mat(voxel_mat: VoxelMat, frag: Fragment) -> PbrI
     pbr_input.is_orthographic = view.projection[3].w == 1.0;
     pbr_input.N = normalize(frag.voxel_world_normal);
     pbr_input.V = calculate_view(vec4<f32>(frag.world_position, 1.0), pbr_input.is_orthographic);
+    pbr_input.flags = mesh[frag.instance_index].flags;
 
     return pbr_input;
 }
