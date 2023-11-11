@@ -27,4 +27,6 @@ This was ported to bevy 0.10.0 thanks to the efforts of [@naomijub](https://gith
 
 Ported to bevy 0.11.3 thanks to [@juliohq](https://github.com/juliohq).
 
+Ported to bevy 0.12.0 thanks to [@rparrett](https://github.com/rparrett).
+
 This uses the awesome [block-mesh](https://github.com/bonsairobo/block-mesh-rs) crate which handles greedy meshing.
