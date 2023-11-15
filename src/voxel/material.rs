@@ -1,5 +1,6 @@
 use bevy::{
-    prelude::{info, Color, Plugin, Resource},
+    log::info,
+    prelude::{Color, Plugin, Resource},
     utils::HashMap,
 };
 use bitflags::bitflags;

@@ -1,7 +1,7 @@
 use crate::voxel::material::VoxelMaterialRegistry;
 use bevy::{
     prelude::*,
-    reflect::{TypePath, TypeUuid},
+    reflect::TypePath,
     render::{
         extract_component::ExtractComponent,
         mesh::MeshVertexAttribute,
@@ -18,7 +18,7 @@ impl VoxelTerrainMesh {
         MeshVertexAttribute::new("Vertex_Data", 0x696969, VertexFormat::Uint32);
 }
 
-#[derive(ShaderType, Clone, Copy, Default)]
+#[derive(ShaderType, Clone, Copy, Debug, Default)]
 pub struct GpuVoxelMaterial {
     base_color: Color,
     flags: u32,
@@ -28,8 +28,7 @@ pub struct GpuVoxelMaterial {
     reflectance: f32,
 }
 
-#[derive(AsBindGroup, ShaderType, Clone, TypePath, TypeUuid)]
-#[uuid = "1e31e29e-73d8-419c-8293-876ae81d2636"]
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct GpuTerrainUniforms {
     #[uniform(0)]
     pub render_distance: u32,
