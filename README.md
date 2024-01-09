@@ -1,4 +1,9 @@
-# `vx_bevy`
+<div align="center">
+    <h1><code>vx_bevy</code></h1>
+        Voxel engine prototype using rust and bevy.
+        (Also check out <a href="https://github.com/Game4all/unnamed-voxel-tracer">my raytraced voxel engine</a>)
+    <hr>
+</div>
 
 > **Note**
 > This respository won't receive further updates to newer bevy versions. Thus current code may require modifications to port to newer bevy versions.
