@@ -116,5 +116,5 @@ pub fn mesh_buffer<T, S>(
         VertexAttributeValues::Uint32(data),
     );
 
-    render_mesh.set_indices(Some(Indices::U32(indices.clone())));
+    render_mesh.insert_indices(Indices::U32(indices.clone()));
 }

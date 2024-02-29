@@ -22,7 +22,7 @@ fn display_debug_stats(mut egui: EguiContexts, diagnostics: Res<DiagnosticsStore
         ui.label(format!(
             "Avg. FPS: {:.02}",
             diagnostics
-                .get(FrameTimeDiagnosticsPlugin::FPS)
+                .get(&FrameTimeDiagnosticsPlugin::FPS)
                 .unwrap()
                 .average()
                 .unwrap_or_default()
@@ -30,7 +30,7 @@ fn display_debug_stats(mut egui: EguiContexts, diagnostics: Res<DiagnosticsStore
         ui.label(format!(
             "Total Entity count: {}",
             diagnostics
-                .get(EntityCountDiagnosticsPlugin::ENTITY_COUNT)
+                .get(&EntityCountDiagnosticsPlugin::ENTITY_COUNT)
                 .unwrap()
                 .average()
                 .unwrap_or_default()
@@ -85,10 +85,10 @@ fn toggle_debug_ui_displays(
 ) {
     for input in inputs.read() {
         match input.key_code {
-            Some(key_code) if key_code == KeyCode::F3 && input.state == ButtonState::Pressed => {
+            KeyCode::F3 if input.state == ButtonState::Pressed => {
                 ui_state.display_debug_info = !ui_state.display_debug_info;
             }
-            Some(key_code) if key_code == KeyCode::F7 && input.state == ButtonState::Pressed => {
+            KeyCode::F7 if input.state == ButtonState::Pressed => {
                 ui_state.display_mat_debug = !ui_state.display_mat_debug;
             }
             _ => {}
@@ -142,7 +142,7 @@ fn display_material_editor(
             &mut editable_color,
             egui::color_picker::Alpha::Opaque,
         );
-        selected_mat.base_color = Color::from(editable_color.to_array());
+        selected_mat.base_color = Color::rgba_linear_from_array(editable_color.to_array());
         ui.label("Perceptual Roughness");
         ui.add(Slider::new(
             &mut selected_mat.perceptual_roughness,
@@ -165,7 +165,7 @@ fn display_material_editor(
             &mut editable_emissive,
             egui::color_picker::Alpha::Opaque,
         );
-        selected_mat.emissive = Color::from(editable_emissive.to_array());
+        selected_mat.emissive = Color::rgba_linear_from_array(editable_emissive.to_array());
     });
 }
 
