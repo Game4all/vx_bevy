@@ -12,7 +12,9 @@ use crate::voxel::{
 use bevy::{
     pbr::NotShadowCaster,
     prelude::*,
-    render::{primitives::Aabb, render_resource::PrimitiveTopology},
+    render::{
+        primitives::Aabb, render_asset::RenderAssetUsages, render_resource::PrimitiveTopology,
+    },
     tasks::{AsyncComputeTaskPool, Task},
 };
 use futures_lite::future;
@@ -31,7 +33,10 @@ pub fn prepare_chunks(
         entity_commands.insert((
             MaterialMeshBundle {
                 material: (**material).clone(),
-                mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
+                mesh: meshes.add(Mesh::new(
+                    PrimitiveTopology::TriangleList,
+                    RenderAssetUsages::RENDER_WORLD,
+                )),
                 transform: Transform::from_translation(chunk_key.0.as_vec3()),
                 visibility: Visibility::Hidden,
                 ..Default::default()
@@ -76,7 +81,10 @@ fn queue_mesh_tasks(
                         })
                         .borrow_mut();
 
-                    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+                    let mut mesh = Mesh::new(
+                        PrimitiveTopology::TriangleList,
+                        RenderAssetUsages::RENDER_WORLD,
+                    );
                     mesh_buffer(&buffer, &mut mesh_buffers, &mut mesh, 1.0);
 
                     mesh
