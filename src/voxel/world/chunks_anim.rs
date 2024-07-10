@@ -44,18 +44,20 @@ fn step_chunk_animation(
     time: Res<Time>,
     mut commands: Commands,
 ) {
-    chunks.for_each_mut(|(entity, mut transform, _chunk, animation)| {
-        let delta = (time.elapsed_seconds() - animation.start_time).min(ANIMATION_DURATION);
+    chunks
+        .iter_mut()
+        .for_each(|(entity, mut transform, _chunk, animation)| {
+            let delta = (time.elapsed_seconds() - animation.start_time).min(ANIMATION_DURATION);
 
-        let ytransform = (1. - (1. - (delta / ANIMATION_DURATION)).powi(5))
-            .mul_add(ANIMATION_HEIGHT, _chunk.0.y as f32 - ANIMATION_HEIGHT);
+            let ytransform = (1. - (1. - (delta / ANIMATION_DURATION)).powi(5))
+                .mul_add(ANIMATION_HEIGHT, _chunk.0.y as f32 - ANIMATION_HEIGHT);
 
-        transform.translation.y = ytransform;
+            transform.translation.y = ytransform;
 
-        if delta == ANIMATION_DURATION {
-            commands.entity(entity).remove::<ChunkSpawnAnimation>();
-        }
-    });
+            if delta == ANIMATION_DURATION {
+                commands.entity(entity).remove::<ChunkSpawnAnimation>();
+            }
+        });
 }
 
 /// Animates the spawning of chunk entities that come into sight.

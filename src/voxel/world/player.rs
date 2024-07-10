@@ -56,8 +56,8 @@ pub fn handle_player_mouse_move(
 pub fn handle_player_input(
     mut egui: EguiContexts,
     mut query: Query<(&mut PlayerController, &mut Transform)>,
-    keys: Res<Input<KeyCode>>,
-    btns: Res<Input<MouseButton>>,
+    keys: Res<ButtonInput<KeyCode>>,
+    btns: Res<ButtonInput<MouseButton>>,
 ) {
     let (mut controller, mut transform) = query.single_mut();
 
@@ -78,19 +78,19 @@ pub fn handle_player_input(
 
     let mut acceleration = 1.0f32;
 
-    if keys.pressed(KeyCode::W) {
+    if keys.pressed(KeyCode::KeyW) {
         direction.z -= 1.0;
     }
 
-    if keys.pressed(KeyCode::S) {
+    if keys.pressed(KeyCode::KeyS) {
         direction.z += 1.0;
     }
 
-    if keys.pressed(KeyCode::D) {
+    if keys.pressed(KeyCode::KeyD) {
         direction.x += 1.0;
     }
 
-    if keys.pressed(KeyCode::A) {
+    if keys.pressed(KeyCode::KeyA) {
         direction.x -= 1.0;
     }
 
