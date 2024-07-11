@@ -131,18 +131,20 @@ fn display_material_editor(
 
         let selected_mat = materials.get_mut_by_id(ui_state.selected_mat).unwrap();
 
+        let base_color = selected_mat.base_color.to_linear();
         let mut editable_color = Rgba::from_rgba_unmultiplied(
-            selected_mat.base_color.r(),
-            selected_mat.base_color.g(),
-            selected_mat.base_color.b(),
-            selected_mat.base_color.a(),
+            base_color.red,
+            base_color.green,
+            base_color.blue,
+            base_color.alpha,
         );
         egui::widgets::color_picker::color_edit_button_rgba(
             ui,
             &mut editable_color,
             egui::color_picker::Alpha::Opaque,
         );
-        selected_mat.base_color = Color::rgba_from_array(editable_color.to_array());
+        let [r, g, b, a] = editable_color.to_array();
+        selected_mat.base_color = Color::srgba(r, g, b, a);
         ui.label("Perceptual Roughness");
         ui.add(Slider::new(
             &mut selected_mat.perceptual_roughness,
@@ -154,18 +156,20 @@ fn display_material_editor(
         ui.add(Slider::new(&mut selected_mat.reflectance, 0.0..=1.0f32));
         ui.label("Emissive");
 
+        let emissive = selected_mat.base_color.to_linear();
         let mut editable_emissive = Rgba::from_rgba_unmultiplied(
-            selected_mat.emissive.r(),
-            selected_mat.emissive.g(),
-            selected_mat.emissive.b(),
-            selected_mat.emissive.a(),
+            emissive.red,
+            emissive.green,
+            emissive.blue,
+            emissive.alpha,
         );
         egui::widgets::color_picker::color_edit_button_rgba(
             ui,
             &mut editable_emissive,
             egui::color_picker::Alpha::Opaque,
         );
-        selected_mat.emissive = Color::rgba_from_array(editable_emissive.to_array());
+        let [r, g, b, a] = editable_emissive.to_array();
+        selected_mat.emissive = Color::srgba(r, g, b, a);
     });
 }
 

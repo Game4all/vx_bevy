@@ -1,4 +1,7 @@
-use bevy::prelude::{Color, Plugin};
+use bevy::{
+    color::{palettes::css, Alpha},
+    prelude::{Color, Plugin},
+};
 
 use crate::{
     voxel::material::{MaterialRegistryInfo, VoxelMaterialFlags, VoxelMaterialRegistry},
@@ -24,12 +27,12 @@ pub struct VoxelWorldBaseMaterialsPlugin;
 impl Plugin for VoxelWorldBaseMaterialsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         let mut registry = app
-            .world
+            .world_mut()
             .get_resource_mut::<VoxelMaterialRegistry>()
             .unwrap();
 
         registry.register_material::<Dirt>(MaterialRegistryInfo {
-            base_color: Color::rgb_u8(112, 97, 92),
+            base_color: Color::srgb_u8(112, 97, 92),
             name: Dirt::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
@@ -39,7 +42,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Sand>(MaterialRegistryInfo {
-            base_color: Color::rgb_u8(228, 219, 148),
+            base_color: Color::srgb_u8(228, 219, 148),
             name: Sand::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
@@ -49,7 +52,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Grass>(MaterialRegistryInfo {
-            base_color: Color::LIME_GREEN,
+            base_color: css::LIMEGREEN.into(),
             name: Grass::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
@@ -59,7 +62,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Rock>(MaterialRegistryInfo {
-            base_color: Color::GRAY,
+            base_color: css::GRAY.into(),
             name: Rock::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
@@ -77,7 +80,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Water>(MaterialRegistryInfo {
-            base_color: *Color::rgb_u8(78, 167, 215).set_a(0.4),
+            base_color: Color::srgb_u8(78, 167, 215).with_alpha(0.4),
             name: Water::NAME,
             flags: VoxelMaterialFlags::LIQUID,
             emissive: Color::BLACK,
@@ -87,7 +90,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Sandstone>(MaterialRegistryInfo {
-            base_color: Color::rgb_u8(198, 192, 144),
+            base_color: Color::srgb_u8(198, 192, 144),
             name: Sandstone::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
@@ -95,7 +98,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Bedrock>(MaterialRegistryInfo {
-            base_color: Color::DARK_GRAY,
+            base_color: css::DARK_GRAY.into(),
             name: Bedrock::NAME,
             flags: VoxelMaterialFlags::UNBREAKABLE,
             emissive: Color::BLACK,
@@ -105,7 +108,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Cactus>(MaterialRegistryInfo {
-            base_color: Color::rgb_u8(0, 96, 0),
+            base_color: Color::srgb_u8(0, 96, 0),
             name: Cactus::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
@@ -113,7 +116,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Wood>(MaterialRegistryInfo {
-            base_color: Color::rgb_u8(188, 147, 97),
+            base_color: Color::srgb_u8(188, 147, 97),
             name: Wood::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
@@ -123,7 +126,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<Leaves>(MaterialRegistryInfo {
-            base_color: Color::rgb_u8(109, 177, 56),
+            base_color: Color::srgb_u8(109, 177, 56),
             name: Leaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
@@ -133,7 +136,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<PineLeaves>(MaterialRegistryInfo {
-            base_color: Color::rgb_u8(135, 201, 167),
+            base_color: Color::srgb_u8(135, 201, 167),
             name: PineLeaves::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
@@ -143,7 +146,7 @@ impl Plugin for VoxelWorldBaseMaterialsPlugin {
         });
 
         registry.register_material::<PineWood>(MaterialRegistryInfo {
-            base_color: Color::rgb_u8(174, 155, 126),
+            base_color: Color::srgb_u8(174, 155, 126),
             name: PineWood::NAME,
             flags: VoxelMaterialFlags::SOLID,
             emissive: Color::BLACK,
