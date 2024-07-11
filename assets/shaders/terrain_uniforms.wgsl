@@ -10,9 +10,9 @@ struct VoxelMat {
     reflectance: f32,
 };
 
-@group(1) @binding(0)
+@group(2) @binding(0)
 var<uniform> render_distance: u32;
 
 // A GPU-suited representation of voxel materials.
-@group(1) @binding(1)
+@group(2) @binding(1)
 var<uniform> voxel_materials: array<VoxelMat, 256>;

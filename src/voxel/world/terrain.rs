@@ -49,13 +49,15 @@ pub fn process_terrain_gen(
     mut dirty_chunks: ResMut<DirtyChunks>,
     mut gen_chunks: Query<(Entity, &Chunk, &mut TerrainGenTask)>,
 ) {
-    gen_chunks.for_each_mut(|(entity, chunk, mut gen_task)| {
-        if let Some(data) = future::block_on(future::poll_once(&mut gen_task.0)) {
-            chunk_data.insert(chunk.0, data);
-            dirty_chunks.mark_dirty(chunk.0);
-            commands.entity(entity).remove::<TerrainGenTask>();
-        }
-    });
+    gen_chunks
+        .iter_mut()
+        .for_each(|(entity, chunk, mut gen_task)| {
+            if let Some(data) = future::block_on(future::poll_once(&mut gen_task.0)) {
+                chunk_data.insert(chunk.0, data);
+                dirty_chunks.mark_dirty(chunk.0);
+                commands.entity(entity).remove::<TerrainGenTask>();
+            }
+        });
 }
 
 /// Handles terrain generation.

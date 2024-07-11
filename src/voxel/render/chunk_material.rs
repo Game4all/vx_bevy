@@ -131,7 +131,7 @@ impl Plugin for ChunkMaterialPlugin {
             .add_systems(
                 Update,
                 update_chunk_material_singleton
-                    .run_if(resource_changed::<VoxelMaterialRegistry>())
+                    .run_if(resource_changed::<VoxelMaterialRegistry>)
                     .in_set(ChunkMaterialSet),
             );
     }
