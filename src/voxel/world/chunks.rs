@@ -45,18 +45,15 @@ fn update_view_chunks(
                     continue;
                 }
 
-                let chunk_key = {
-                    let mut pos: IVec3 = player_pos.chunk_min
-                        + IVec3::new(
-                            x * CHUNK_LENGTH as i32,
-                            y * CHUNK_LENGTH as i32,
-                            z * CHUNK_LENGTH as i32,
-                        );
-
-                    pos.y = pos.y.max(0);
-
-                    pos
-                };
+                let chunk_key = player_pos.chunk_min
+                    + IVec3::new(
+                        x * CHUNK_LENGTH as i32,
+                        y * CHUNK_LENGTH as i32,
+                        z * CHUNK_LENGTH as i32,
+                    );
+                if chunk_key.y < 0 {
+                    continue;
+                }
 
                 if chunk_entities.entity(chunk_key).is_none() {
                     chunk_command_queue.create.push(chunk_key);
