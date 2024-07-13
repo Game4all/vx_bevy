@@ -35,7 +35,7 @@ struct VertexOutput {
 
 @vertex
 fn vertex(vertex: Vertex) -> VertexOutput {
-    let model = mesh_functions::get_model_matrix(vertex.instance_index);
+    let model = mesh_functions::get_world_from_local(vertex.instance_index);
     let world_position = bevy_pbr::mesh_functions::mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
 
     var out: VertexOutput;
@@ -78,7 +78,7 @@ fn prepare_pbr_input_from_voxel_mat(voxel_mat: VoxelMat, frag: Fragment) -> PbrI
     pbr_input.world_position = vec4<f32>(frag.world_position, 1.0);
     pbr_input.world_normal = (f32(frag.front_facing) * 2.0 - 1.0) * voxel_world_normal;
 
-    pbr_input.is_orthographic = view.projection[3].w == 1.0;
+    pbr_input.is_orthographic = view.clip_from_view[3].w == 1.0;
     pbr_input.N = normalize(voxel_world_normal);
     pbr_input.V = calculate_view(vec4<f32>(frag.world_position, 1.0), pbr_input.is_orthographic);
     pbr_input.flags = mesh[frag.instance_index].flags;

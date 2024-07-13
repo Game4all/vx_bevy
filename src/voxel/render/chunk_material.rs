@@ -20,9 +20,9 @@ impl VoxelTerrainMesh {
 
 #[derive(ShaderType, Clone, Copy, Debug, Default)]
 pub struct GpuVoxelMaterial {
-    base_color: Color,
+    base_color: LinearRgba,
     flags: u32,
-    emissive: Color,
+    emissive: LinearRgba,
     perceptual_roughness: f32,
     metallic: f32,
     reflectance: f32,
@@ -57,10 +57,10 @@ impl Material for GpuTerrainUniforms {
     fn specialize(
         _pipeline: &bevy::pbr::MaterialPipeline<Self>,
         descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
-        layout: &bevy::render::mesh::MeshVertexBufferLayout,
+        layout: &bevy::render::mesh::MeshVertexBufferLayoutRef,
         _key: bevy::pbr::MaterialPipelineKey<Self>,
     ) -> Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
-        let vertex_layout = layout.get_layout(&[
+        let vertex_layout = layout.0.get_layout(&[
             Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
             VoxelTerrainMesh::ATTRIBUTE_DATA.at_shader_location(1),
         ])?;
@@ -79,7 +79,7 @@ fn update_chunk_material_singleton(
     if chunk_material.is_changed() {
         let mut gpu_mats = GpuTerrainUniforms {
             materials: [GpuVoxelMaterial {
-                base_color: Color::WHITE,
+                base_color: Color::WHITE.into(),
                 flags: 0,
                 ..Default::default()
             }; 256],
@@ -90,9 +90,9 @@ fn update_chunk_material_singleton(
             .iter_mats()
             .enumerate()
             .for_each(|(index, material)| {
-                gpu_mats.materials[index].base_color = material.base_color;
+                gpu_mats.materials[index].base_color = material.base_color.into();
                 gpu_mats.materials[index].flags = material.flags.bits();
-                gpu_mats.materials[index].emissive = material.emissive;
+                gpu_mats.materials[index].emissive = material.emissive.into();
                 gpu_mats.materials[index].perceptual_roughness = material.perceptual_roughness;
                 gpu_mats.materials[index].metallic = material.metallic;
                 gpu_mats.materials[index].reflectance = material.reflectance;
