@@ -2,7 +2,7 @@ use bevy::math::{IVec3, Vec2, Vec2Swizzles, Vec3, Vec3Swizzles};
 use noise::{utils::NoiseMapBuilder, MultiFractal};
 
 pub fn rand2to1(p: Vec2, dot: Vec2) -> f32 {
-    let sp: Vec2 = p.to_array().map(|x| x.sin()).into();
+    let sp: Vec2 = p.to_array().map(f32::sin).into();
     let random = sp.dot(dot);
     (random.sin() * 143_758.55).fract()
 }

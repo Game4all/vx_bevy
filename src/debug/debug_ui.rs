@@ -121,7 +121,7 @@ fn display_material_editor(
                             mat_index as u8,
                             mat.name,
                         );
-                    })
+                    });
             });
 
         ui.heading("Material properties");

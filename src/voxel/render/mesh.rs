@@ -93,7 +93,7 @@ pub fn mesh_buffer<T, S>(
         .zip(RIGHT_HANDED_Y_UP_CONFIG.faces.iter())
         .enumerate()
     {
-        for quad in group.iter() {
+        for quad in group {
             indices.extend_from_slice(&face.quad_mesh_indices(positions.len() as u32));
             positions.extend_from_slice(&face.quad_mesh_positions(quad, scale));
             data.extend_from_slice(

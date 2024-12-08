@@ -46,7 +46,7 @@ fn update_light_position(
     let player_translation = queries
         .p1()
         .get_single()
-        .map_or_else(|_| Default::default(), |ply| ply.translation);
+        .map_or_else(|_| Vec3::default(), |ply| ply.translation);
 
     {
         let mut binding = queries.p0();
