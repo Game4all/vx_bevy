@@ -56,7 +56,7 @@ impl<T: LayeredBiomeTerrainGenerator> BiomeTerrainGenerator for T {
                         let remaining_height = local_height.checked_sub(h);
 
                         if let Some(uh) = remaining_height {
-                            *buffer.voxel_at_mut([pos.x, uh, pos.y].into()) = self.fill_strata(h)
+                            *buffer.voxel_at_mut([pos.x, uh, pos.y].into()) = self.fill_strata(h);
                         }
                     }
                 }

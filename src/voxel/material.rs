@@ -105,8 +105,8 @@ impl VoxelMaterialRegistry {
 impl Default for VoxelMaterialRegistry {
     fn default() -> Self {
         let mut registry = Self {
-            materials: Default::default(),
-            mat_ids: Default::default(),
+            materials: Vec::default(),
+            mat_ids: HashMap::default(),
         };
 
         registry.register_material::<Void>(MaterialRegistryInfo {

@@ -28,7 +28,7 @@ where
 {
     pub fn new(chunk_shape: S) -> Self {
         Self {
-            chunks: Default::default(),
+            chunks: BTreeMap::default(),
             shape_mask: !(IVec3::from(chunk_shape.as_array().map(|x| x as i32)) - IVec3::ONE),
             shape: chunk_shape,
         }

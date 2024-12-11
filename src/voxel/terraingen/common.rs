@@ -16,7 +16,7 @@ pub fn terrain_generate_world_bottom_border(buffer: &mut VoxelBuffer<Voxel, Chun
     buffer.fill_extent(
         Extent::from_min_and_shape(UVec3::ZERO, UVec3::new(CHUNK_LENGTH, 2, CHUNK_LENGTH)),
         Bedrock::into_voxel(),
-    )
+    );
 }
 
 /// Carve the general terrain shape for a chunk.
@@ -73,13 +73,13 @@ pub fn make_pine_tree<T: VoxelMaterial, L: VoxelMaterial>(
         })
         .for_each(|(trunk_distance, leaves_distance, position)| {
             if trunk_distance {
-                *buffer.voxel_at_mut(position) = T::into_voxel()
+                *buffer.voxel_at_mut(position) = T::into_voxel();
             }
 
             if leaves_distance {
-                *buffer.voxel_at_mut(position) = L::into_voxel()
+                *buffer.voxel_at_mut(position) = L::into_voxel();
             }
-        })
+        });
 }
 
 /// Make a tree using SDF functions
@@ -106,11 +106,11 @@ pub fn make_tree<T: VoxelMaterial, L: VoxelMaterial>(
         })
         .for_each(|(trunk_distance, leaves_distance, position)| {
             if trunk_distance {
-                *buffer.voxel_at_mut(position) = T::into_voxel()
+                *buffer.voxel_at_mut(position) = T::into_voxel();
             }
 
             if leaves_distance {
-                *buffer.voxel_at_mut(position) = L::into_voxel()
+                *buffer.voxel_at_mut(position) = L::into_voxel();
             }
         });
 }
@@ -133,7 +133,7 @@ pub fn make_rock<V: VoxelMaterial>(
         })
         .for_each(|(rock, position)| {
             if rock {
-                *buffer.voxel_at_mut(position) = V::into_voxel()
+                *buffer.voxel_at_mut(position) = V::into_voxel();
             }
         });
 }
